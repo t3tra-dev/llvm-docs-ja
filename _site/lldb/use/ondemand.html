@@ -1,0 +1,473 @@
+<!doctype html>
+<html class="no-js" lang="en" data-content_root="../">
+  <head><meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Using LLDB On AArch64 Linux" href="aarch64-linux.html" /><link rel="prev" title="Tracing with Intel Processor Trace" href="intel_pt.html" />
+
+    <!-- Generated with Sphinx 7.2.6 and Furo 2024.01.29 -->
+        <title>On Demand Symbols - 🐛 LLDB</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=d75fae25" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=135e06be" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=36a5483c" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #f0f0f0;
+  --color-code-foreground: black;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+      }
+    }
+  }
+</style></head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-half" viewBox="0 0 24 24">
+    <title>Auto light/dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-shadow">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M13 12h5" />
+      <path d="M13 15h4" />
+      <path d="M13 18h1" />
+      <path d="M13 9h4" />
+      <path d="M13 6h1" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc">
+<label class="overlay sidebar-overlay" for="__navigation">
+  <div class="visually-hidden">Hide navigation sidebar</div>
+</label>
+<label class="overlay toc-overlay" for="__toc">
+  <div class="visually-hidden">Hide table of contents sidebar</div>
+</label>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <div class="visually-hidden">Toggle site navigation sidebar</div>
+        <i class="icon"><svg><use href="#svg-menu"></use></svg></i>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="../index.html"><div class="brand">🐛 LLDB</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle">
+          <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+          <svg class="theme-icon-when-auto"><use href="#svg-sun-half"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
+        <div class="visually-hidden">Toggle table of contents sidebar</div>
+        <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="../index.html">
+  
+  
+  <span class="sidebar-brand-text">🐛 LLDB</span>
+  
+</a><form class="sidebar-search-container" method="get" action="../search.html" role="search">
+  <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <p class="caption" role="heading"><span class="caption-text">Using LLDB</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="map.html">GDB to LLDB command map</a></li>
+<li class="toctree-l1"><a class="reference internal" href="formatting.html">Frame and Thread Format</a></li>
+<li class="toctree-l1"><a class="reference internal" href="variable.html">Variable Formatting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="symbolication.html">Symbolication</a></li>
+<li class="toctree-l1"><a class="reference internal" href="symbols.html">Symbols on macOS</a></li>
+<li class="toctree-l1"><a class="reference internal" href="remote.html">Remote Debugging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="intel_pt.html">Tracing with Intel Processor Trace</a></li>
+<li class="toctree-l1 current current-page"><a class="current reference internal" href="#">On Demand Symbols</a></li>
+<li class="toctree-l1"><a class="reference internal" href="aarch64-linux.html">Using LLDB On AArch64 Linux</a></li>
+<li class="toctree-l1"><a class="reference internal" href="symbolfilejson.html">JSON Symbol File Format</a></li>
+<li class="toctree-l1"><a class="reference internal" href="mcp.html">Model Context Protocol (MCP)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="troubleshooting.html">Troubleshooting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="links.html">Links</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../man/lldb.html">Man Page</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Scripting LLDB</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="python.html">Python Scripting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="python-reference.html">Python Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../python_api.html">Python API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../python_extensions.html">Python Extensions</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Developing LLDB</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../resources/overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../resources/contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../resources/build.html">Building</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../resources/test.html">Testing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../resources/qemu-testing.html">Testing LLDB using QEMU</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../resources/debugging.html">Debugging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../resources/fuzzing.html">Fuzzing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../resources/sbapi.html">Scripting Bridge API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../resources/dataformatters.html">Data Formatters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../resources/formatterbytecode.html">Formatter Bytecode</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../resources/extensions.html">DWARF Extensions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../resources/lldbgdbremote.html">GDB Remote Protocol Extensions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../resources/lldbplatformpackets.html">LLDB Platform Packets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../resources/caveats.html">Caveats</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../resources/projects.html">Open Projects</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../resources/lldbdap.html">Contributing to LLDB-DAP</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../resources/addinglanguagesupport.html">Adding Programming Language Support</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://lldb.llvm.org/cpp_reference/namespacelldb.html">Public C++ API</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://lldb.llvm.org/cpp_reference/index.html">Private C++ API</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">External Links</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/llvm/llvm-project">Source Code</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/llvm/llvm-project/releases">Releases</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://discord.gg/xS7Z362">Join the Discord</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://discord.com/channels/636084430946959380/636732809708306432">Discord Channel</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://discourse.llvm.org/c/subprojects/lldb/8">Discussion Forums</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://llvm.org/docs/DeveloperPolicy.html">Developer Policy</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/llvm/llvm-project/issues?q=is%3Aissue+label%3Alldb+is%3Aopen">Bug Reports</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/llvm/llvm-project/pulls?q=is%3Apr+label%3Alldb+is%3Aopen">Code Reviews</a></li>
+</ul>
+
+</div>
+</div>
+
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="edit-this-page">
+  <a class="muted-link" href="https://github.com/llvm/llvm-project/edit/main/lldb/docs/use/ondemand.rst" title="Edit this page">
+    <svg aria-hidden="true" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+      <path d="M4 20h4l10.5 -10.5a1.5 1.5 0 0 0 -4 -4l-10.5 10.5v4" />
+      <line x1="13.5" y1="6.5" x2="17.5" y2="10.5" />
+    </svg>
+    <span class="visually-hidden">Edit this page</span>
+  </a>
+</div><div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle">
+              <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+              <svg class="theme-icon-when-auto"><use href="#svg-sun-half"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
+            <div class="visually-hidden">Toggle table of contents sidebar</div>
+            <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+          </label>
+        </div>
+        <article role="main">
+          <section id="on-demand-symbols">
+<h1>On Demand Symbols<a class="headerlink" href="#on-demand-symbols" title="Link to this heading">#</a></h1>
+<p>On demand symbols can be enabled in LLDB for projects that generate debug info
+for more than what is required by a normal debug session. Some build systems
+enable debug information for all binaries and can end up producing many
+gigabytes of debug information. This amount of debug information can greatly
+increase debug session load times and can slow developer productivity when the
+debug information isn’t indexed. It can also cause expression evaluation to
+be slow when types from all of the binaries have full debug info as each module
+is queried for very common types, or global name lookups fail due to a mistyped
+expression.</p>
+<section id="when-should-i-consider-enabling-this-feature">
+<h2>When should I consider enabling this feature?<a class="headerlink" href="#when-should-i-consider-enabling-this-feature" title="Link to this heading">#</a></h2>
+<p>Anyone that has a build system that produces debug information for many
+binaries that are not all required when you want to focus on debugging a few of
+the produced binaries. Some build systems enable debug info as a project wide
+switch and the build system files that control how things are built are not
+easy to modify to produce debug info for only a small subset of the files being
+linked. If your debug session startup times are slow because of too much debug
+info, this feature might help you be more productive during daily use.</p>
+</section>
+<section id="how-do-i-enable-on-demand-symbols">
+<h2>How do I enable on demand symbols?<a class="headerlink" href="#how-do-i-enable-on-demand-symbols" title="Link to this heading">#</a></h2>
+<p>This feature is enabled using a LLDB setting:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">(</span><span class="n">lldb</span><span class="p">)</span> <span class="n">settings</span> <span class="nb">set</span> <span class="n">symbols</span><span class="o">.</span><span class="n">load</span><span class="o">-</span><span class="n">on</span><span class="o">-</span><span class="n">demand</span> <span class="n">true</span>
+</pre></div>
+</div>
+<p>Users can also put this command into their ~/.lldbinit file so it is always
+enabled.</p>
+</section>
+<section id="how-does-this-feature-work">
+<h2>How does this feature work?<a class="headerlink" href="#how-does-this-feature-work" title="Link to this heading">#</a></h2>
+<p>This feature works by selectively enabling debug information for modules that
+the user focuses on. It is designed to be enabled and work without the user
+having to set any other settings and will try and determine when to enable
+debug info access from the modules automatically. All modules with debug info
+start off with their debug information turned off for expensive name and type
+lookups. The debug information for line tables are always left enabled to allow
+users to reliably set breakpoints by file and line. As the user debugs their
+target, some simple things can cause module to get its debug information
+enabled (called hydration):
+- Setting a file and line breakpoint
+- Any PC from any stack frame that maps to a module
+- Setting a breakpoint by function name
+- Finding a global variable by name</p>
+<p>Since most users set breakpoints by file and line, this is an easy way for
+people to inform the debugger that they want focus on this module. Breakpoints
+by file and line are always enabled when on demand symbols is being used. Line
+tables in debug information are cheap to parse and breakpoints will be able to
+be set in any module that has debug info. Setting breakpoints by file and line
+acts as one of the primary ways to enable debug info for a module as it is
+the most common way to stop your program at interesting areas of your code.</p>
+<p>Once the user hits a breakpoint, or stops the program for any other reason,
+like a crash, assertion or signal, the debugger will calculate the stack frames
+for one or more threads. Any stack frames whose PC value is contained within
+one of a module’s sections will have its debug information enabled. This allows
+us to enable debug information for the areas of code that the user is stopped
+in and will allow only the important subset of modules to have their debug
+information enabled.</p>
+<p>On demand symbol loading tries to avoid indexing the names within the debug
+information and makes a few tradeoffs to allow name matching of functions and
+globals without having to always index all of the debug information.
+Setting breakpoints by function name can work, but we try to avoid using
+debug information by relying on the symbol tables from a module. Debug
+information name indexing is one of the most expensive operations that we are
+trying to avoid with the on demand symbol loading so this is one of the main
+tradeoffs of this feature. When setting a breakpoint by function name, if the
+symbol table contains a match, the debug information will be enabled for that
+module and the query will be completed using the debug information. This does
+mean that setting breakpoints on inline function names can fail for modules
+that have debug info, but no matches in the symbol table since inlined
+functions don’t exist in symbol tables. When using on demand symbol loading it
+is encouraged to not strip the symbol tables of local symbols as this will
+allow users to set breakpoints on all concrete functions reliably. Stripped
+symbol tables have their local symbols removed from the symbol table which
+means that static functions and non exported function will not appear in the
+symbol tables. This can cause breakpoint setting by function name to fail when
+previously it wouldn’t fail.</p>
+<p>Global variable lookups rely on the same methodology as breakpoint setting by
+function name: we use the symbol tables to find a match first if debug
+information isn’t enabled for a module. If we find a match in the symbol table
+for a global variable lookup, we will enable debug information and complete
+the query using the debug information. It is encouraged to not strip your
+symbol tables with this features as static variables and other non exported
+globals will not appear in the symbol table and can lead to matches not being
+found.</p>
+</section>
+<section id="what-other-things-might-fail">
+<h2>What other things might fail?<a class="headerlink" href="#what-other-things-might-fail" title="Link to this heading">#</a></h2>
+<p>The on demand symbol loading feature tries to limit expensive name lookups
+within debug information. As such, some lookups by name might fail when they
+wouldn’t when this feature is not enabled:
+- Setting breakpoints by function name for inlined functions
+- Type lookups when the expression parser requests types by name
+- Global variable lookups by name when the name of the variable is stripped</p>
+<p>Setting breakpoints by function name can fail for inline function because this
+information is only contained in the debug information. No symbols are created
+for inlined functions unless there is a concrete copy of the inlined function
+in that same module. As a result, we might not end up stopping at all inlined
+functions when requested with this feature enabled. Setting file and line
+breakpoints are a good way still use on demand symbol loading effectively
+and still being able to stop at inline function invocations.</p>
+<p>The expression parser often tries to lookup types by name when the user types
+an expression. These are some of the most costly parts of expression evaluation
+as the user can type something like “iterator” as part of their expression and
+this can result in matches from all STL types in all modules. These kinds of
+global type lookup queries can cause thousands of results to be found if debug
+information is enabled. The way that most debug information is created these
+days has the type information inlined into each module. Typically each module
+will contain full type definitions in the debug info for any types that are
+used in code. This means that when you type an expression when stopped, you
+have debug information for all of the variables, arguments and global variables
+in your current stack frame and we should be able to find type that are
+important by using only the modules that have their debug information enabled.</p>
+<p>The expression parser can also be asked to display global variables and they
+can be looked up by name. For this feature to work reliably with on demand
+symbol loading enabled, just don’t strip your symbol tables and the expression
+parser should have no problem finding your variables. Most global variables
+that are exported will still be in your symbol table if it is stripped, but
+static variables and non exported globals will not be.</p>
+</section>
+<section id="can-i-troubleshoot-issues-when-i-believe-this-feature-is-impeding-my-debugging">
+<h2>Can I troubleshoot issues when I believe this feature is impeding my debugging?<a class="headerlink" href="#can-i-troubleshoot-issues-when-i-believe-this-feature-is-impeding-my-debugging" title="Link to this heading">#</a></h2>
+<p>Logging has been added that can be enabled to help notify our engineers when
+something is not producing results when this feature is enabled. This logging
+can be enabled during a debug session and can be sent to the LLDB engineers
+to help troubleshoot these situation. To enable logging, type the following
+command:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">(</span><span class="n">lldb</span><span class="p">)</span> <span class="n">log</span> <span class="n">enable</span> <span class="o">-</span><span class="n">f</span> <span class="o">/</span><span class="n">tmp</span><span class="o">/</span><span class="n">ondemand</span><span class="o">.</span><span class="n">txt</span> <span class="n">lldb</span> <span class="n">on</span><span class="o">-</span><span class="n">demand</span>
+</pre></div>
+</div>
+<p>When the logging is enabled, we get full visibility into each query that would
+have produced results if this feature were not enabled and will allow us to
+troublshoot issues. Enabling this logging before an expression, setting a
+breakpoint by name, or doing a type lookup can help us see the patterns that
+cause failures and will help us improve this feature.</p>
+</section>
+</section>
+
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          <a class="next-page" href="aarch64-linux.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title">Using LLDB On AArch64 Linux</div>
+              </div>
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+            </a>
+          <a class="prev-page" href="intel_pt.html">
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title">Tracing with Intel Processor Trace</div>
+                
+              </div>
+            </a>
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; 2007-2025, The LLDB Team
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            <div class="last-updated">
+              Last updated on Aug 13, 2025</div>
+          </div>
+          <div class="right-details">
+            
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer">
+      
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">On Demand Symbols</a><ul>
+<li><a class="reference internal" href="#when-should-i-consider-enabling-this-feature">When should I consider enabling this feature?</a></li>
+<li><a class="reference internal" href="#how-do-i-enable-on-demand-symbols">How do I enable on demand symbols?</a></li>
+<li><a class="reference internal" href="#how-does-this-feature-work">How does this feature work?</a></li>
+<li><a class="reference internal" href="#what-other-things-might-fail">What other things might fail?</a></li>
+<li><a class="reference internal" href="#can-i-troubleshoot-issues-when-i-believe-this-feature-is-impeding-my-debugging">Can I troubleshoot issues when I believe this feature is impeding my debugging?</a></li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
+      
+      
+    </aside>
+  </div>
+</div><script src="../_static/documentation_options.js?v=7f41d439"></script>
+    <script src="../_static/doctools.js?v=888ff710"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/scripts/furo.js?v=32e29ea5"></script>
+    </body>
+</html>

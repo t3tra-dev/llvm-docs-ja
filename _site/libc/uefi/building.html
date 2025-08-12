@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Building libc for UEFI &#8212; The LLVM C Library</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=d75fae25" />
+    <link rel="stylesheet" type="text/css" href="../_static/alabaster.css?v=2e637bd6" />
+    <script src="../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../_static/doctools.js?v=888ff710"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Using libc for UEFI" href="using.html" />
+    <link rel="prev" title="libc for UEFI" href="index.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="building-libc-for-uefi">
+<span id="libc-uefi-building"></span><h1>Building libc for UEFI<a class="headerlink" href="#building-libc-for-uefi" title="Link to this heading">¶</a></h1>
+<nav class="contents local" id="table-of-contents">
+<p class="topic-title">Table of Contents</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#building-llvm-libc-for-uefi" id="id1">Building LLVM libc for UEFI</a></p>
+<ul>
+<li><p><a class="reference internal" href="#standard-runtimes-build" id="id2">Standard runtimes build</a></p></li>
+</ul>
+</li>
+</ul>
+</nav>
+<section id="building-llvm-libc-for-uefi">
+<h2><a class="toc-backref" href="#id1" role="doc-backlink">Building LLVM libc for UEFI</a><a class="headerlink" href="#building-llvm-libc-for-uefi" title="Link to this heading">¶</a></h2>
+<p>This document will present recipes to build the LLVM C library for UEFI.
+UEFI builds use the same <a class="reference internal" href="../full_cross_build.html#full-cross-build"><span class="std std-ref">cross build</span></a> support as
+the other targets. However, the UEFI target has the restriction that it <em>must</em>
+be built with an up-to-date <code class="docutils literal notranslate"><span class="pre">clang</span></code> compiler. This is because UEFI support
+in <code class="docutils literal notranslate"><span class="pre">clang</span></code> is still an experimental feature.</p>
+<p>Currently, it is only possible to build LLVM libc for UEFI for <code class="docutils literal notranslate"><span class="pre">x86_64</span></code>
+CPUs. This is due to the target not being enabled for <code class="docutils literal notranslate"><span class="pre">aarch64</span></code> and
+<code class="docutils literal notranslate"><span class="pre">riscv64</span></code>.</p>
+<p>Once you have finished building, refer to <a class="reference internal" href="using.html#libc-uefi-usage"><span class="std std-ref">Using libc for UEFI</span></a> to get started
+with the newly built C library.</p>
+<section id="standard-runtimes-build">
+<h3><a class="toc-backref" href="#id2" role="doc-backlink">Standard runtimes build</a><a class="headerlink" href="#standard-runtimes-build" title="Link to this heading">¶</a></h3>
+<p>The simplest way to build for UEFI is to use the existing LLVM runtimes
+support. This will automatically handle bootstrapping an up-to-date <code class="docutils literal notranslate"><span class="pre">clang</span></code>
+compiler and use it to build the C library. The following CMake invocation
+will instruct it to build the <code class="docutils literal notranslate"><span class="pre">libc</span></code> runtime targeting <code class="docutils literal notranslate"><span class="pre">x86_64</span></code> CPUs.</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>$&gt;<span class="w"> </span><span class="nb">cd</span><span class="w"> </span>llvm-project<span class="w">  </span><span class="c1"># The llvm-project checkout</span>
+$&gt;<span class="w"> </span>mkdir<span class="w"> </span>build
+$&gt;<span class="w"> </span><span class="nb">cd</span><span class="w"> </span>build
+$&gt;<span class="w"> </span>cmake<span class="w"> </span>../llvm<span class="w"> </span>-G<span class="w"> </span>Ninja<span class="w">                                                 </span><span class="se">\</span>
+<span class="w">   </span>-DLLVM_ENABLE_PROJECTS<span class="o">=</span><span class="s2">&quot;clang;lld&quot;</span><span class="w">                                     </span><span class="se">\</span>
+<span class="w">   </span>-DCMAKE_BUILD_TYPE<span class="o">=</span>&lt;Debug<span class="p">|</span>Release&gt;<span class="w">  </span><span class="se">\ </span><span class="c1"># Select build type</span>
+<span class="w">   </span>-DCMAKE_INSTALL_PREFIX<span class="o">=</span>&lt;PATH&gt;<span class="w">       </span><span class="se">\ </span><span class="c1"># Where the libraries will live</span>
+<span class="w">   </span>-DLLVM_DEFAULT_TARGET_TRIPLE<span class="o">=</span>x86_64-unknown-uefi-llvm<span class="w">                  </span><span class="se">\</span>
+<span class="w">   </span>-DLLVM_RUNTIME_TARGETS<span class="o">=</span>x86_64-unknown-uefi-llvm<span class="w">                        </span><span class="se">\</span>
+<span class="w">   </span>-DRUNTIMES_x86_64-unknown-uefi-llvm_LLVM_ENABLE_RUNTIMES<span class="o">=</span>libc<span class="w">          </span><span class="se">\</span>
+<span class="w">   </span>-DRUNTIMES_x86_64-unknown-uefi-llvm_LLVM_LIBC_FULL_BUILD<span class="o">=</span><span class="nb">true</span><span class="w">          </span><span class="se">\</span>
+$&gt;<span class="w"> </span>ninja<span class="w"> </span>install
+</pre></div>
+</div>
+<p>We need <code class="docutils literal notranslate"><span class="pre">clang</span></code> to build the UEFI C library and <code class="docutils literal notranslate"><span class="pre">lld</span></code> to link UEFI PE
+executables, so we enable them in <code class="docutils literal notranslate"><span class="pre">LLVM_ENABLE_PROJECTS</span></code>. We then set
+<code class="docutils literal notranslate"><span class="pre">RUNTIMES_&lt;triple&gt;_LLVM_ENABLE_RUNTIMES</span></code> to enable <code class="docutils literal notranslate"><span class="pre">libc</span></code> for the UEFI
+targets.</p>
+</section>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../index.html">libc</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">Status &amp; Support</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../headers/index.html">Implementation Status</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../arch_support.html">Architecture Support</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../platform_support.html">Platform Support</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../compiler_support.html">Compiler Support</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Simple Usage</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../getting_started.html">Getting Started</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Advanced Usage</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../full_host_build.html">Full Host Build</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../full_cross_build.html">Full Cross Build</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../overlay_mode.html">Overlay Mode</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../gpu/index.html">libc for GPUs</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">libc for UEFI</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../configure.html">Configure Options</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Development</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Maintainers.html">LLVM-libc Maintainers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../build_and_test.html">Building and Testing the libc</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../dev/index.html">Developer Guides</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../porting.html">Bringup on a New OS or Architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../contributing.html">Contributing to the libc Project</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Useful Links</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../talks.html">Talks</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/llvm/llvm-project/tree/main/libc">Source Code</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/llvm/llvm-project/labels/libc">Bug Reports</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://discourse.llvm.org/c/runtimes/libc">Discourse</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://discord.gg/xS7Z362">Join the Discord</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://discord.com/channels/636084430946959380/636732994891284500">Discord Channel</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://lab.llvm.org/buildbot/#/builders?tags=libc">Buildbot</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  <li><a href="index.html">libc for UEFI</a><ul>
+      <li>Previous: <a href="index.html" title="previous chapter">libc for UEFI</a></li>
+      <li>Next: <a href="using.html" title="next chapter">Using libc for UEFI</a></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;2011-2025, LLVM Project.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 7.2.6</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 0.7.16</a>
+      
+      |
+      <a href="../_sources/uefi/building.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

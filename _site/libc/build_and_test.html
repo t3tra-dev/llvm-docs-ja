@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="./">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Building and Testing the libc &#8212; The LLVM C Library</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=d75fae25" />
+    <link rel="stylesheet" type="text/css" href="_static/alabaster.css?v=2e637bd6" />
+    <script src="_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="_static/doctools.js?v=888ff710"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Developer Guides" href="dev/index.html" />
+    <link rel="prev" title="LLVM-libc Maintainers" href="Maintainers.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="building-and-testing-the-libc">
+<span id="build-and-test"></span><h1>Building and Testing the libc<a class="headerlink" href="#building-and-testing-the-libc" title="Link to this heading">¶</a></h1>
+<section id="build-modes">
+<h2>Build modes<a class="headerlink" href="#build-modes" title="Link to this heading">¶</a></h2>
+<p>The libc can be built and tested in two different modes:</p>
+<ol class="arabic">
+<li><p><strong>The overlay mode</strong> - In this mode, one uses the static archive from LLVM’s
+libc along with the system libc. See <a class="reference internal" href="overlay_mode.html#overlay-mode"><span class="std std-ref">Overlay Mode</span></a> for more details
+on building and using the libc in this mode. You can only run the libc
+unittests in this mode. To run them, one simply does:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>$&gt;<span class="w"> </span>ninja<span class="w"> </span>check-libc
+</pre></div>
+</div>
+<p>Note that, unittests for only those functions which are part of the overlay
+static archive will be run with the above command.</p>
+</li>
+<li><p><strong>The full build mode</strong> - In this mode, the libc is used as the only libc
+for the user’s application. See <a class="reference internal" href="full_host_build.html#full-host-build"><span class="std std-ref">Full Host Build</span></a> for more details on
+building and using the libc in this mode. Once configured for a full libc
+build, you can run three kinds of tests:</p>
+<ol class="arabic">
+<li><p>Unit tests - You can run unittests by the command:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>$&gt;<span class="w"> </span>ninja<span class="w"> </span>check-libc
+</pre></div>
+</div>
+</li>
+<li><p>Integration tests - You can run integration tests by the command:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>$&gt;<span class="w"> </span>ninja<span class="w"> </span>libc-integration-tests
+</pre></div>
+</div>
+</li>
+</ol>
+</li>
+</ol>
+</section>
+<section id="building-with-vscode">
+<h2>Building with VSCode<a class="headerlink" href="#building-with-vscode" title="Link to this heading">¶</a></h2>
+<p>As a quickstart to using VSCode for development, install the cmake extension
+and put the following in your settings.json file:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">  </span><span class="s2">&quot;cmake.sourceDirectory&quot;</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;${workspaceFolder}/llvm&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="s2">&quot;cmake.configureSettings&quot;</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="s2">&quot;LLVM_ENABLE_PROJECTS&quot;</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;libc&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="s2">&quot;LLVM_LIBC_FULL_BUILD&quot;</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">      </span><span class="s2">&quot;LLVM_ENABLE_SPHINX&quot;</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">      </span><span class="s2">&quot;LIBC_INCLUDE_DOCS&quot;</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="kc">true</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="building-with-bazel">
+<h2>Building with Bazel<a class="headerlink" href="#building-with-bazel" title="Link to this heading">¶</a></h2>
+<ol class="arabic simple">
+<li><p>To build with Bazel, use the following command:</p></li>
+</ol>
+<blockquote>
+<div><div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>$&gt;<span class="w"> </span>bazel<span class="w"> </span>build<span class="w"> </span>--config<span class="o">=</span>generic_clang<span class="w"> </span>@llvm-project//libc/...
+</pre></div>
+</div>
+</div></blockquote>
+<ol class="arabic simple">
+<li><p>To run the unit tests with bazel, use the following command:</p></li>
+</ol>
+<blockquote>
+<div><div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>$&gt;<span class="w"> </span>bazel<span class="w"> </span><span class="nb">test</span><span class="w"> </span>--config<span class="o">=</span>generic_clang<span class="w"> </span>@llvm-project//libc/...
+</pre></div>
+</div>
+</div></blockquote>
+<ol class="arabic simple">
+<li><p>The bazel target layout of <cite>libc</cite> is located at: <a class="reference external" href="https://github.com/llvm/llvm-project/tree/main/utils/bazel/llvm-project-overlay/libc/BUILD.bazel">utils/bazel/llvm-project-overlay/libc/BUILD.bazel</a>.</p></li>
+</ol>
+</section>
+<section id="building-in-a-container-for-a-different-architecture">
+<h2>Building in a container for a different architecture<a class="headerlink" href="#building-in-a-container-for-a-different-architecture" title="Link to this heading">¶</a></h2>
+<p><a class="reference external" href="https://podman.io/">Podman</a> can be used together with
+<a class="reference external" href="https://www.qemu.org/">QEMU</a> to run container images built for architectures
+other than the host’s. This can be used to build and test the libc on other
+supported architectures for which you do not have access to hardware. It can
+also be used if the hardware is slower than emulation of its architecture on a
+more powerful machine under a different architecture.</p>
+<p>As an example, to build and test in a container for 32-bit Arm:</p>
+<ol class="arabic">
+<li><p>To install the necessary packages on Arch Linux:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>$&gt;<span class="w"> </span>pacman<span class="w"> </span>-S<span class="w"> </span>podman<span class="w"> </span>qemu-user-static<span class="w"> </span>qemu-user-static-binfmt<span class="w"> </span><span class="se">\</span>
+<span class="w">   </span>qemu-system-arm
+</pre></div>
+</div>
+</li>
+<li><p>To run Bash interactively in an Ubuntu 22.04 container for 32-bit Arm and
+bind-mount an existing checkout of llvm-project on the host:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>$&gt;<span class="w"> </span>podman<span class="w"> </span>run<span class="w"> </span>-it<span class="w"> </span><span class="se">\</span>
+<span class="w">   </span>-v<span class="w"> </span>&lt;/host/path/to/llvm-project&gt;:&lt;/container/path/to/llvm-project&gt;<span class="w"> </span><span class="se">\</span>
+<span class="w">   </span>--arch<span class="w"> </span>arm<span class="w"> </span>docker.io/ubuntu:jammy<span class="w"> </span>bash
+</pre></div>
+</div>
+</li>
+<li><p>Install necessary packages, invoke CMake, build, and run tests.</p></li>
+</ol>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">libc</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">Status &amp; Support</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="headers/index.html">Implementation Status</a></li>
+<li class="toctree-l1"><a class="reference internal" href="arch_support.html">Architecture Support</a></li>
+<li class="toctree-l1"><a class="reference internal" href="platform_support.html">Platform Support</a></li>
+<li class="toctree-l1"><a class="reference internal" href="compiler_support.html">Compiler Support</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Simple Usage</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting Started</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Advanced Usage</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="full_host_build.html">Full Host Build</a></li>
+<li class="toctree-l1"><a class="reference internal" href="full_cross_build.html">Full Cross Build</a></li>
+<li class="toctree-l1"><a class="reference internal" href="overlay_mode.html">Overlay Mode</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gpu/index.html">libc for GPUs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="uefi/index.html">libc for UEFI</a></li>
+<li class="toctree-l1"><a class="reference internal" href="configure.html">Configure Options</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Development</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="Maintainers.html">LLVM-libc Maintainers</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Building and Testing the libc</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dev/index.html">Developer Guides</a></li>
+<li class="toctree-l1"><a class="reference internal" href="porting.html">Bringup on a New OS or Architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing to the libc Project</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Useful Links</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="talks.html">Talks</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/llvm/llvm-project/tree/main/libc">Source Code</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/llvm/llvm-project/labels/libc">Bug Reports</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://discourse.llvm.org/c/runtimes/libc">Discourse</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://discord.gg/xS7Z362">Join the Discord</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://discord.com/channels/636084430946959380/636732994891284500">Discord Channel</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://lab.llvm.org/buildbot/#/builders?tags=libc">Buildbot</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="Maintainers.html" title="previous chapter">LLVM-libc Maintainers</a></li>
+      <li>Next: <a href="dev/index.html" title="next chapter">Developer Guides</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;2011-2025, LLVM Project.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 7.2.6</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 0.7.16</a>
+      
+      |
+      <a href="_sources/build_and_test.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

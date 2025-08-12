@@ -1,0 +1,935 @@
+<!doctype html>
+<html class="no-js" lang="en" data-content_root="../">
+  <head><meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="GDB to LLDB command map" href="map.html" /><link rel="prev" title="The LLDB Debugger" href="../index.html" />
+
+    <!-- Generated with Sphinx 7.2.6 and Furo 2024.01.29 -->
+        <title>Tutorial - 🐛 LLDB</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=d75fae25" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=135e06be" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=36a5483c" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #f0f0f0;
+  --color-code-foreground: black;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+      }
+    }
+  }
+</style></head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-half" viewBox="0 0 24 24">
+    <title>Auto light/dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-shadow">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M13 12h5" />
+      <path d="M13 15h4" />
+      <path d="M13 18h1" />
+      <path d="M13 9h4" />
+      <path d="M13 6h1" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc">
+<label class="overlay sidebar-overlay" for="__navigation">
+  <div class="visually-hidden">Hide navigation sidebar</div>
+</label>
+<label class="overlay toc-overlay" for="__toc">
+  <div class="visually-hidden">Hide table of contents sidebar</div>
+</label>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <div class="visually-hidden">Toggle site navigation sidebar</div>
+        <i class="icon"><svg><use href="#svg-menu"></use></svg></i>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="../index.html"><div class="brand">🐛 LLDB</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle">
+          <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+          <svg class="theme-icon-when-auto"><use href="#svg-sun-half"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
+        <div class="visually-hidden">Toggle table of contents sidebar</div>
+        <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="../index.html">
+  
+  
+  <span class="sidebar-brand-text">🐛 LLDB</span>
+  
+</a><form class="sidebar-search-container" method="get" action="../search.html" role="search">
+  <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <p class="caption" role="heading"><span class="caption-text">Using LLDB</span></p>
+<ul class="current">
+<li class="toctree-l1 current current-page"><a class="current reference internal" href="#">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="map.html">GDB to LLDB command map</a></li>
+<li class="toctree-l1"><a class="reference internal" href="formatting.html">Frame and Thread Format</a></li>
+<li class="toctree-l1"><a class="reference internal" href="variable.html">Variable Formatting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="symbolication.html">Symbolication</a></li>
+<li class="toctree-l1"><a class="reference internal" href="symbols.html">Symbols on macOS</a></li>
+<li class="toctree-l1"><a class="reference internal" href="remote.html">Remote Debugging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="intel_pt.html">Tracing with Intel Processor Trace</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ondemand.html">On Demand Symbols</a></li>
+<li class="toctree-l1"><a class="reference internal" href="aarch64-linux.html">Using LLDB On AArch64 Linux</a></li>
+<li class="toctree-l1"><a class="reference internal" href="symbolfilejson.html">JSON Symbol File Format</a></li>
+<li class="toctree-l1"><a class="reference internal" href="mcp.html">Model Context Protocol (MCP)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="troubleshooting.html">Troubleshooting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="links.html">Links</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../man/lldb.html">Man Page</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Scripting LLDB</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="python.html">Python Scripting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="python-reference.html">Python Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../python_api.html">Python API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../python_extensions.html">Python Extensions</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Developing LLDB</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../resources/overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../resources/contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../resources/build.html">Building</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../resources/test.html">Testing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../resources/qemu-testing.html">Testing LLDB using QEMU</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../resources/debugging.html">Debugging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../resources/fuzzing.html">Fuzzing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../resources/sbapi.html">Scripting Bridge API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../resources/dataformatters.html">Data Formatters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../resources/formatterbytecode.html">Formatter Bytecode</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../resources/extensions.html">DWARF Extensions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../resources/lldbgdbremote.html">GDB Remote Protocol Extensions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../resources/lldbplatformpackets.html">LLDB Platform Packets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../resources/caveats.html">Caveats</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../resources/projects.html">Open Projects</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../resources/lldbdap.html">Contributing to LLDB-DAP</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../resources/addinglanguagesupport.html">Adding Programming Language Support</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://lldb.llvm.org/cpp_reference/namespacelldb.html">Public C++ API</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://lldb.llvm.org/cpp_reference/index.html">Private C++ API</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">External Links</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/llvm/llvm-project">Source Code</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/llvm/llvm-project/releases">Releases</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://discord.gg/xS7Z362">Join the Discord</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://discord.com/channels/636084430946959380/636732809708306432">Discord Channel</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://discourse.llvm.org/c/subprojects/lldb/8">Discussion Forums</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://llvm.org/docs/DeveloperPolicy.html">Developer Policy</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/llvm/llvm-project/issues?q=is%3Aissue+label%3Alldb+is%3Aopen">Bug Reports</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/llvm/llvm-project/pulls?q=is%3Apr+label%3Alldb+is%3Aopen">Code Reviews</a></li>
+</ul>
+
+</div>
+</div>
+
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="edit-this-page">
+  <a class="muted-link" href="https://github.com/llvm/llvm-project/edit/main/lldb/docs/use/tutorial.rst" title="Edit this page">
+    <svg aria-hidden="true" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+      <path d="M4 20h4l10.5 -10.5a1.5 1.5 0 0 0 -4 -4l-10.5 10.5v4" />
+      <line x1="13.5" y1="6.5" x2="17.5" y2="10.5" />
+    </svg>
+    <span class="visually-hidden">Edit this page</span>
+  </a>
+</div><div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle">
+              <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+              <svg class="theme-icon-when-auto"><use href="#svg-sun-half"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
+            <div class="visually-hidden">Toggle table of contents sidebar</div>
+            <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+          </label>
+        </div>
+        <article role="main">
+          <section id="tutorial">
+<h1>Tutorial<a class="headerlink" href="#tutorial" title="Link to this heading">#</a></h1>
+<p>This document describes how to use LLDB if you are already familiar with
+GDB’s command set. We will start with some details on LLDB command structure and
+syntax.</p>
+<section id="command-structure">
+<h2>Command Structure<a class="headerlink" href="#command-structure" title="Link to this heading">#</a></h2>
+<p>Unlike GDB’s quite free-form commands, LLDB’s are more structured. All commands
+are of the form:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">&lt;</span><span class="n">noun</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">verb</span><span class="o">&gt;</span> <span class="p">[</span><span class="o">-</span><span class="n">options</span> <span class="p">[</span><span class="n">option</span><span class="o">-</span><span class="n">value</span><span class="p">]]</span> <span class="p">[</span><span class="n">argument</span> <span class="p">[</span><span class="n">argument</span><span class="o">...</span><span class="p">]]</span>
+</pre></div>
+</div>
+<p>The command line parsing is done before command execution, so it is the same for
+all commands. The command syntax for basic commands is very simple.</p>
+<ul class="simple">
+<li><p>Arguments, options and option values are all white-space separated.</p></li>
+<li><p>Either single <code class="docutils literal notranslate"><span class="pre">'</span></code> or double-quotes <code class="docutils literal notranslate"><span class="pre">&quot;</span></code> (in pairs) are used to protect white-spaces
+in an argument.</p></li>
+<li><p>Escape backslashes and double quotes within arguments should be escaped
+with a backslash <code class="docutils literal notranslate"><span class="pre">\</span></code>.</p></li>
+</ul>
+<p>This makes LLDB’s commands more regular, but it also means you may have to quote
+some arguments in LLDB that you would not in GDB.</p>
+<p>There is one other special quote character in LLDB - the backtick <code class="docutils literal notranslate"><span class="pre">`</span></code>.
+If you put backticks around an argument or option value, LLDB will run the text
+of the value through the expression parser, and the result of the expression
+will be passed to the command.  So for instance, if <code class="docutils literal notranslate"><span class="pre">len</span></code> is a local
+<code class="docutils literal notranslate"><span class="pre">int</span></code> variable with the value <code class="docutils literal notranslate"><span class="pre">5</span></code>, then the command:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>(lldb) memory read -c `len` 0x12345
+</pre></div>
+</div>
+<p>Will receive the value <code class="docutils literal notranslate"><span class="pre">5</span></code> for the count option, rather than the string <code class="docutils literal notranslate"><span class="pre">len</span></code>.</p>
+<p>Options can be placed anywhere on the command line, but if the arguments begin
+with a <code class="docutils literal notranslate"><span class="pre">-</span></code> then you have to tell LLDB that you are done with options for the
+current command by adding an option termination: <code class="docutils literal notranslate"><span class="pre">--</span></code>.</p>
+<p>So for instance, if you want to launch a process and give the <code class="docutils literal notranslate"><span class="pre">process</span> <span class="pre">launch</span></code>
+command the <code class="docutils literal notranslate"><span class="pre">--stop-at-entry</span></code> option, yet you want the process you are about
+to launch to be launched with the arguments <code class="docutils literal notranslate"><span class="pre">-program_arg</span> <span class="pre">value</span></code>, you would type:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">(</span><span class="n">lldb</span><span class="p">)</span> <span class="n">process</span> <span class="n">launch</span> <span class="o">--</span><span class="n">stop</span><span class="o">-</span><span class="n">at</span><span class="o">-</span><span class="n">entry</span> <span class="o">--</span> <span class="o">-</span><span class="n">program_arg</span> <span class="n">value</span>
+</pre></div>
+</div>
+<p>We also tried to reduce the number of special purpose argument parsers, which
+sometimes forces the user to be explicit about their intentions. The first
+instance you willl see of this is the breakpoint command. In GDB, to set a
+breakpoint, you might enter:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">(</span><span class="n">gdb</span><span class="p">)</span> <span class="k">break</span> <span class="n">foo</span><span class="o">.</span><span class="n">c</span><span class="p">:</span><span class="mi">12</span>
+</pre></div>
+</div>
+<p>To break at line <code class="docutils literal notranslate"><span class="pre">12</span></code> of <code class="docutils literal notranslate"><span class="pre">foo.c</span></code>, and:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">(</span><span class="n">gdb</span><span class="p">)</span> <span class="k">break</span> <span class="n">foo</span>
+</pre></div>
+</div>
+<p>To break at the function <code class="docutils literal notranslate"><span class="pre">foo</span></code>. As time went on, the parser that tells <code class="docutils literal notranslate"><span class="pre">foo.c:12</span></code>
+from <code class="docutils literal notranslate"><span class="pre">foo</span></code> from <code class="docutils literal notranslate"><span class="pre">foo.c::foo</span></code> (which means the function <code class="docutils literal notranslate"><span class="pre">foo</span></code> in the file <code class="docutils literal notranslate"><span class="pre">foo.c</span></code>)
+got more and more complex. Especially in C++ there are times where there is
+really no way to specify the function you want to break on.</p>
+<p>The LLDB commands are more verbose but also more precise and allow for
+intelligent auto completion.</p>
+<p>To set the same file and line breakpoint in LLDB you can enter either of:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">(</span><span class="n">lldb</span><span class="p">)</span> <span class="nb">breakpoint</span> <span class="nb">set</span> <span class="o">--</span><span class="n">file</span> <span class="n">foo</span><span class="o">.</span><span class="n">c</span> <span class="o">--</span><span class="n">line</span> <span class="mi">12</span>
+<span class="p">(</span><span class="n">lldb</span><span class="p">)</span> <span class="nb">breakpoint</span> <span class="nb">set</span> <span class="o">-</span><span class="n">f</span> <span class="n">foo</span><span class="o">.</span><span class="n">c</span> <span class="o">-</span><span class="n">l</span> <span class="mi">12</span>
+</pre></div>
+</div>
+<p>To set a breakpoint on a function named <code class="docutils literal notranslate"><span class="pre">foo</span></code> in LLDB you can enter either of:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">(</span><span class="n">lldb</span><span class="p">)</span> <span class="nb">breakpoint</span> <span class="nb">set</span> <span class="o">--</span><span class="n">name</span> <span class="n">foo</span>
+<span class="p">(</span><span class="n">lldb</span><span class="p">)</span> <span class="nb">breakpoint</span> <span class="nb">set</span> <span class="o">-</span><span class="n">n</span> <span class="n">foo</span>
+</pre></div>
+</div>
+<p>You can use the <code class="docutils literal notranslate"><span class="pre">--name</span></code> option multiple times to make a breakpoint on a set of
+functions as well. This is convenient since it allows you to set common
+conditions or commands without having to specify them multiple times:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">(</span><span class="n">lldb</span><span class="p">)</span> <span class="nb">breakpoint</span> <span class="nb">set</span> <span class="o">--</span><span class="n">name</span> <span class="n">foo</span> <span class="o">--</span><span class="n">name</span> <span class="n">bar</span>
+</pre></div>
+</div>
+<p>Setting breakpoints by name is even more specialized in LLDB as you can specify
+that you want to set a breakpoint at a function by method name. To set a
+breakpoint on all C++ methods named <code class="docutils literal notranslate"><span class="pre">foo</span></code> you can enter either of:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">(</span><span class="n">lldb</span><span class="p">)</span> <span class="nb">breakpoint</span> <span class="nb">set</span> <span class="o">--</span><span class="n">method</span> <span class="n">foo</span>
+<span class="p">(</span><span class="n">lldb</span><span class="p">)</span> <span class="nb">breakpoint</span> <span class="nb">set</span> <span class="o">-</span><span class="n">M</span> <span class="n">foo</span>
+</pre></div>
+</div>
+<p>To set a breakpoint Objective-C selectors named <code class="docutils literal notranslate"><span class="pre">alignLeftEdges:</span></code> you can enter either of:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">(</span><span class="n">lldb</span><span class="p">)</span> <span class="nb">breakpoint</span> <span class="nb">set</span> <span class="o">--</span><span class="n">selector</span> <span class="n">alignLeftEdges</span><span class="p">:</span>
+<span class="p">(</span><span class="n">lldb</span><span class="p">)</span> <span class="nb">breakpoint</span> <span class="nb">set</span> <span class="o">-</span><span class="n">S</span> <span class="n">alignLeftEdges</span><span class="p">:</span>
+</pre></div>
+</div>
+<p>You can limit any breakpoints to a specific executable image by using the
+<code class="docutils literal notranslate"><span class="pre">--shlib</span> <span class="pre">&lt;path&gt;</span></code> (<code class="docutils literal notranslate"><span class="pre">-s</span> <span class="pre">&lt;path&gt;</span></code> for short):</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">(</span><span class="n">lldb</span><span class="p">)</span> <span class="nb">breakpoint</span> <span class="nb">set</span> <span class="o">--</span><span class="n">shlib</span> <span class="n">foo</span><span class="o">.</span><span class="n">dylib</span> <span class="o">--</span><span class="n">name</span> <span class="n">foo</span>
+<span class="p">(</span><span class="n">lldb</span><span class="p">)</span> <span class="nb">breakpoint</span> <span class="nb">set</span> <span class="o">-</span><span class="n">s</span> <span class="n">foo</span><span class="o">.</span><span class="n">dylib</span> <span class="o">-</span><span class="n">n</span> <span class="n">foo</span>
+</pre></div>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">--shlib</span></code> option can also be repeated to specify several shared libraries.</p>
+<p>Suggestions on more interesting primitives of this sort are also very welcome.</p>
+<p>Just like GDB, the LLDB command interpreter does a shortest unique string match
+on command names, so the following two commands will both execute the same
+command:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">(</span><span class="n">lldb</span><span class="p">)</span> <span class="nb">breakpoint</span> <span class="nb">set</span> <span class="o">-</span><span class="n">n</span> <span class="s2">&quot;-[SKTGraphicView alignLeftEdges:]&quot;</span>
+<span class="p">(</span><span class="n">lldb</span><span class="p">)</span> <span class="n">br</span> <span class="n">s</span> <span class="o">-</span><span class="n">n</span> <span class="s2">&quot;-[SKTGraphicView alignLeftEdges:]&quot;</span>
+</pre></div>
+</div>
+<p>LLDB also supports command completion for source file names, symbol names, file
+names, etc. Completion is initiated by hitting TAB. Individual options in a
+command can have different completers, so for instance, the <code class="docutils literal notranslate"><span class="pre">--file</span> <span class="pre">&lt;path&gt;</span></code>
+option in <code class="docutils literal notranslate"><span class="pre">breakpoint</span></code> completes to source files, the <code class="docutils literal notranslate"><span class="pre">--shlib</span> <span class="pre">&lt;path&gt;</span></code> option
+to currently loaded shared libraries, etc. You can even do things like if you
+specify <code class="docutils literal notranslate"><span class="pre">--shlib</span> <span class="pre">&lt;path&gt;</span></code>, and are completing on <code class="docutils literal notranslate"><span class="pre">--file</span> <span class="pre">&lt;path&gt;</span></code>, LLDB will only
+list source files in the shared library specified by <code class="docutils literal notranslate"><span class="pre">--shlib</span> <span class="pre">&lt;path&gt;</span></code>.</p>
+<p>The individual commands are pretty extensively documented. You can use the <code class="docutils literal notranslate"><span class="pre">help</span></code>
+command to get an overview of which commands are available or to obtain details
+about specific commands. There is also an <code class="docutils literal notranslate"><span class="pre">apropos</span></code> command that will search the
+help text for all commands for a particular word and dump a summary help string
+for each matching command.</p>
+<p>Finally, there is a mechanism to construct aliases for commonly used commands.
+For instance, if you get annoyed typing:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">(</span><span class="n">lldb</span><span class="p">)</span> <span class="nb">breakpoint</span> <span class="nb">set</span> <span class="o">--</span><span class="n">file</span> <span class="n">foo</span><span class="o">.</span><span class="n">c</span> <span class="o">--</span><span class="n">line</span> <span class="mi">12</span>
+</pre></div>
+</div>
+<p>You can do:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">(</span><span class="n">lldb</span><span class="p">)</span> <span class="n">command</span> <span class="n">alias</span> <span class="n">bfl</span> <span class="nb">breakpoint</span> <span class="nb">set</span> <span class="o">-</span><span class="n">f</span> <span class="o">%</span><span class="mi">1</span> <span class="o">-</span><span class="n">l</span> <span class="o">%</span><span class="mi">2</span>
+<span class="p">(</span><span class="n">lldb</span><span class="p">)</span> <span class="n">bfl</span> <span class="n">foo</span><span class="o">.</span><span class="n">c</span> <span class="mi">12</span>
+</pre></div>
+</div>
+<p>LLDB has a few aliases for commonly used commands (e.g. <code class="docutils literal notranslate"><span class="pre">step</span></code>, <code class="docutils literal notranslate"><span class="pre">next</span></code> and
+<code class="docutils literal notranslate"><span class="pre">continue</span></code>) but it does not try to be exhaustive because in our experience it
+is more convenient to make the basic commands unique down to a letter or two,
+and then learn these sequences than to fill the namespace with lots of aliases,
+and then have to type them all the way out.</p>
+<p>If the alias abbreviation or the full alias command collides with another
+existing command, the command resolver will prefer to use the alias over any
+other command as far as there is only one alias command match.</p>
+<p>However, users are free to customize LLDB’s command set however they like, and
+since LLDB reads the file <code class="docutils literal notranslate"><span class="pre">~/.lldbinit</span></code> at startup, you can store all your
+aliases there and they will be generally available to you. Your aliases are
+also documented in the <code class="docutils literal notranslate"><span class="pre">help</span></code> command so you can remind yourself of what you have
+set up.</p>
+<p>One alias of note that LLDB does include by popular demand is a weak emulator of
+GDB’s <code class="docutils literal notranslate"><span class="pre">break</span></code> command. It does not try to do everything that GDB’s break command
+does (for instance, it does not handle <code class="docutils literal notranslate"><span class="pre">foo.c::bar</span></code>). But it mostly works, and
+makes the transition easier. Also, by popular demand, it is aliased to <code class="docutils literal notranslate"><span class="pre">b</span></code>. If you
+actually want to learn the LLDB command set natively, that means it will get in
+the way of the rest of the breakpoint commands. Fortunately, if you do not like
+one of our aliases, you can easily get rid of it by running, for example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">(</span><span class="n">lldb</span><span class="p">)</span> <span class="n">command</span> <span class="n">unalias</span> <span class="n">b</span>
+</pre></div>
+</div>
+<p>You can also do:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">(</span><span class="n">lldb</span><span class="p">)</span> <span class="n">command</span> <span class="n">alias</span> <span class="n">b</span> <span class="nb">breakpoint</span>
+</pre></div>
+</div>
+<p>So you can run the native LLDB breakpoint command with just <code class="docutils literal notranslate"><span class="pre">b</span></code>.</p>
+<p>The LLDB command parser also supports “raw” commands, where, after command
+options are stripped off, the rest of the command string is passed
+uninterpreted to the command. This is convenient for commands whose arguments
+might be some complex expression that would be painful to backslash protect.
+For instance, the <code class="docutils literal notranslate"><span class="pre">expression</span></code> command is a “raw” command for obvious reasons.
+The <code class="docutils literal notranslate"><span class="pre">help</span></code> output for a command will tell you if it is “raw” or not, so you
+know what to expect. The one thing you have to watch out for is that since raw
+commands still can have options, if your command string has dashes in it,
+you will have to indicate these are not option markers by putting <code class="docutils literal notranslate"><span class="pre">--</span></code> after the
+command name, but before your command string.</p>
+<p>LLDB also has a built-in Python interpreter, which is accessible by the
+<code class="docutils literal notranslate"><span class="pre">script</span></code> command. All the functionality of the debugger is available as classes
+in the Python interpreter, so the more complex commands that in GDB you would
+introduce with the <code class="docutils literal notranslate"><span class="pre">define</span></code> command can be done by writing Python functions
+using the LLDB Python library, then loading the scripts into your running
+session and accessing them with the <code class="docutils literal notranslate"><span class="pre">script</span></code> command.</p>
+</section>
+<section id="loading-a-program-into-lldb">
+<h2>Loading a Program Into LLDB<a class="headerlink" href="#loading-a-program-into-lldb" title="Link to this heading">#</a></h2>
+<p>First you need to set the program to debug. As with GDB, you can start LLDB and
+specify the file you wish to debug on the command line:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ lldb /Projects/Sketch/build/Debug/Sketch.app
+Current executable set to &#39;/Projects/Sketch/build/Debug/Sketch.app&#39; (x86_64).
+</pre></div>
+</div>
+<p>Or you can specify it after the fact with the <code class="docutils literal notranslate"><span class="pre">file</span></code> command:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ lldb
+(lldb) file /Projects/Sketch/build/Debug/Sketch.app
+Current executable set to &#39;/Projects/Sketch/build/Debug/Sketch.app&#39; (x86_64).
+</pre></div>
+</div>
+</section>
+<section id="setting-breakpoints">
+<h2>Setting Breakpoints<a class="headerlink" href="#setting-breakpoints" title="Link to this heading">#</a></h2>
+<p>We have discussed how to set breakpoints above. You can use <code class="docutils literal notranslate"><span class="pre">help</span> <span class="pre">breakpoint</span> <span class="pre">set</span></code>
+to see all the options for breakpoint setting. For instance, you could do:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">(</span><span class="n">lldb</span><span class="p">)</span> <span class="nb">breakpoint</span> <span class="nb">set</span> <span class="o">--</span><span class="n">selector</span> <span class="n">alignLeftEdges</span><span class="p">:</span>
+<span class="n">Breakpoint</span> <span class="n">created</span><span class="p">:</span> <span class="mi">1</span><span class="p">:</span> <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;alignLeftEdges:&#39;</span><span class="p">,</span> <span class="n">locations</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="n">resolved</span> <span class="o">=</span> <span class="mi">1</span>
+</pre></div>
+</div>
+<p>You can find out about the breakpoints you have set with:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>(lldb) breakpoint list
+Current breakpoints:
+1: name = &#39;alignLeftEdges:&#39;, locations = 1, resolved = 1
+1.1: where = Sketch`-[SKTGraphicView alignLeftEdges:] + 33 at /Projects/Sketch/SKTGraphicView.m:1405, address = 0x0000000100010d5b, resolved, hit count = 0
+</pre></div>
+</div>
+<p>Note that setting a breakpoint creates a logical breakpoint, which could
+resolve to one or more locations. For instance, break by selector would set a
+breakpoint on all the methods that implement that selector in the classes in
+your program. Similarly, a file and line breakpoint might result in multiple
+locations if that file and line were inlined in different places in your code.</p>
+<p>The logical breakpoint has an integer id, and its locations have an id within
+their parent breakpoint (the two are joined by a <code class="docutils literal notranslate"><span class="pre">.</span></code>, e.g. <code class="docutils literal notranslate"><span class="pre">1.1</span></code> in the example
+above).</p>
+<p>Also logical breakpoints remain live so that if another shared library were
+to be loaded that had another implementation of the <code class="docutils literal notranslate"><span class="pre">alignLeftEdges:</span></code> selector,
+the new location would be added to breakpoint <code class="docutils literal notranslate"><span class="pre">1</span></code> (e.g. a <code class="docutils literal notranslate"><span class="pre">1.2</span></code> breakpoint would
+be set on the newly loaded selector).</p>
+<p>The other piece of information in the breakpoint listing is whether the
+breakpoint location was resolved or not. A location gets resolved when the file
+address it corresponds to gets loaded into the program you are debugging. For
+instance if you set a breakpoint in a shared library that then gets unloaded,
+that breakpoint location will remain, but it will no longer be resolved.</p>
+<p>One other thing to note for GDB users is that LLDB acts like GDB with:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">(</span><span class="n">gdb</span><span class="p">)</span> <span class="nb">set</span> <span class="nb">breakpoint</span> <span class="n">pending</span> <span class="n">on</span>
+</pre></div>
+</div>
+<p>Which means that LLDB will always make a breakpoint from your specification, even if it
+could not find any locations that match the specification. You can tell whether
+the expression was resolved or not by checking the locations field in
+<code class="docutils literal notranslate"><span class="pre">breakpoint</span> <span class="pre">list</span></code>, and LLDB reports the breakpoint as <code class="docutils literal notranslate"><span class="pre">pending</span></code> when you set it so
+you can tell you have made a typo more easily, if that was indeed the reason no
+locations were found:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">(</span><span class="n">lldb</span><span class="p">)</span> <span class="nb">breakpoint</span> <span class="nb">set</span> <span class="o">--</span><span class="n">file</span> <span class="n">foo</span><span class="o">.</span><span class="n">c</span> <span class="o">--</span><span class="n">line</span> <span class="mi">12</span>
+<span class="n">Breakpoint</span> <span class="n">created</span><span class="p">:</span> <span class="mi">2</span><span class="p">:</span> <span class="n">file</span> <span class="o">=</span><span class="s1">&#39;foo.c&#39;</span><span class="p">,</span> <span class="n">line</span> <span class="o">=</span> <span class="mi">12</span><span class="p">,</span> <span class="n">locations</span> <span class="o">=</span> <span class="mi">0</span> <span class="p">(</span><span class="n">pending</span><span class="p">)</span>
+<span class="n">WARNING</span><span class="p">:</span> <span class="n">Unable</span> <span class="n">to</span> <span class="n">resolve</span> <span class="nb">breakpoint</span> <span class="n">to</span> <span class="nb">any</span> <span class="n">actual</span> <span class="n">locations</span><span class="o">.</span>
+</pre></div>
+</div>
+<p>You can delete, disable, set conditions and ignore counts either on all the
+locations generated by your logical breakpoint, or on any one of the particular
+locations your specification resolved to. For instance, if you wanted to add a
+command to print a backtrace when you hit this breakpoint you could do:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">(</span><span class="n">lldb</span><span class="p">)</span> <span class="nb">breakpoint</span> <span class="n">command</span> <span class="n">add</span> <span class="mf">1.1</span>
+<span class="n">Enter</span> <span class="n">your</span> <span class="n">debugger</span> <span class="n">command</span><span class="p">(</span><span class="n">s</span><span class="p">)</span><span class="o">.</span> <span class="n">Type</span> <span class="s1">&#39;DONE&#39;</span> <span class="n">to</span> <span class="n">end</span><span class="o">.</span>
+<span class="o">&gt;</span> <span class="n">bt</span>
+<span class="o">&gt;</span> <span class="n">DONE</span>
+</pre></div>
+</div>
+<p>By default, the breakpoint command add command takes LLDB command line
+commands. You can also specify this explicitly by passing the <code class="docutils literal notranslate"><span class="pre">--command</span></code>
+option. Use <code class="docutils literal notranslate"><span class="pre">--script</span></code> if you want to implement your breakpoint command using
+the Python script instead.</p>
+<p>This is a convenient point to bring up another feature of the LLDB command
+<code class="docutils literal notranslate"><span class="pre">help</span></code>. Do:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">(</span><span class="n">lldb</span><span class="p">)</span> <span class="n">help</span> <span class="k">break</span> <span class="n">command</span> <span class="n">add</span>
+<span class="n">Add</span> <span class="n">a</span> <span class="nb">set</span> <span class="n">of</span> <span class="n">commands</span> <span class="n">to</span> <span class="n">a</span> <span class="nb">breakpoint</span><span class="p">,</span> <span class="n">to</span> <span class="n">be</span> <span class="n">executed</span> <span class="n">whenever</span> <span class="n">the</span> <span class="nb">breakpoint</span> <span class="ow">is</span> <span class="n">hit</span><span class="o">.</span>
+
+<span class="n">Syntax</span><span class="p">:</span> <span class="nb">breakpoint</span> <span class="n">command</span> <span class="n">add</span> <span class="o">&lt;</span><span class="n">cmd</span><span class="o">-</span><span class="n">options</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">breakpt</span><span class="o">-</span><span class="nb">id</span><span class="o">&gt;</span>
+<span class="n">etc</span><span class="o">...</span>
+</pre></div>
+</div>
+<p>When you see arguments to commands specified in the <code class="docutils literal notranslate"><span class="pre">Syntax</span></code> section in angle brackets
+like <code class="docutils literal notranslate"><span class="pre">&lt;breakpt-id&gt;</span></code>, that indicates that that is some common argument type that
+you can get further help on from the command system. So in this case you could
+do:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">(</span><span class="n">lldb</span><span class="p">)</span> <span class="n">help</span> <span class="o">&lt;</span><span class="n">breakpt</span><span class="o">-</span><span class="nb">id</span><span class="o">&gt;</span>
+<span class="o">&lt;</span><span class="n">breakpt</span><span class="o">-</span><span class="nb">id</span><span class="o">&gt;</span> <span class="o">--</span> <span class="n">Breakpoint</span> <span class="n">ID</span><span class="s1">&#39;s consist major and minor numbers; the major etc...</span>
+</pre></div>
+</div>
+</section>
+<section id="breakpoint-names">
+<h2>Breakpoint Names<a class="headerlink" href="#breakpoint-names" title="Link to this heading">#</a></h2>
+<p>Breakpoints carry two orthogonal sets of information: one specifies where to set
+the breakpoint, and the other how to react when the breakpoint is hit. The latter
+set of information (e.g. commands, conditions, hit-count, auto-continue…) we
+call breakpoint options.</p>
+<p>It is fairly common to want to apply one set of options to a number of breakpoints.
+For instance, you might want to check that <code class="docutils literal notranslate"><span class="pre">self</span> <span class="pre">==</span> <span class="pre">nil</span></code> and if it is, print a
+backtrace and continue, on a number of methods. One convenient way to do that would
+be to make all the breakpoints, then configure the options with:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">(</span><span class="n">lldb</span><span class="p">)</span> <span class="nb">breakpoint</span> <span class="n">modify</span> <span class="o">-</span><span class="n">c</span> <span class="s2">&quot;self == nil&quot;</span> <span class="o">-</span><span class="n">C</span> <span class="n">bt</span> <span class="o">--</span><span class="n">auto</span><span class="o">-</span><span class="k">continue</span> <span class="mi">1</span> <span class="mi">2</span> <span class="mi">3</span>
+</pre></div>
+</div>
+<p>That is not too bad, but you have to repeat this for every new breakpoint you make,
+and if you wanted to change the options, you have to remember all the ones you are
+using this way.</p>
+<p>Breakpoint names provide a convenient solution to this problem. The simple solution
+would be to use the name to gather the breakpoints you want to affect this way into
+a group. So when you make the breakpoint you would do:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">(</span><span class="n">lldb</span><span class="p">)</span> <span class="nb">breakpoint</span> <span class="nb">set</span> <span class="o">-</span><span class="n">N</span> <span class="n">SelfNil</span>
+</pre></div>
+</div>
+<p>Then when you have made all your breakpoints, you can set up or modify the options
+using the name to collect all the relevant breakpoints.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">(</span><span class="n">lldb</span><span class="p">)</span> <span class="nb">breakpoint</span> <span class="n">modify</span> <span class="o">-</span><span class="n">c</span> <span class="s2">&quot;self == nil&quot;</span> <span class="o">-</span><span class="n">C</span> <span class="n">bt</span> <span class="o">--</span><span class="n">auto</span><span class="o">-</span><span class="k">continue</span> <span class="n">SelfNil</span>
+</pre></div>
+</div>
+<p>That is better, but suffers from the problem that when new breakpoints get
+added, they do not pick up these modifications, and the options only exist in
+the context of actual breakpoints, so they are hard to store and reuse.</p>
+<p>An even better solution is to make a fully configured breakpoint name:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">(</span><span class="n">lldb</span><span class="p">)</span> <span class="nb">breakpoint</span> <span class="n">name</span> <span class="n">configure</span> <span class="o">-</span><span class="n">c</span> <span class="s2">&quot;self == nil&quot;</span> <span class="o">-</span><span class="n">C</span> <span class="n">bt</span> <span class="o">--</span><span class="n">auto</span><span class="o">-</span><span class="k">continue</span> <span class="n">SelfNil</span>
+</pre></div>
+</div>
+<p>Then you can apply the name to your breakpoints, and they will all pick up
+these options. The connection from name to breakpoints remains live, so when
+you change the options configured on the name, all the breakpoints pick up
+those changes. This makes it easy to use configured names to experiment with
+your options.</p>
+<p>You can make breakpoint names in your <code class="docutils literal notranslate"><span class="pre">.lldbinit</span></code> file, so you can use them to
+can behaviors that you have found useful and reapply them in future sessions.</p>
+<p>You can also make a breakpoint name from the options set on a breakpoint:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">(</span><span class="n">lldb</span><span class="p">)</span> <span class="nb">breakpoint</span> <span class="n">name</span> <span class="n">configure</span> <span class="o">-</span><span class="n">B</span> <span class="mi">1</span> <span class="n">SelfNil</span>
+</pre></div>
+</div>
+<p>which makes it easy to copy behavior from one breakpoint to a set of others.</p>
+</section>
+<section id="setting-watchpoints">
+<h2>Setting Watchpoints<a class="headerlink" href="#setting-watchpoints" title="Link to this heading">#</a></h2>
+<p>In addition to breakpoints, you can use help watchpoint to see all the commands
+for watchpoint manipulations. For instance, you might do the following to watch
+a variable called <code class="docutils literal notranslate"><span class="pre">global</span></code> for write operation, but only stop if the condition
+<code class="docutils literal notranslate"><span class="pre">(global==5)</span></code> is true:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">(</span><span class="n">lldb</span><span class="p">)</span> <span class="n">watch</span> <span class="nb">set</span> <span class="n">var</span> <span class="k">global</span>
+<span class="n">Watchpoint</span> <span class="n">created</span><span class="p">:</span> <span class="n">Watchpoint</span> <span class="mi">1</span><span class="p">:</span> <span class="n">addr</span> <span class="o">=</span> <span class="mh">0x100001018</span> <span class="n">size</span> <span class="o">=</span> <span class="mi">4</span> <span class="n">state</span> <span class="o">=</span> <span class="n">enabled</span> <span class="nb">type</span> <span class="o">=</span> <span class="n">w</span>
+   <span class="n">declare</span> <span class="o">@</span> <span class="s1">&#39;/Volumes/data/lldb/svn/ToT/test/functionalities/watchpoint/watchpoint_commands/condition/main.cpp:12&#39;</span>
+<span class="p">(</span><span class="n">lldb</span><span class="p">)</span> <span class="n">watch</span> <span class="n">modify</span> <span class="o">-</span><span class="n">c</span> <span class="s1">&#39;(global==5)&#39;</span>
+<span class="p">(</span><span class="n">lldb</span><span class="p">)</span> <span class="n">watch</span> <span class="nb">list</span>
+<span class="n">Current</span> <span class="n">watchpoints</span><span class="p">:</span>
+<span class="n">Watchpoint</span> <span class="mi">1</span><span class="p">:</span> <span class="n">addr</span> <span class="o">=</span> <span class="mh">0x100001018</span> <span class="n">size</span> <span class="o">=</span> <span class="mi">4</span> <span class="n">state</span> <span class="o">=</span> <span class="n">enabled</span> <span class="nb">type</span> <span class="o">=</span> <span class="n">w</span>
+   <span class="n">declare</span> <span class="o">@</span> <span class="s1">&#39;/Volumes/data/lldb/svn/ToT/test/functionalities/watchpoint/watchpoint_commands/condition/main.cpp:12&#39;</span>
+   <span class="n">condition</span> <span class="o">=</span> <span class="s1">&#39;(global==5)&#39;</span>
+<span class="p">(</span><span class="n">lldb</span><span class="p">)</span> <span class="n">c</span>
+<span class="n">Process</span> <span class="mi">15562</span> <span class="n">resuming</span>
+<span class="p">(</span><span class="n">lldb</span><span class="p">)</span> <span class="n">about</span> <span class="n">to</span> <span class="n">write</span> <span class="n">to</span> <span class="s1">&#39;global&#39;</span><span class="o">...</span>
+<span class="n">Process</span> <span class="mi">15562</span> <span class="n">stopped</span> <span class="ow">and</span> <span class="n">was</span> <span class="n">programmatically</span> <span class="n">restarted</span><span class="o">.</span>
+<span class="n">Process</span> <span class="mi">15562</span> <span class="n">stopped</span> <span class="ow">and</span> <span class="n">was</span> <span class="n">programmatically</span> <span class="n">restarted</span><span class="o">.</span>
+<span class="n">Process</span> <span class="mi">15562</span> <span class="n">stopped</span> <span class="ow">and</span> <span class="n">was</span> <span class="n">programmatically</span> <span class="n">restarted</span><span class="o">.</span>
+<span class="n">Process</span> <span class="mi">15562</span> <span class="n">stopped</span> <span class="ow">and</span> <span class="n">was</span> <span class="n">programmatically</span> <span class="n">restarted</span><span class="o">.</span>
+<span class="n">Process</span> <span class="mi">15562</span> <span class="n">stopped</span>
+<span class="o">*</span> <span class="n">thread</span> <span class="c1">#1: tid = 0x1c03, 0x0000000100000ef5 a.out`modify + 21 at main.cpp:16, stop reason = watchpoint 1</span>
+   <span class="n">frame</span> <span class="c1">#0: 0x0000000100000ef5 a.out`modify + 21 at main.cpp:16</span>
+   <span class="mi">13</span>
+   <span class="mi">14</span>        <span class="n">static</span> <span class="n">void</span> <span class="n">modify</span><span class="p">(</span><span class="n">int32_t</span> <span class="o">&amp;</span><span class="n">var</span><span class="p">)</span> <span class="p">{</span>
+   <span class="mi">15</span>            <span class="o">++</span><span class="n">var</span><span class="p">;</span>
+<span class="o">-&gt;</span> <span class="mi">16</span>        <span class="p">}</span>
+   <span class="mi">17</span>
+   <span class="mi">18</span>        <span class="nb">int</span> <span class="n">main</span><span class="p">(</span><span class="nb">int</span> <span class="n">argc</span><span class="p">,</span> <span class="n">char</span><span class="o">**</span> <span class="n">argv</span><span class="p">)</span> <span class="p">{</span>
+   <span class="mi">19</span>            <span class="nb">int</span> <span class="n">local</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">(</span><span class="n">lldb</span><span class="p">)</span> <span class="n">bt</span>
+<span class="o">*</span> <span class="n">thread</span> <span class="c1">#1: tid = 0x1c03, 0x0000000100000ef5 a.out`modify + 21 at main.cpp:16, stop reason = watchpoint 1</span>
+   <span class="n">frame</span> <span class="c1">#0: 0x0000000100000ef5 a.out`modify + 21 at main.cpp:16</span>
+   <span class="n">frame</span> <span class="c1">#1: 0x0000000100000eac a.out`main + 108 at main.cpp:25</span>
+   <span class="n">frame</span> <span class="c1">#2: 0x00007fff8ac9c7e1 libdyld.dylib`start + 1</span>
+<span class="p">(</span><span class="n">lldb</span><span class="p">)</span> <span class="n">frame</span> <span class="n">var</span> <span class="k">global</span>
+<span class="p">(</span><span class="n">int32_t</span><span class="p">)</span> <span class="k">global</span> <span class="o">=</span> <span class="mi">5</span>
+<span class="p">(</span><span class="n">lldb</span><span class="p">)</span> <span class="n">watch</span> <span class="nb">list</span> <span class="o">-</span><span class="n">v</span>
+<span class="n">Current</span> <span class="n">watchpoints</span><span class="p">:</span>
+<span class="n">Watchpoint</span> <span class="mi">1</span><span class="p">:</span> <span class="n">addr</span> <span class="o">=</span> <span class="mh">0x100001018</span> <span class="n">size</span> <span class="o">=</span> <span class="mi">4</span> <span class="n">state</span> <span class="o">=</span> <span class="n">enabled</span> <span class="nb">type</span> <span class="o">=</span> <span class="n">w</span>
+   <span class="n">declare</span> <span class="o">@</span> <span class="s1">&#39;/Volumes/data/lldb/svn/ToT/test/functionalities/watchpoint/watchpoint_commands/condition/main.cpp:12&#39;</span>
+   <span class="n">condition</span> <span class="o">=</span> <span class="s1">&#39;(global==5)&#39;</span>
+   <span class="n">hit_count</span> <span class="o">=</span> <span class="mi">5</span>     <span class="n">ignore_count</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="p">(</span><span class="n">lldb</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="starting-or-attaching-to-your-program">
+<h2>Starting or Attaching to Your Program<a class="headerlink" href="#starting-or-attaching-to-your-program" title="Link to this heading">#</a></h2>
+<p>To launch a program in LLDB you will use the <code class="docutils literal notranslate"><span class="pre">process</span> <span class="pre">launch</span></code> command or one of
+its built in aliases:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">(</span><span class="n">lldb</span><span class="p">)</span> <span class="n">process</span> <span class="n">launch</span>
+<span class="p">(</span><span class="n">lldb</span><span class="p">)</span> <span class="n">run</span>
+<span class="p">(</span><span class="n">lldb</span><span class="p">)</span> <span class="n">r</span>
+</pre></div>
+</div>
+<p>You can also attach to a process by process ID or process name. When attaching
+to a process by name, LLDB also supports the <code class="docutils literal notranslate"><span class="pre">--waitfor</span></code> option which waits for
+the next process that has that name to show up, and attaches to it</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">(</span><span class="n">lldb</span><span class="p">)</span> <span class="n">process</span> <span class="n">attach</span> <span class="o">--</span><span class="n">pid</span> <span class="mi">123</span>
+<span class="p">(</span><span class="n">lldb</span><span class="p">)</span> <span class="n">process</span> <span class="n">attach</span> <span class="o">--</span><span class="n">name</span> <span class="n">Sketch</span>
+<span class="p">(</span><span class="n">lldb</span><span class="p">)</span> <span class="n">process</span> <span class="n">attach</span> <span class="o">--</span><span class="n">name</span> <span class="n">Sketch</span> <span class="o">--</span><span class="n">waitfor</span>
+</pre></div>
+</div>
+<p>After you launch or attach to a process, your process might stop somewhere:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">(</span><span class="n">lldb</span><span class="p">)</span> <span class="n">process</span> <span class="n">attach</span> <span class="o">-</span><span class="n">p</span> <span class="mi">12345</span>
+<span class="n">Process</span> <span class="mi">46915</span> <span class="n">Attaching</span>
+<span class="n">Process</span> <span class="mi">46915</span> <span class="n">Stopped</span>
+<span class="mi">1</span> <span class="n">of</span> <span class="mi">3</span> <span class="n">threads</span> <span class="n">stopped</span> <span class="k">with</span> <span class="n">reasons</span><span class="p">:</span>
+<span class="o">*</span> <span class="n">thread</span> <span class="c1">#1: tid = 0x2c03, 0x00007fff85cac76a, where = libSystem.B.dylib`__getdirentries64 + 10, stop reason = signal = SIGSTOP, queue = com.apple.main-thread</span>
+</pre></div>
+</div>
+<p>Note the line that says <code class="docutils literal notranslate"><span class="pre">1</span> <span class="pre">of</span> <span class="pre">3</span> <span class="pre">threads</span> <span class="pre">stopped</span> <span class="pre">with</span> <span class="pre">reasons:</span></code> and the lines
+that follow it. In a multi-threaded environment it is very common for more than
+one thread to hit your breakpoint(s) before the kernel actually returns control
+to the debugger. In that case, you will see all the threads that stopped for
+some interesting reason listed in the stop message.</p>
+</section>
+<section id="controlling-your-program">
+<h2>Controlling Your Program<a class="headerlink" href="#controlling-your-program" title="Link to this heading">#</a></h2>
+<p>After launching, you can continue until you hit your breakpoint. The primitive commands
+for process control all exist under the “thread” command:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">(</span><span class="n">lldb</span><span class="p">)</span> <span class="n">thread</span> <span class="k">continue</span>
+<span class="n">Resuming</span> <span class="n">thread</span> <span class="mh">0x2c03</span> <span class="ow">in</span> <span class="n">process</span> <span class="mi">46915</span>
+<span class="n">Resuming</span> <span class="n">process</span> <span class="mi">46915</span>
+<span class="p">(</span><span class="n">lldb</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>At present you can only operate on one thread at a time, but the design will
+ultimately support saying “step over the function in Thread 1, and step into the
+function in Thread 2, and continue Thread 3” etc. When LLDB eventually supports
+keeping some threads running while others are stopped this will be particularly
+important. For convenience, however, all the stepping commands have easy aliases.
+So <code class="docutils literal notranslate"><span class="pre">thread</span> <span class="pre">continue</span></code> is just <code class="docutils literal notranslate"><span class="pre">c</span></code>, etc.</p>
+<p>The other program stepping commands are pretty much the same as in GDB. You have got:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">(</span><span class="n">lldb</span><span class="p">)</span> <span class="n">thread</span> <span class="n">step</span><span class="o">-</span><span class="ow">in</span>    <span class="o">//</span> <span class="n">The</span> <span class="n">same</span> <span class="k">as</span> <span class="n">GDB</span><span class="s1">&#39;s &quot;step&quot; or &quot;s&quot;</span>
+<span class="p">(</span><span class="n">lldb</span><span class="p">)</span> <span class="n">thread</span> <span class="n">step</span><span class="o">-</span><span class="n">over</span>  <span class="o">//</span> <span class="n">The</span> <span class="n">same</span> <span class="k">as</span> <span class="n">GDB</span><span class="s1">&#39;s &quot;next&quot; or &quot;n&quot;</span>
+<span class="p">(</span><span class="n">lldb</span><span class="p">)</span> <span class="n">thread</span> <span class="n">step</span><span class="o">-</span><span class="n">out</span>   <span class="o">//</span> <span class="n">The</span> <span class="n">same</span> <span class="k">as</span> <span class="n">GDB</span><span class="s1">&#39;s &quot;finish&quot; or &quot;f&quot;</span>
+</pre></div>
+</div>
+<p>By default, LLDB does defined aliases to all common GDB process control commands
+(<code class="docutils literal notranslate"><span class="pre">s</span></code>, <code class="docutils literal notranslate"><span class="pre">step</span></code>, <code class="docutils literal notranslate"><span class="pre">n</span></code>, <code class="docutils literal notranslate"><span class="pre">next</span></code>, <code class="docutils literal notranslate"><span class="pre">finish</span></code>). If LLDB is missing any, please add
+them to your <code class="docutils literal notranslate"><span class="pre">~/.lldbinit</span></code> file using the <code class="docutils literal notranslate"><span class="pre">command</span> <span class="pre">alias</span></code> command.</p>
+<p>LLDB also supports the step by instruction versions:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">(</span><span class="n">lldb</span><span class="p">)</span> <span class="n">thread</span> <span class="n">step</span><span class="o">-</span><span class="n">inst</span>       <span class="o">//</span> <span class="n">The</span> <span class="n">same</span> <span class="k">as</span> <span class="n">GDB</span><span class="s1">&#39;s &quot;stepi&quot; / &quot;si&quot;</span>
+<span class="p">(</span><span class="n">lldb</span><span class="p">)</span> <span class="n">thread</span> <span class="n">step</span><span class="o">-</span><span class="n">over</span><span class="o">-</span><span class="n">inst</span>  <span class="o">//</span> <span class="n">The</span> <span class="n">same</span> <span class="k">as</span> <span class="n">GDB</span><span class="s1">&#39;s &quot;nexti&quot; / &quot;ni&quot;</span>
+</pre></div>
+</div>
+<p>Finally, LLDB has a run until line or frame exit stepping mode:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">(</span><span class="n">lldb</span><span class="p">)</span> <span class="n">thread</span> <span class="n">until</span> <span class="mi">100</span>
+</pre></div>
+</div>
+<p>This command will run the thread in the current frame until it reaches line 100
+in this frame or stops if it leaves the current frame. This is a pretty close
+equivalent to GDB’s <code class="docutils literal notranslate"><span class="pre">until</span></code> command.</p>
+<p>One other useful thing to note about the lldb stepping commands is that they
+are implemented as a stack of interruptible operations.  Until the operation -
+e.g. step to the next line - is completed, it will remain on the
+stack.  If the step over is interrupted and control returned to you,
+any new stepping commands you issue won’t replace the step-over, but instead
+their operations will be pushed onto the stack after the original step over.
+Then each of them will be retired as they are completed, finally returning to the
+original step over operation.</p>
+<p>Suppose, for instance, you <code class="docutils literal notranslate"><span class="pre">step-over</span></code> a source line with a function call.
+If there is a breakpoint in that function, hitting the breakpoint will interrupt
+the step over.  At that point, you will likely want to examine the state at
+the breakpoint, maybe stepping around in that frame, or stepping into other
+functions, running some expressions, etc.</p>
+<p>Because the original step-over has remained on the stack, when you’ve finished
+your examinations, a simple <code class="docutils literal notranslate"><span class="pre">continue</span></code> will resume the original <code class="docutils literal notranslate"><span class="pre">step-over</span></code>
+operation, and you will arrive at the end of your starting source line in the
+original frame.</p>
+<p>This saves you from having to keep track of your original intention, and manually
+issuing the requisite number of <code class="docutils literal notranslate"><span class="pre">step-out</span></code> commands to get back to the frame
+you were stepping over.  The stack maintains that information for you.</p>
+<p>Hand-called functions using the <code class="docutils literal notranslate"><span class="pre">expr</span></code> command are also implemented by
+operations on this same stack.  So if you are calling some code with the <code class="docutils literal notranslate"><span class="pre">expr</span></code> command,
+and hit a breakpoint during the evaluation of that code, you can examine
+the state where you stopped, and when you’re satisfied,  issue a
+<code class="docutils literal notranslate"><span class="pre">continue</span></code> to finish the expression evaluation operation and print the function
+result.</p>
+<p>You can examine the state of the operations stack using the <code class="docutils literal notranslate"><span class="pre">thread</span> <span class="pre">plan</span> <span class="pre">list</span></code>
+command, and if, for instance, you decide you don’t actually want that outermost
+next to continue running, you can remove it with the <code class="docutils literal notranslate"><span class="pre">thread</span> <span class="pre">plan</span> <span class="pre">discard</span></code>
+command.  If you are interested in following this process in more detail, the
+<code class="docutils literal notranslate"><span class="pre">lldb</span> <span class="pre">step</span></code> logging channel is useful source of information.</p>
+<p>A process, by default, will share the LLDB terminal with the inferior process.
+When in this mode, much like when debugging with GDB, when the process is
+running anything you type will go to the <code class="docutils literal notranslate"><span class="pre">STDIN</span></code> of the inferior process. To
+interrupt your inferior program, type <code class="docutils literal notranslate"><span class="pre">CTRL+C</span></code>.</p>
+<p>If you attach to a process, or launch a process with the <code class="docutils literal notranslate"><span class="pre">--no-stdin</span></code> option,
+the command interpreter is always available to enter commands. It might be a
+little disconcerting to GDB users to always have an <code class="docutils literal notranslate"><span class="pre">(lldb)</span></code> prompt. This allows
+you to set a breakpoint, or use any other command without having to explicitly
+interrupt the program you are debugging:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">(</span><span class="n">lldb</span><span class="p">)</span> <span class="n">process</span> <span class="k">continue</span>
+<span class="p">(</span><span class="n">lldb</span><span class="p">)</span> <span class="nb">breakpoint</span> <span class="nb">set</span> <span class="o">--</span><span class="n">name</span> <span class="n">stop_here</span>
+</pre></div>
+</div>
+<p>There are many commands that won’t work while running, and the command
+interpreter will let you know when this is the case. Please file an issue if
+it does not. This way of operation will set us up for a future debugging
+mode called thread centric debugging. This mode will allow us to run all
+threads and only stop the threads that are at breakpoints or have exceptions or
+signals.</p>
+<p>The commands that currently work while running include interrupting the process
+to halt execution (<code class="docutils literal notranslate"><span class="pre">process</span> <span class="pre">interrupt</span></code>), getting the process status (<code class="docutils literal notranslate"><span class="pre">process</span> <span class="pre">status</span></code>),
+breakpoint setting and clearing (<code class="docutils literal notranslate"><span class="pre">breakpoint</span> <span class="pre">[set|clear|enable|disable|list]</span> <span class="pre">...</span></code>),
+and memory reading and writing (<code class="docutils literal notranslate"><span class="pre">memory</span> <span class="pre">[read|write]</span> <span class="pre">...</span></code>).</p>
+<p>The question of disabling stdio when running brings up a good opportunity to
+show how to set debugger properties. If you always want to run in
+the <code class="docutils literal notranslate"><span class="pre">--no-stdin</span></code> mode, you can set this as a generic process property using the
+LLDB <code class="docutils literal notranslate"><span class="pre">settings</span></code> command, which is equivalent to GDB’s <code class="docutils literal notranslate"><span class="pre">set</span></code> command.
+In this case you would say:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">(</span><span class="n">lldb</span><span class="p">)</span> <span class="n">settings</span> <span class="nb">set</span> <span class="n">target</span><span class="o">.</span><span class="n">process</span><span class="o">.</span><span class="n">disable</span><span class="o">-</span><span class="n">stdio</span> <span class="n">true</span>
+</pre></div>
+</div>
+<p>Over time, GDB’s <code class="docutils literal notranslate"><span class="pre">set</span></code> command became a wilderness of disordered options, so
+that there were useful options that even experienced GDB users did not know
+about because they were too hard to find. LLDB instead organizes the settings
+hierarchically using the structure of the basic entities in the debugger. For
+the most part anywhere you can specify a setting on a generic entity (threads,
+for example) you can also apply the option to a particular instance. You can
+view the available settings with the command <code class="docutils literal notranslate"><span class="pre">settings</span> <span class="pre">list</span></code> and there is help
+on the settings command explaining how it works more generally.</p>
+</section>
+<section id="examining-thread-state">
+<h2>Examining Thread State<a class="headerlink" href="#examining-thread-state" title="Link to this heading">#</a></h2>
+<p>Once you have stopped, LLDB will choose a current thread, usually the one that
+stopped “for a reason”, and a current frame in that thread (on stop this is
+always the bottom-most frame). Many the commands for inspecting state work on
+this current thread/frame.</p>
+<p>To inspect the current state of your process, you can start with the threads:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">(</span><span class="n">lldb</span><span class="p">)</span> <span class="n">thread</span> <span class="nb">list</span>
+<span class="n">Process</span> <span class="mi">46915</span> <span class="n">state</span> <span class="ow">is</span> <span class="n">Stopped</span>
+<span class="o">*</span> <span class="n">thread</span> <span class="c1">#1: tid = 0x2c03, 0x00007fff85cac76a, where = libSystem.B.dylib`__getdirentries64 + 10, stop reason = signal = SIGSTOP, queue = com.apple.main-thread</span>
+<span class="n">thread</span> <span class="c1">#2: tid = 0x2e03, 0x00007fff85cbb08a, where = libSystem.B.dylib`kevent + 10, queue = com.apple.libdispatch-manager</span>
+<span class="n">thread</span> <span class="c1">#3: tid = 0x2f03, 0x00007fff85cbbeaa, where = libSystem.B.dylib`__workq_kernreturn + 10</span>
+</pre></div>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">*</span></code> indicates that Thread 1 is the current thread. To get a backtrace for
+that thread, do:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">(</span><span class="n">lldb</span><span class="p">)</span> <span class="n">thread</span> <span class="n">backtrace</span>
+<span class="n">thread</span> <span class="c1">#1: tid = 0x2c03, stop reason = breakpoint 1.1, queue = com.apple.main-thread</span>
+<span class="n">frame</span> <span class="c1">#0: 0x0000000100010d5b, where = Sketch`-[SKTGraphicView alignLeftEdges:] + 33 at /Projects/Sketch/SKTGraphicView.m:1405</span>
+<span class="n">frame</span> <span class="c1">#1: 0x00007fff8602d152, where = AppKit`-[NSApplication sendAction:to:from:] + 95</span>
+<span class="n">frame</span> <span class="c1">#2: 0x00007fff860516be, where = AppKit`-[NSMenuItem _corePerformAction] + 365</span>
+<span class="n">frame</span> <span class="c1">#3: 0x00007fff86051428, where = AppKit`-[NSCarbonMenuImpl performActionWithHighlightingForItemAtIndex:] + 121</span>
+<span class="n">frame</span> <span class="c1">#4: 0x00007fff860370c1, where = AppKit`-[NSMenu performKeyEquivalent:] + 272</span>
+<span class="n">frame</span> <span class="c1">#5: 0x00007fff86035e69, where = AppKit`-[NSApplication _handleKeyEquivalent:] + 559</span>
+<span class="n">frame</span> <span class="c1">#6: 0x00007fff85f06aa1, where = AppKit`-[NSApplication sendEvent:] + 3630</span>
+<span class="n">frame</span> <span class="c1">#7: 0x00007fff85e9d922, where = AppKit`-[NSApplication run] + 474</span>
+<span class="n">frame</span> <span class="c1">#8: 0x00007fff85e965f8, where = AppKit`NSApplicationMain + 364</span>
+<span class="n">frame</span> <span class="c1">#9: 0x0000000100015ae3, where = Sketch`main + 33 at /Projects/Sketch/SKTMain.m:11</span>
+<span class="n">frame</span> <span class="c1">#10: 0x0000000100000f20, where = Sketch`start + 52</span>
+</pre></div>
+</div>
+<p>You can also provide a list of threads to backtrace, or the keyword <code class="docutils literal notranslate"><span class="pre">all</span></code> to see all threads:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">(</span><span class="n">lldb</span><span class="p">)</span> <span class="n">thread</span> <span class="n">backtrace</span> <span class="nb">all</span>
+</pre></div>
+</div>
+<p>You can select the current thread, which will be used by default in all the
+commands in the next section, with the <code class="docutils literal notranslate"><span class="pre">thread</span> <span class="pre">select</span></code> command:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">(</span><span class="n">lldb</span><span class="p">)</span> <span class="n">thread</span> <span class="n">select</span> <span class="mi">2</span>
+</pre></div>
+</div>
+<p>where the thread index is just the one shown in the <code class="docutils literal notranslate"><span class="pre">thread</span> <span class="pre">list</span></code> listing.</p>
+</section>
+<section id="examining-stack-frame-state">
+<h2>Examining Stack Frame State<a class="headerlink" href="#examining-stack-frame-state" title="Link to this heading">#</a></h2>
+<p>The most convenient way to inspect a frame’s arguments and local variables is
+to use the <code class="docutils literal notranslate"><span class="pre">frame</span> <span class="pre">variable</span></code> command:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">(</span><span class="n">lldb</span><span class="p">)</span> <span class="n">frame</span> <span class="n">variable</span>
+<span class="bp">self</span> <span class="o">=</span> <span class="p">(</span><span class="n">SKTGraphicView</span> <span class="o">*</span><span class="p">)</span> <span class="mh">0x0000000100208b40</span>
+<span class="n">_cmd</span> <span class="o">=</span> <span class="p">(</span><span class="n">struct</span> <span class="n">objc_selector</span> <span class="o">*</span><span class="p">)</span> <span class="mh">0x000000010001bae1</span>
+<span class="n">sender</span> <span class="o">=</span> <span class="p">(</span><span class="nb">id</span><span class="p">)</span> <span class="mh">0x00000001001264e0</span>
+<span class="n">selection</span> <span class="o">=</span> <span class="p">(</span><span class="n">NSArray</span> <span class="o">*</span><span class="p">)</span> <span class="mh">0x00000001001264e0</span>
+<span class="n">i</span> <span class="o">=</span> <span class="p">(</span><span class="n">NSUInteger</span><span class="p">)</span> <span class="mh">0x00000001001264e0</span>
+<span class="n">c</span> <span class="o">=</span> <span class="p">(</span><span class="n">NSUInteger</span><span class="p">)</span> <span class="mh">0x00000001001253b0</span>
+</pre></div>
+</div>
+<p>As you see above, if you do not specify any variable names, all arguments and
+locals will be shown. If you call <code class="docutils literal notranslate"><span class="pre">frame</span> <span class="pre">variable</span></code> passing in the names of
+particular local variables, only those variables will be printed. For instance:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">(</span><span class="n">lldb</span><span class="p">)</span> <span class="n">frame</span> <span class="n">variable</span> <span class="bp">self</span>
+<span class="p">(</span><span class="n">SKTGraphicView</span> <span class="o">*</span><span class="p">)</span> <span class="bp">self</span> <span class="o">=</span> <span class="mh">0x0000000100208b40</span>
+</pre></div>
+</div>
+<p>You can also pass in a path to some sub-element of one of the available locals,
+and that sub-element will be printed. For instance:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">(</span><span class="n">lldb</span><span class="p">)</span> <span class="n">frame</span> <span class="n">variable</span> <span class="bp">self</span><span class="o">.</span><span class="n">isa</span>
+<span class="p">(</span><span class="n">struct</span> <span class="n">objc_class</span> <span class="o">*</span><span class="p">)</span> <span class="bp">self</span><span class="o">.</span><span class="n">isa</span> <span class="o">=</span> <span class="mh">0x0000000100023730</span>
+</pre></div>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">frame</span> <span class="pre">variable</span></code> command is not a full expression parser but it does
+support a few simple operations like <code class="docutils literal notranslate"><span class="pre">&amp;</span></code>, <code class="docutils literal notranslate"><span class="pre">*</span></code>, <code class="docutils literal notranslate"><span class="pre">-&gt;</span></code>, <code class="docutils literal notranslate"><span class="pre">[]</span></code> (no
+overloaded operators). The array brackets can be used on pointers to treat
+pointers as arrays:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">(</span><span class="n">lldb</span><span class="p">)</span> <span class="n">frame</span> <span class="n">variable</span> <span class="o">*</span><span class="bp">self</span>
+<span class="p">(</span><span class="n">SKTGraphicView</span> <span class="o">*</span><span class="p">)</span> <span class="bp">self</span> <span class="o">=</span> <span class="mh">0x0000000100208b40</span>
+<span class="p">(</span><span class="n">NSView</span><span class="p">)</span> <span class="n">NSView</span> <span class="o">=</span> <span class="p">{</span>
+<span class="p">(</span><span class="n">NSResponder</span><span class="p">)</span> <span class="n">NSResponder</span> <span class="o">=</span> <span class="p">{</span>
+<span class="o">...</span>
+
+<span class="p">(</span><span class="n">lldb</span><span class="p">)</span> <span class="n">frame</span> <span class="n">variable</span> <span class="o">&amp;</span><span class="bp">self</span>
+<span class="p">(</span><span class="n">SKTGraphicView</span> <span class="o">**</span><span class="p">)</span> <span class="o">&amp;</span><span class="bp">self</span> <span class="o">=</span> <span class="mh">0x0000000100304ab</span>
+
+<span class="p">(</span><span class="n">lldb</span><span class="p">)</span> <span class="n">frame</span> <span class="n">variable</span> <span class="n">argv</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<span class="p">(</span><span class="n">char</span> <span class="n">const</span> <span class="o">*</span><span class="p">)</span> <span class="n">argv</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mh">0x00007fff5fbffaf8</span> <span class="s2">&quot;/Projects/Sketch/build/Debug/Sketch.app/Contents/MacOS/Sketch&quot;</span>
+</pre></div>
+</div>
+<p>The frame variable command will also perform “object printing” operations on
+variables (currently LLDB only supports ObjC printing, using the object’s
+<code class="docutils literal notranslate"><span class="pre">description</span></code> method. Turn this on by passing the <code class="docutils literal notranslate"><span class="pre">-o</span></code> flag to frame variable:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">(</span><span class="n">lldb</span><span class="p">)</span> <span class="n">frame</span> <span class="n">variable</span> <span class="o">-</span><span class="n">o</span> <span class="bp">self</span> <span class="p">(</span><span class="n">SKTGraphicView</span> <span class="o">*</span><span class="p">)</span> <span class="bp">self</span> <span class="o">=</span> <span class="mh">0x0000000100208b40</span> <span class="o">&lt;</span><span class="n">SKTGraphicView</span><span class="p">:</span> <span class="mh">0x100208b40</span><span class="o">&gt;</span>
+<span class="n">You</span> <span class="n">can</span> <span class="n">select</span> <span class="n">another</span> <span class="n">frame</span> <span class="n">to</span> <span class="n">view</span> <span class="k">with</span> <span class="n">the</span> <span class="s2">&quot;frame select&quot;</span> <span class="n">command</span>
+
+<span class="p">(</span><span class="n">lldb</span><span class="p">)</span> <span class="n">frame</span> <span class="n">select</span> <span class="mi">9</span>
+<span class="n">frame</span> <span class="c1">#9: 0x0000000100015ae3, where = Sketch`function1 + 33 at /Projects/Sketch/SKTFunctions.m:11</span>
+</pre></div>
+</div>
+<p>You can also move up and down the stack by passing the <code class="docutils literal notranslate"><span class="pre">--relative</span></code> (<code class="docutils literal notranslate"><span class="pre">-r</span></code>) option.
+We also have built-in aliases <code class="docutils literal notranslate"><span class="pre">u</span></code> and <code class="docutils literal notranslate"><span class="pre">d</span></code> which behave like their GDB equivalents.</p>
+</section>
+</section>
+
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          <a class="next-page" href="map.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title">GDB to LLDB command map</div>
+              </div>
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+            </a>
+          <a class="prev-page" href="../index.html">
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title">Home</div>
+                
+              </div>
+            </a>
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; 2007-2025, The LLDB Team
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            <div class="last-updated">
+              Last updated on Aug 13, 2025</div>
+          </div>
+          <div class="right-details">
+            
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer">
+      
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">Tutorial</a><ul>
+<li><a class="reference internal" href="#command-structure">Command Structure</a></li>
+<li><a class="reference internal" href="#loading-a-program-into-lldb">Loading a Program Into LLDB</a></li>
+<li><a class="reference internal" href="#setting-breakpoints">Setting Breakpoints</a></li>
+<li><a class="reference internal" href="#breakpoint-names">Breakpoint Names</a></li>
+<li><a class="reference internal" href="#setting-watchpoints">Setting Watchpoints</a></li>
+<li><a class="reference internal" href="#starting-or-attaching-to-your-program">Starting or Attaching to Your Program</a></li>
+<li><a class="reference internal" href="#controlling-your-program">Controlling Your Program</a></li>
+<li><a class="reference internal" href="#examining-thread-state">Examining Thread State</a></li>
+<li><a class="reference internal" href="#examining-stack-frame-state">Examining Stack Frame State</a></li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
+      
+      
+    </aside>
+  </div>
+</div><script src="../_static/documentation_options.js?v=7f41d439"></script>
+    <script src="../_static/doctools.js?v=888ff710"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/scripts/furo.js?v=32e29ea5"></script>
+    </body>
+</html>

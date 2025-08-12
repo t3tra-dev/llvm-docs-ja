@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Replacing OpenMP runtime call &lt;call&gt; with &lt;value&gt;. &#8212; LLVM/OpenMP  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=d75fae25" />
+    <link rel="stylesheet" type="text/css" href="../_static/agogo.css?v=a323ad78" />
+    <script src="../_static/documentation_options.js?v=7f41d439"></script>
+    <script src="../_static/doctools.js?v=888ff710"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Redundant barrier eliminated. (device only)" href="OMP190.html" />
+    <link rel="prev" title="OpenMP runtime call &lt;call&gt; deduplicated. [OMP170]" href="OMP170.html" />
+<style type="text/css">
+  table.right { float: right; margin-left: 20px; }
+  table.right td { border: 1px solid #ccc; }
+</style>
+
+  </head><body>
+    <div class="header-wrapper" role="banner">
+      <div class="header">
+        <div class="headertitle"><a
+          href="../index.html">LLVM/OpenMP  documentation</a></div>
+        <div class="rel" role="navigation" aria-label="related navigation">
+          <a href="../index.html" title="LLVM OpenMP Documentation">HOME</a>
+           |
+          <a href="OMP170.html" title="OpenMP runtime call &lt;call&gt; deduplicated. [OMP170]"
+             accesskey="P">previous</a> |
+          <a href="OMP190.html" title="Redundant barrier eliminated. (device only)"
+             accesskey="N">next</a> |
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a>
+        </div>
+       </div>
+    </div>
+
+    <div class="content-wrapper">
+      <div class="content">
+        <div class="document">
+            
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="replacing-openmp-runtime-call-call-with-value">
+<span id="omp180"></span><h1>Replacing OpenMP runtime call &lt;call&gt; with &lt;value&gt;.<a class="headerlink" href="#replacing-openmp-runtime-call-call-with-value" title="Link to this heading">¶</a></h1>
+<p>This optimization remark indicates that analysis determined an OpenMP runtime
+calls can be replaced with a constant value. This can occur when an OpenMP
+runtime call that queried some internal state was found to always return a
+single value after analysis.</p>
+<section id="example">
+<h2>Example<a class="headerlink" href="#example" title="Link to this heading">¶</a></h2>
+<p>This optimization will trigger for most target regions to simplify the runtime
+once certain constants are known. This will trigger for internal runtime
+functions so it requires enabling verbose remarks with
+<cite>-openmp-opt-verbose-remarks</cite> (prefixed with <cite>-mllvm</cite> for use with clang).</p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="kt">void</span><span class="w"> </span><span class="nf">foo</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="cp">#pragma omp target parallel</span>
+<span class="w">  </span><span class="p">{</span><span class="w"> </span><span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>clang<span class="w"> </span>test.c<span class="w"> </span>-fopenmp<span class="w"> </span>-fopenmp-targets<span class="o">=</span>nvptx64<span class="w"> </span>-O1<span class="w"> </span>-Rpass<span class="o">=</span>openmp-opt<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>-mllvm<span class="w"> </span>-openmp-opt-verbose-remarks
+<span class="go">remark: Replacing runtime call __kmpc_is_spmd_exec_mode with 1. [OMP180] [-Rpass=openmp-opt]</span>
+<span class="go">remark: Replacing runtime call __kmpc_is_spmd_exec_mode with 1. [OMP180] [-Rpass=openmp-opt]</span>
+<span class="go">remark: Replacing runtime call __kmpc_parallel_level with 1. [OMP180] [-Rpass=openmp-opt]</span>
+<span class="go">remark: Replacing runtime call __kmpc_parallel_level with 1. [OMP180] [-Rpass=openmp-opt]</span>
+</pre></div>
+</div>
+</section>
+<section id="diagnostic-scope">
+<h2>Diagnostic Scope<a class="headerlink" href="#diagnostic-scope" title="Link to this heading">¶</a></h2>
+<p>OpenMP optimization remark.</p>
+</section>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+        </div>
+        <div class="sidebar">
+          
+          <h3>Table of Contents</h3>
+          <ul>
+<li class="toctree-l1"><a class="reference internal" href="../index.html">LLVM/OpenMP Documentation</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../design/Overview.html">OpenMP in LLVM — Design Overview</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../openacc/Overview.html">OpenACC Support</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../optimizations/Overview.html">OpenMP Optimizations in LLVM</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="OptimizationRemarks.html">OpenMP Optimization Remarks</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="OMP100.html">Potentially unknown OpenMP target region caller <cite>[OMP100]</cite></a></li>
+<li class="toctree-l2"><a class="reference internal" href="OMP101.html">Parallel region is used in unknown / unexpected ways. Will not attempt to rewrite the state machine. [OMP101]</a></li>
+<li class="toctree-l2"><a class="reference internal" href="OMP102.html">Parallel region is not called from a unique kernel. Will not attempt to rewrite the state machine. [OMP102]</a></li>
+<li class="toctree-l2"><a class="reference internal" href="OMP110.html">Moving globalized variable to the stack. [OMP110]</a></li>
+<li class="toctree-l2"><a class="reference internal" href="OMP111.html">Replaced globalized variable with X bytes of shared memory. [OMP111]</a></li>
+<li class="toctree-l2"><a class="reference internal" href="OMP112.html">Found thread data sharing on the GPU. Expect degraded performance due to data globalization. [OMP112]</a></li>
+<li class="toctree-l2"><a class="reference internal" href="OMP113.html">Could not move globalized variable to the stack. Variable is potentially captured in call. Mark parameter as <cite>__attribute__((noescape))</cite> to override. [OMP113]</a></li>
+<li class="toctree-l2"><a class="reference internal" href="OMP120.html">Transformed generic-mode kernel to SPMD-mode [OMP120]</a></li>
+<li class="toctree-l2"><a class="reference internal" href="OMP121.html">Value has potential side effects preventing SPMD-mode execution. Add <cite>[[omp::assume(&quot;ompx_spmd_amenable&quot;)]]</cite> to the called function to override. [OMP121]</a></li>
+<li class="toctree-l2"><a class="reference internal" href="OMP130.html">Removing unused state machine from generic-mode kernel. [OMP130]</a></li>
+<li class="toctree-l2"><a class="reference internal" href="OMP131.html">Rewriting generic-mode kernel with a customized state machine. [OMP131]</a></li>
+<li class="toctree-l2"><a class="reference internal" href="OMP132.html">Generic-mode kernel is executed with a customized state machine that requires a fallback. [OMP132]</a></li>
+<li class="toctree-l2"><a class="reference internal" href="OMP133.html">Call may contain unknown parallel regions. Use <cite>[[omp::assume(“omp_no_parallelism”)]]</cite> to override. [OMP133]</a></li>
+<li class="toctree-l2"><a class="reference internal" href="OMP140.html">Could not internalize function. Some optimizations may not be possible. [OMP140]</a></li>
+<li class="toctree-l2"><a class="reference internal" href="OMP150.html">Parallel region merged with parallel region at &lt;location&gt;. [OMP150]</a></li>
+<li class="toctree-l2"><a class="reference internal" href="OMP160.html">Removing parallel region with no side-effects. [OMP160]</a></li>
+<li class="toctree-l2"><a class="reference internal" href="OMP170.html">OpenMP runtime call &lt;call&gt; deduplicated. [OMP170]</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Replacing OpenMP runtime call &lt;call&gt; with &lt;value&gt;.</a></li>
+<li class="toctree-l2"><a class="reference internal" href="OMP190.html">Redundant barrier eliminated. (device only)</a></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../CommandLineArgumentReference.html">OpenMP Command-Line Argument Reference</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../SupportAndFAQ.html">Support, Getting Involved, and FAQ</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../ReleaseNotes.html">In-Progress ReleaseNotes</a></li>
+</ul>
+
+          <div role="search">
+            <h3 style="margin-top: 1.5em;">Search</h3>
+            <form class="search" action="../search.html" method="get">
+                <input type="text" name="q" />
+                <input type="submit" value="Go" />
+            </form>
+          </div>
+
+        </div>
+        <div class="clearer"></div>
+      </div>
+    </div>
+
+    <div class="footer-wrapper">
+      <div class="footer">
+        <div class="left">
+          <div role="navigation" aria-label="related navigaton">
+            <a href="../index.html" title="LLVM OpenMP Documentation">HOME</a>
+             |
+            <a href="OMP170.html" title="OpenMP runtime call &lt;call&gt; deduplicated. [OMP170]"
+              >previous</a> |
+            <a href="OMP190.html" title="Redundant barrier eliminated. (device only)"
+              >next</a> |
+            <a href="../genindex.html" title="General Index"
+              >index</a>
+          </div>
+          <div role="note" aria-label="source link">
+          </div>
+        </div>
+
+        <div class="right">
+          
+    <div class="footer" role="contentinfo">
+    &#169; Copyright 2013-2025, LLVM/OpenMP.
+      Last updated on 2025-08-13.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.6.
+    </div>
+        </div>
+        <div class="clearer"></div>
+      </div>
+    </div>
+
+  </body>
+</html>

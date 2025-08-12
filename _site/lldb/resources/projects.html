@@ -1,0 +1,726 @@
+<!doctype html>
+<html class="no-js" lang="en" data-content_root="../">
+  <head><meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Contributing to LLDB-DAP" href="lldbdap.html" /><link rel="prev" title="Caveats" href="caveats.html" />
+
+    <!-- Generated with Sphinx 7.2.6 and Furo 2024.01.29 -->
+        <title>Open Projects - 🐛 LLDB</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=d75fae25" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=135e06be" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=36a5483c" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #f0f0f0;
+  --color-code-foreground: black;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+      }
+    }
+  }
+</style></head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-half" viewBox="0 0 24 24">
+    <title>Auto light/dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-shadow">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M13 12h5" />
+      <path d="M13 15h4" />
+      <path d="M13 18h1" />
+      <path d="M13 9h4" />
+      <path d="M13 6h1" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc">
+<label class="overlay sidebar-overlay" for="__navigation">
+  <div class="visually-hidden">Hide navigation sidebar</div>
+</label>
+<label class="overlay toc-overlay" for="__toc">
+  <div class="visually-hidden">Hide table of contents sidebar</div>
+</label>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <div class="visually-hidden">Toggle site navigation sidebar</div>
+        <i class="icon"><svg><use href="#svg-menu"></use></svg></i>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="../index.html"><div class="brand">🐛 LLDB</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle">
+          <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+          <svg class="theme-icon-when-auto"><use href="#svg-sun-half"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
+        <div class="visually-hidden">Toggle table of contents sidebar</div>
+        <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="../index.html">
+  
+  
+  <span class="sidebar-brand-text">🐛 LLDB</span>
+  
+</a><form class="sidebar-search-container" method="get" action="../search.html" role="search">
+  <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <p class="caption" role="heading"><span class="caption-text">Using LLDB</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../use/tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../use/map.html">GDB to LLDB command map</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../use/formatting.html">Frame and Thread Format</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../use/variable.html">Variable Formatting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../use/symbolication.html">Symbolication</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../use/symbols.html">Symbols on macOS</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../use/remote.html">Remote Debugging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../use/intel_pt.html">Tracing with Intel Processor Trace</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../use/ondemand.html">On Demand Symbols</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../use/aarch64-linux.html">Using LLDB On AArch64 Linux</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../use/symbolfilejson.html">JSON Symbol File Format</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../use/mcp.html">Model Context Protocol (MCP)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../use/troubleshooting.html">Troubleshooting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../use/links.html">Links</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../man/lldb.html">Man Page</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Scripting LLDB</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../use/python.html">Python Scripting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../use/python-reference.html">Python Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../python_api.html">Python API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../python_extensions.html">Python Extensions</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Developing LLDB</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="build.html">Building</a></li>
+<li class="toctree-l1"><a class="reference internal" href="test.html">Testing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="qemu-testing.html">Testing LLDB using QEMU</a></li>
+<li class="toctree-l1"><a class="reference internal" href="debugging.html">Debugging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="fuzzing.html">Fuzzing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sbapi.html">Scripting Bridge API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dataformatters.html">Data Formatters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="formatterbytecode.html">Formatter Bytecode</a></li>
+<li class="toctree-l1"><a class="reference internal" href="extensions.html">DWARF Extensions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="lldbgdbremote.html">GDB Remote Protocol Extensions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="lldbplatformpackets.html">LLDB Platform Packets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="caveats.html">Caveats</a></li>
+<li class="toctree-l1 current current-page"><a class="current reference internal" href="#">Open Projects</a></li>
+<li class="toctree-l1"><a class="reference internal" href="lldbdap.html">Contributing to LLDB-DAP</a></li>
+<li class="toctree-l1"><a class="reference internal" href="addinglanguagesupport.html">Adding Programming Language Support</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://lldb.llvm.org/cpp_reference/namespacelldb.html">Public C++ API</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://lldb.llvm.org/cpp_reference/index.html">Private C++ API</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">External Links</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/llvm/llvm-project">Source Code</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/llvm/llvm-project/releases">Releases</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://discord.gg/xS7Z362">Join the Discord</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://discord.com/channels/636084430946959380/636732809708306432">Discord Channel</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://discourse.llvm.org/c/subprojects/lldb/8">Discussion Forums</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://llvm.org/docs/DeveloperPolicy.html">Developer Policy</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/llvm/llvm-project/issues?q=is%3Aissue+label%3Alldb+is%3Aopen">Bug Reports</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/llvm/llvm-project/pulls?q=is%3Apr+label%3Alldb+is%3Aopen">Code Reviews</a></li>
+</ul>
+
+</div>
+</div>
+
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="edit-this-page">
+  <a class="muted-link" href="https://github.com/llvm/llvm-project/edit/main/lldb/docs/resources/projects.rst" title="Edit this page">
+    <svg aria-hidden="true" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+      <path d="M4 20h4l10.5 -10.5a1.5 1.5 0 0 0 -4 -4l-10.5 10.5v4" />
+      <line x1="13.5" y1="6.5" x2="17.5" y2="10.5" />
+    </svg>
+    <span class="visually-hidden">Edit this page</span>
+  </a>
+</div><div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle">
+              <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+              <svg class="theme-icon-when-auto"><use href="#svg-sun-half"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
+            <div class="visually-hidden">Toggle table of contents sidebar</div>
+            <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+          </label>
+        </div>
+        <article role="main">
+          <section id="open-projects">
+<h1>Open Projects<a class="headerlink" href="#open-projects" title="Link to this heading">#</a></h1>
+<p>The following is a mostly unordered set of the ideas for improvements to the
+LLDB debugger. Some are fairly deep, some would require less effort.</p>
+<section id="speed-up-type-realization-in-lldb">
+<h2>Speed up type realization in lldb<a class="headerlink" href="#speed-up-type-realization-in-lldb" title="Link to this heading">#</a></h2>
+<p>The type of problem I’m addressing here is the situation where you are
+debugging a large program (lldb built with debug clang/swift will do) and you
+go to print a simple expression, and lldb goes away for 30 seconds. When you
+sample it, it is always busily churning through all the CU’s in the world
+looking for something.  The problem isn’t that looking for something in
+particular is slow, but rather that we somehow turned an bounded search (maybe
+a subtype of “std::string” into an unbounded search (all things with the name
+of that subtype.)  Or didn’t stop when we got a reasonable answer proximate to
+the context of the search, but let the search leak out globally. And quite
+likely there are other issues that I haven’t guessed yet. But if you end up
+churning though 3 or 4 Gig of debug info, that’s going to be slow no matter how
+well written your debug reader is…</p>
+<p>My guess is the work will be more in the general symbol lookup than in the
+DWARF parser in particular, but it may be a combination of both.</p>
+<p>As a user debugging a largish program, this is the most obvious lameness of
+lldb.</p>
+</section>
+<section id="symbol-name-completion-in-the-expression-parser">
+<h2>Symbol name completion in the expression parser<a class="headerlink" href="#symbol-name-completion-in-the-expression-parser" title="Link to this heading">#</a></h2>
+<p>This is the other obvious lameness of lldb.  You can do:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">(</span><span class="n">lldb</span><span class="p">)</span> <span class="n">frame</span> <span class="n">var</span> <span class="n">foo</span><span class="o">.</span><span class="n">b</span>
+</pre></div>
+</div>
+<p>and we will tell you it is “foo.bar”. But you can’t do that in the expression
+parser. This will require collaboration with the clang/swift folks to get the
+right extension points in the compiler. And whatever they are, lldb will need
+use them to tell the compiler about what names are available. It will be
+important to avoid the pitfalls of #1 where we wander into the entire DWARF
+world.</p>
+</section>
+<section id="make-a-high-speed-asynchronous-communication-channel">
+<h2>Make a high speed asynchronous communication channel<a class="headerlink" href="#make-a-high-speed-asynchronous-communication-channel" title="Link to this heading">#</a></h2>
+<p>All lldb debugging nowadays is done by talking to a debug agent. We used the
+gdb-remote protocol because that is universal, and good enough, and you have to
+support it anyway since so many little devices &amp; JTAG’s and VM’s etc support
+it. But it is really old, not terribly high performance, and can’t really
+handle sending or receiving messages while the process is supposedly running.
+It should have compression built in, remove the hand-built checksums and rely
+on the robust communication protocols we always have nowadays, allow for
+out-of-order requests/replies, allow for reconnecting to a temporarily
+disconnected debug session, regularize all of the packet formatting into JSON
+or BSON or whatever while including a way to do large binary transfers. It must
+be possible to come up with something faster, and better tunable for the many
+communications pathways we end up supporting.</p>
+</section>
+<section id="fix-local-variable-lookup-in-the-lldb-expression-parser">
+<h2>Fix local variable lookup in the lldb expression parser<a class="headerlink" href="#fix-local-variable-lookup-in-the-lldb-expression-parser" title="Link to this heading">#</a></h2>
+<p>The injection of local variables into the clang expression parser is
+currently done incorrectly - it happens too late in the lookup. This results
+in namespace variables &amp; functions, same named types and ivars shadowing
+locals when it should be the other way around. An attempt was made to fix
+this by manually inserting all the visible local variables into wrapper
+function in the expression text. This mostly gets the job done but that
+method means you have to realize all the types and locations of all local
+variables for even the simplest of expressions, and when run on large
+programs (e.g. lldb) it would cause unacceptable delays. And it was very
+fragile since an error in realizing any of the locals would cause all
+expressions run in that context to fail. We need to fix this by adjusting
+the points where name lookup calls out to lldb in clang.</p>
+</section>
+<section id="support-calling-sb-commands-everywhere-and-support-non-stop-debugging">
+<h2>Support calling SB &amp; commands everywhere and support non-stop debugging<a class="headerlink" href="#support-calling-sb-commands-everywhere-and-support-non-stop-debugging" title="Link to this heading">#</a></h2>
+<p>There is a fairly ad-hoc system to handle when it is safe to run SB API’s and
+command line commands. This is actually a bit of a tricky problem, since we
+allow access to the command line and SB API from some funky places in lldb. The
+Operating System plugins are the most obvious instance, since they get run
+right after lldb is told by debugserver that the process has stopped, but
+before it has finished collating the information from the stop for presentation
+to the higher levels. But breakpoint callbacks have some of the same problems,
+and other things like the scripted stepping operations and any fancier
+extension points we want to add to the debugger are going to be hard to
+implement robustly till we work on a finer-grained and more explicit control
+over who gets to control the process state.</p>
+<p>We also won’t have any chance of supporting non-stop debugging - which is a
+useful mode for programs that have a lot of high-priority or real-time worker
+threads - until we get this sorted out.</p>
+</section>
+<section id="finish-the-language-abstraction-and-remove-all-the-unnecessary-api-s">
+<h2>Finish the language abstraction and remove all the unnecessary API’s<a class="headerlink" href="#finish-the-language-abstraction-and-remove-all-the-unnecessary-api-s" title="Link to this heading">#</a></h2>
+<p>An important part of making lldb a more useful “debugger toolkit” as opposed to
+a C/C++/ObjC/Swift debugger is to have a clean abstraction for language
+support. We did most, but not all, of the physical separation.  We need to
+finish that. And then by force of necessity the API’s really look like the
+interface to a C++ type system with a few swift bits added on.  How you would
+go about adding a new language is unclear and much more trouble than it is
+worth at present. But if we made this nice, we could add a lot of value to
+other language projects.</p>
+</section>
+<section id="add-some-syntax-to-generate-data-formatters-from-type-definitions">
+<h2>Add some syntax to generate data formatters from type definitions<a class="headerlink" href="#add-some-syntax-to-generate-data-formatters-from-type-definitions" title="Link to this heading">#</a></h2>
+<p>Uses of the data formatters fall into two types. There are data formatters for
+types where the structure elements pretty much tell you how to present the
+data, you just need a little expression language to express how to turn them
+into what the user expects to see. Then there are the ones (like pretty much
+all our Foundation/AppKit/UIKit formatters) that use deep magic to figure out
+how the type is actually laid out. The latter are pretty much always going to
+have to be done by hand.</p>
+<p>But for the ones where the information is expressed in the fields, it would be
+great to have a way to express the instructions to produce summaries and
+children in some form you could embed next to the types and have the compiler
+produce a byte code form of the instructions and then make that available to
+lldb along with the library. This isn’t as simple as having clang run over the
+headers and produce something from the types directly. After all, clang has no
+way of knowing that the interesting thing about a std::vector is the elements
+that you get by calling size (for the summary) and [] for the elements. But it
+shouldn’t be hard to come up with a generic markup to express this.</p>
+</section>
+<section id="allow-the-expression-parser-to-access-dynamic-type-data-formatter-information">
+<h2>Allow the expression parser to access dynamic type/data formatter information<a class="headerlink" href="#allow-the-expression-parser-to-access-dynamic-type-data-formatter-information" title="Link to this heading">#</a></h2>
+<p>This seems like a smaller one. The symptom is your object is Foo child of
+Bar, and in the Locals view you see all the fields of Foo, but because the
+static type of the object is Bar, you can’t see any of the fields of Foo.
+But if you could get this working, you could hijack the mechanism to make
+the results of the value object summaries/synthetic children available to
+expressions. And if you can do that, you could add other properties to an
+object externally (through Python or some other extension point) and then
+have these also available in the expression parser. You could use this to
+express invariants for data structures, or other more advanced uses of types
+in the debugger.</p>
+<p>Another version of this is to allow access to synthetic children in the
+expression parser. Otherwise you end up in situations like:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>(lldb) print return_a_foo()
+(SomeVectorLikeType) $1 = {
+  [0] = 0
+  [1] = 1
+  [2] = 2
+  [3] = 3
+  [4] = 4
+}
+</pre></div>
+</div>
+<p>That’s good but:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">(</span><span class="n">lldb</span><span class="p">)</span> <span class="nb">print</span> <span class="n">return_a_foo</span><span class="p">()[</span><span class="mi">2</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>fails because the expression parser doesn’t know anything about the
+array-like nature of SomeVectorLikeType that it gets from the synthetic
+children.</p>
+</section>
+<section id="recover-thread-information-lazily">
+<h2>Recover thread information lazily<a class="headerlink" href="#recover-thread-information-lazily" title="Link to this heading">#</a></h2>
+<p>LLDB stores all the user intentions for a thread in the ThreadPlans stored in
+the Thread class. That allows us to reliably implement a very natural model for
+users moving through a debug session. For example, if step-over stops at a
+breakpoint in an function in a younger region of the stack, continue will
+complete the step-over rather than having to manually step out. But that means
+that it is important that the Thread objects live as long as the Threads they
+represent. For programs with many threads, but only one that you are debugging,
+that makes stepping less efficient, since now you have to fetch the thread list
+on every step or stepping doesn’t work correctly. This is especially an issue
+when the threads are provided by an Operating System plugin, where it may take
+non-trivial work to reconstruct the thread list. It would be better to fetch
+threads lazily but keep “unseen” threads in a holding area, and only retire
+them when we know we’ve fetched the whole thread list and ensured they are no
+longer alive.</p>
+</section>
+<section id="make-python-backed-commands-first-class-citizens">
+<h2>Make Python-backed commands first class citizens<a class="headerlink" href="#make-python-backed-commands-first-class-citizens" title="Link to this heading">#</a></h2>
+<p>As it stands, Python commands have no way to advertise their options. They are
+required to parse their arguments by hand. That leads to inconsistency, and
+more importantly means they can’t take advantage of auto-generated help and
+command completion. This leaves python-backed commands feeling worse than
+built-in ones.</p>
+<p>As part of this job, it would also be great to hook automatically hook the
+“type” of an option value or argument (e.g. eArgTypeShlibName) to sensible
+default completers. You need to be able to over-ride this in more complicated
+scenarios (like in “break set” where the presence of a “-s” option limits the
+search for completion of a “-n” option.) But in common cases it is unnecessary
+busy-work to have to supply the completer AND the type. If this worked, then it
+would be easier for Python commands to also get correct completers.</p>
+</section>
+<section id="reimplement-the-command-interpreter-commands-using-the-sb-api">
+<h2>Reimplement the command interpreter commands using the SB API<a class="headerlink" href="#reimplement-the-command-interpreter-commands-using-the-sb-api" title="Link to this heading">#</a></h2>
+<p>Currently, all the CommandObject::DoExecute methods are implemented using the
+lldb_private API’s. That generally means that there’s code that gets duplicated
+between the CommandObject and the SB API that does roughly the same thing. We
+would reduce this code duplication, present a single coherent face to the users
+of lldb, and keep ourselves more honest about what we need in the SB API’s if
+we implemented the CommandObjects::DoExecute methods using the SB API’s.</p>
+<p>BTW, it is only the way it was much easier to develop lldb if it had a
+functioning command-line early on. So we did that first, and developed the SB
+API’s when lldb was more mature. There’s no good technical reason to have the
+commands use the lldb_private API’s.</p>
+</section>
+<section id="documentation-and-better-examples">
+<h2>Documentation and better examples<a class="headerlink" href="#documentation-and-better-examples" title="Link to this heading">#</a></h2>
+<p>We need to put the lldb syntax docs in the tutorial somewhere that is more
+easily accessible. On suggestion is to add non-command based help to the help
+system, and then have a “help lldb” or “help syntax” type command with this
+info. Be nice if the non-command based help could be hierarchical so you could
+make topics.</p>
+<p>There’s a fair bit of docs about the SB API’s, but it is spotty. Some classes
+are well documented in the Python “help (lldb.SBWhatever)” and some are not.</p>
+<p>We need more conceptual docs. And we need more examples. And we could provide a
+clean pluggable example for using LLDB standalone from Python. The
+process_events.py is a start of this, but it just handles process events, and
+it is really a quick sketch not a polished expandable proto-tool.</p>
+</section>
+<section id="make-a-more-accessible-plugin-architecture-for-lldb">
+<h2>Make a more accessible plugin architecture for lldb<a class="headerlink" href="#make-a-more-accessible-plugin-architecture-for-lldb" title="Link to this heading">#</a></h2>
+<p>Right now, you can only use the Python or SB API’s to extend an extant lldb.
+You can’t implement any of the actual lldb Plugins as plugins. That means
+anybody that wants to add new Object file/Process/Language etc support has to
+build and distribute their own lldb. This is tricky because the API’s the
+plugins use are currently not stable (and recently have been changing quite a
+lot.) We would have to define a subset of lldb_private that you could use, and
+some way of telling whether the plugins were compatible with the lldb. But
+long-term, making this sort of extension possible will make lldb more appealing
+for research and 3rd party uses.</p>
+</section>
+<section id="use-instruction-emulation-to-reduce-the-overhead-for-breakpoints">
+<h2>Use instruction emulation to reduce the overhead for breakpoints<a class="headerlink" href="#use-instruction-emulation-to-reduce-the-overhead-for-breakpoints" title="Link to this heading">#</a></h2>
+<p>At present, breakpoints are implemented by inserting a trap instruction, then
+when the trap is hit, replace the trap with the actual instruction and single
+step. Then swap back and continue. This causes problems for read only text, and
+also means that no-stop debugging must either stop all threads briefly to handle
+this two-step or risk missing some breakpoint hits. If you emulated the
+instruction and wrote back the results, you wouldn’t have these problems, and
+it would also save a stop per breakpoint hit. Since we use breakpoints to
+implement stepping, this savings could be significant on slow connections.</p>
+</section>
+<section id="use-the-jit-to-speed-up-conditional-breakpoint-evaluation">
+<h2>Use the JIT to speed up conditional breakpoint evaluation<a class="headerlink" href="#use-the-jit-to-speed-up-conditional-breakpoint-evaluation" title="Link to this heading">#</a></h2>
+<p>We already JIT and cache the conditional expressions for breakpoints for the C
+family of languages, so we aren’t re-compiling every time you hit the
+breakpoint. And if we couldn’t IR interpret the expression, we leave the JIT’ed
+code in place for reuse. But it would be even better if we could also insert
+the “stop or not” decision into the code at the breakpoint, so you would only
+actually stop the process when the condition was true. Greg’s idea was that if
+you had a conditional breakpoint set when you started the debug session, Xcode
+could rebuild and insert enough no-ops that we could instrument the breakpoint
+site and call the conditional expression, and only trap if the conditional was
+true.</p>
+</section>
+<section id="broaden-the-idea-in-target-stop-hook-to-cover-more-events-in-the-debugger">
+<h2>Broaden the idea in “target stop-hook” to cover more events in the debugger<a class="headerlink" href="#broaden-the-idea-in-target-stop-hook-to-cover-more-events-in-the-debugger" title="Link to this heading">#</a></h2>
+<p>Shared library loads, command execution, User directed memory/register reads
+and writes are all places where you would reasonably want to hook into the
+debugger.</p>
+</section>
+<section id="mock-classes-for-testing">
+<h2>Mock classes for testing<a class="headerlink" href="#mock-classes-for-testing" title="Link to this heading">#</a></h2>
+<p>We need “ProcessMock” and “ObjectFileMock” and the like. These would be real
+plugin implementations for their underlying lldb classes, with the addition
+that you can prime them from some sort of text based input files. For classes
+that manage changes over time (like process) you would need to program the
+state at StopPoint 0, StopPoint 1, etc. These could then be used for testing
+reactions to complex threading problems &amp; the like, and also for simulating
+hard-to-test environments (like bare board debugging).</p>
+</section>
+<section id="expression-parser-needs-syntax-for-symbol-type-a-in-cu-b-cpp">
+<h2>Expression parser needs syntax for “{symbol,type} A in CU B.cpp”<a class="headerlink" href="#expression-parser-needs-syntax-for-symbol-type-a-in-cu-b-cpp" title="Link to this heading">#</a></h2>
+<p>Sometimes you need to specify non-visible or ambiguous types to the expression
+parser. We were planning to do $b_dot_cpp$A or something like. You might want
+to specify a static in a function, in a source file, or in a shared library. So
+the syntax should support all these.</p>
+</section>
+<section id="add-a-testbutdontabort-style-test-to-the-unittest-framework">
+<h2>Add a “testButDontAbort” style test to the UnitTest framework<a class="headerlink" href="#add-a-testbutdontabort-style-test-to-the-unittest-framework" title="Link to this heading">#</a></h2>
+<p>The way we use unittest now (maybe this is the only way it can work, I don’t
+know) you can’t report a real failure and continue with the test. That is
+appropriate in some cases: if I’m supposed to hit breakpoint A before I
+evaluate an expression, and don’t hit breakpoint A, the test should fail. But
+it means that if I want to test five different expressions, I can either do it
+in one test, which is good because it means I only have to fire up one process,
+attach to it, and get it to a certain point. But it also means if the first
+test fails, the other four don’t even get run. So though at first we wrote a
+bunch of test like this, as time went on we switched more to writing “one at a
+time” tests because they were more robust against a single failure. That makes
+the test suite run much more slowly. It would be great to add a
+“test_but_dont_abort” variant of the tests, then we could gang tests that all
+drive to the same place and do similar things. As an added benefit, it would
+allow us to be more thorough in writing tests, since each test would have lower
+costs.</p>
+</section>
+<section id="convert-the-dotest-style-tests-to-use-lldbutil-run-to-source-breakpoint">
+<h2>Convert the dotest style tests to use lldbutil.run_to_source_breakpoint<a class="headerlink" href="#convert-the-dotest-style-tests-to-use-lldbutil-run-to-source-breakpoint" title="Link to this heading">#</a></h2>
+<p>run_to_source_breakpoint &amp; run_to_name_breakpoint provide a compact API that
+does in one line what the first 10 or 20 lines of most of the old tests now do
+by hand. Using these functions makes tests much more readable, and by
+centralizing common functionality will make maintaining the testsuites easier
+in the future. This is more of a finger exercise, and perhaps best implemented
+by a rule like: “If you touch a test case, and it isn’t using
+run_to_source_breakpoint, please make it do so”.</p>
+</section>
+<section id="unify-watchpoint-s-breakpoints">
+<h2>Unify Watchpoint’s &amp; Breakpoints<a class="headerlink" href="#unify-watchpoint-s-breakpoints" title="Link to this heading">#</a></h2>
+<p>Option handling isn’t shared, and more importantly the PerformAction’s have a
+lot of duplicated common code, most of which works less well on the Watchpoint
+side.</p>
+</section>
+<section id="reverse-debugging">
+<h2>Reverse debugging<a class="headerlink" href="#reverse-debugging" title="Link to this heading">#</a></h2>
+<p>This is kind of a holy grail, it’s hard to support for complex apps (many
+threads, shared memory, etc.) But it would be SO nice to have…</p>
+</section>
+<section id="non-stop-debugging">
+<h2>Non-stop debugging<a class="headerlink" href="#non-stop-debugging" title="Link to this heading">#</a></h2>
+<p>By this I mean allowing some threads in the target program to run while
+stopping other threads. This is supported in name in lldb at present, but lldb
+makes the assumption “If I get a stop, I won’t get another stop unless I
+actually run the program.” in a bunch of places so getting it to work reliably
+will be some a good bit of work. And figuring out how to present this in the UI
+will also be tricky.</p>
+</section>
+<section id="fix-and-continue">
+<h2>Fix and continue<a class="headerlink" href="#fix-and-continue" title="Link to this heading">#</a></h2>
+<p>We did this in gdb without a real JIT. The implementation shouldn’t be that
+hard, especially if you can build the executable for fix and continue. The
+tricky part is how to verify that the user can only do the kinds of fixes that
+are safe to do. No changing object sizes is easy to detect, but there were many
+more subtle changes (function you are fixing is on the stack…) that take more
+work to prevent. And then you have to explain these conditions the user in some
+helpful way.</p>
+</section>
+<section id="unified-ir-interpreter">
+<h2>Unified IR interpreter<a class="headerlink" href="#unified-ir-interpreter" title="Link to this heading">#</a></h2>
+<p>Currently IRInterpreter implements a portion of the LLVM IR, but it doesn’t
+handle vector data types and there are plenty of instructions it also doesn’t
+support. Conversely, lli supports most of LLVM’s IR but it doesn’t handle
+remote memory and its function calling support is very rudimentary. It would be
+useful to unify these and make the IR interpreter – both for LLVM and LLDB –
+better. An alternate strategy would be simply to JIT into the current process
+but have callbacks for non-stack memory access.</p>
+</section>
+<section id="teach-lldb-to-predict-exception-propagation-at-the-throw-site">
+<h2>Teach lldb to predict exception propagation at the throw site<a class="headerlink" href="#teach-lldb-to-predict-exception-propagation-at-the-throw-site" title="Link to this heading">#</a></h2>
+<p>There are a bunch of places in lldb where we need to know at the point where an
+exception is thrown, what frame will catch the exception.</p>
+<p>For instance, if an expression throws an exception, we need to know whether the
+exception will be caught in the course of the expression evaluation.  If so it
+would be safe to let the expression continue.  But since we would destroy the
+state of the thread if we let the exception escape the expression, we currently
+stop the expression evaluation if we see a throw.  If we knew where it would be
+caught we could distinguish these two cases.</p>
+<p>Similarly, when you step over a call that throws, you want to stop at the throw
+point if you know the exception will unwind past the frame you were stepping in,
+but it would annoying to have the step abort every time an exception was thrown.
+If we could predict the catching frame, we could do this right.</p>
+<p>And of course, this would be a useful piece of information to display when stopped
+at a throw point.</p>
+</section>
+<section id="add-predicates-to-the-nodes-of-settings">
+<h2>Add predicates to the nodes of settings<a class="headerlink" href="#add-predicates-to-the-nodes-of-settings" title="Link to this heading">#</a></h2>
+<p>It would be very useful to be able to give values to settings that are dependent
+on the triple, or executable name, for targets, or on whether a process is local
+or remote, or on the name of a thread, etc.  The original intent (and there is
+a sketch of this in the settings parsing code) was to be able to say:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">(</span><span class="n">lldb</span><span class="p">)</span> <span class="n">settings</span> <span class="nb">set</span> <span class="n">target</span><span class="p">{</span><span class="n">arch</span><span class="o">=</span><span class="n">x86_64</span><span class="p">}</span><span class="o">.</span><span class="n">process</span><span class="o">.</span><span class="n">thread</span><span class="p">{</span><span class="n">name</span><span class="o">=</span><span class="n">foo</span><span class="p">}</span><span class="o">...</span>
+</pre></div>
+</div>
+<p>The exact details are still to be worked out, however.</p>
+</section>
+<section id="resurrect-type-validators">
+<h2>Resurrect Type Validators<a class="headerlink" href="#resurrect-type-validators" title="Link to this heading">#</a></h2>
+<p>This half-implemented feature was removed in
+<a class="reference external" href="https://reviews.llvm.org/D71310">https://reviews.llvm.org/D71310</a> but the general idea might still be
+useful: Type Validators look at a ValueObject, and make sure that
+there is nothing semantically wrong with the object’s contents to
+easily catch corrupted data.</p>
+</section>
+</section>
+
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          <a class="next-page" href="lldbdap.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title">Contributing to LLDB-DAP</div>
+              </div>
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+            </a>
+          <a class="prev-page" href="caveats.html">
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title">Caveats</div>
+                
+              </div>
+            </a>
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; 2007-2025, The LLDB Team
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            <div class="last-updated">
+              Last updated on Aug 13, 2025</div>
+          </div>
+          <div class="right-details">
+            
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer">
+      
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">Open Projects</a><ul>
+<li><a class="reference internal" href="#speed-up-type-realization-in-lldb">Speed up type realization in lldb</a></li>
+<li><a class="reference internal" href="#symbol-name-completion-in-the-expression-parser">Symbol name completion in the expression parser</a></li>
+<li><a class="reference internal" href="#make-a-high-speed-asynchronous-communication-channel">Make a high speed asynchronous communication channel</a></li>
+<li><a class="reference internal" href="#fix-local-variable-lookup-in-the-lldb-expression-parser">Fix local variable lookup in the lldb expression parser</a></li>
+<li><a class="reference internal" href="#support-calling-sb-commands-everywhere-and-support-non-stop-debugging">Support calling SB &amp; commands everywhere and support non-stop debugging</a></li>
+<li><a class="reference internal" href="#finish-the-language-abstraction-and-remove-all-the-unnecessary-api-s">Finish the language abstraction and remove all the unnecessary API’s</a></li>
+<li><a class="reference internal" href="#add-some-syntax-to-generate-data-formatters-from-type-definitions">Add some syntax to generate data formatters from type definitions</a></li>
+<li><a class="reference internal" href="#allow-the-expression-parser-to-access-dynamic-type-data-formatter-information">Allow the expression parser to access dynamic type/data formatter information</a></li>
+<li><a class="reference internal" href="#recover-thread-information-lazily">Recover thread information lazily</a></li>
+<li><a class="reference internal" href="#make-python-backed-commands-first-class-citizens">Make Python-backed commands first class citizens</a></li>
+<li><a class="reference internal" href="#reimplement-the-command-interpreter-commands-using-the-sb-api">Reimplement the command interpreter commands using the SB API</a></li>
+<li><a class="reference internal" href="#documentation-and-better-examples">Documentation and better examples</a></li>
+<li><a class="reference internal" href="#make-a-more-accessible-plugin-architecture-for-lldb">Make a more accessible plugin architecture for lldb</a></li>
+<li><a class="reference internal" href="#use-instruction-emulation-to-reduce-the-overhead-for-breakpoints">Use instruction emulation to reduce the overhead for breakpoints</a></li>
+<li><a class="reference internal" href="#use-the-jit-to-speed-up-conditional-breakpoint-evaluation">Use the JIT to speed up conditional breakpoint evaluation</a></li>
+<li><a class="reference internal" href="#broaden-the-idea-in-target-stop-hook-to-cover-more-events-in-the-debugger">Broaden the idea in “target stop-hook” to cover more events in the debugger</a></li>
+<li><a class="reference internal" href="#mock-classes-for-testing">Mock classes for testing</a></li>
+<li><a class="reference internal" href="#expression-parser-needs-syntax-for-symbol-type-a-in-cu-b-cpp">Expression parser needs syntax for “{symbol,type} A in CU B.cpp”</a></li>
+<li><a class="reference internal" href="#add-a-testbutdontabort-style-test-to-the-unittest-framework">Add a “testButDontAbort” style test to the UnitTest framework</a></li>
+<li><a class="reference internal" href="#convert-the-dotest-style-tests-to-use-lldbutil-run-to-source-breakpoint">Convert the dotest style tests to use lldbutil.run_to_source_breakpoint</a></li>
+<li><a class="reference internal" href="#unify-watchpoint-s-breakpoints">Unify Watchpoint’s &amp; Breakpoints</a></li>
+<li><a class="reference internal" href="#reverse-debugging">Reverse debugging</a></li>
+<li><a class="reference internal" href="#non-stop-debugging">Non-stop debugging</a></li>
+<li><a class="reference internal" href="#fix-and-continue">Fix and continue</a></li>
+<li><a class="reference internal" href="#unified-ir-interpreter">Unified IR interpreter</a></li>
+<li><a class="reference internal" href="#teach-lldb-to-predict-exception-propagation-at-the-throw-site">Teach lldb to predict exception propagation at the throw site</a></li>
+<li><a class="reference internal" href="#add-predicates-to-the-nodes-of-settings">Add predicates to the nodes of settings</a></li>
+<li><a class="reference internal" href="#resurrect-type-validators">Resurrect Type Validators</a></li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
+      
+      
+    </aside>
+  </div>
+</div><script src="../_static/documentation_options.js?v=7f41d439"></script>
+    <script src="../_static/doctools.js?v=888ff710"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/scripts/furo.js?v=32e29ea5"></script>
+    </body>
+</html>

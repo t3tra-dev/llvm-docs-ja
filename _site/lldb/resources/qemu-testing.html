@@ -1,0 +1,517 @@
+<!doctype html>
+<html class="no-js" lang="en" data-content_root="../">
+  <head><meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Debugging" href="debugging.html" /><link rel="prev" title="Testing" href="test.html" />
+
+    <!-- Generated with Sphinx 7.2.6 and Furo 2024.01.29 -->
+        <title>Testing LLDB using QEMU - 🐛 LLDB</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=d75fae25" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=135e06be" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=36a5483c" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #f0f0f0;
+  --color-code-foreground: black;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+      }
+    }
+  }
+</style></head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-half" viewBox="0 0 24 24">
+    <title>Auto light/dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-shadow">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M13 12h5" />
+      <path d="M13 15h4" />
+      <path d="M13 18h1" />
+      <path d="M13 9h4" />
+      <path d="M13 6h1" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc">
+<label class="overlay sidebar-overlay" for="__navigation">
+  <div class="visually-hidden">Hide navigation sidebar</div>
+</label>
+<label class="overlay toc-overlay" for="__toc">
+  <div class="visually-hidden">Hide table of contents sidebar</div>
+</label>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <div class="visually-hidden">Toggle site navigation sidebar</div>
+        <i class="icon"><svg><use href="#svg-menu"></use></svg></i>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="../index.html"><div class="brand">🐛 LLDB</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle">
+          <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+          <svg class="theme-icon-when-auto"><use href="#svg-sun-half"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
+        <div class="visually-hidden">Toggle table of contents sidebar</div>
+        <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="../index.html">
+  
+  
+  <span class="sidebar-brand-text">🐛 LLDB</span>
+  
+</a><form class="sidebar-search-container" method="get" action="../search.html" role="search">
+  <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <p class="caption" role="heading"><span class="caption-text">Using LLDB</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../use/tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../use/map.html">GDB to LLDB command map</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../use/formatting.html">Frame and Thread Format</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../use/variable.html">Variable Formatting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../use/symbolication.html">Symbolication</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../use/symbols.html">Symbols on macOS</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../use/remote.html">Remote Debugging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../use/intel_pt.html">Tracing with Intel Processor Trace</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../use/ondemand.html">On Demand Symbols</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../use/aarch64-linux.html">Using LLDB On AArch64 Linux</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../use/symbolfilejson.html">JSON Symbol File Format</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../use/mcp.html">Model Context Protocol (MCP)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../use/troubleshooting.html">Troubleshooting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../use/links.html">Links</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../man/lldb.html">Man Page</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Scripting LLDB</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../use/python.html">Python Scripting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../use/python-reference.html">Python Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../python_api.html">Python API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../python_extensions.html">Python Extensions</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Developing LLDB</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="build.html">Building</a></li>
+<li class="toctree-l1"><a class="reference internal" href="test.html">Testing</a></li>
+<li class="toctree-l1 current current-page"><a class="current reference internal" href="#">Testing LLDB using QEMU</a></li>
+<li class="toctree-l1"><a class="reference internal" href="debugging.html">Debugging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="fuzzing.html">Fuzzing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sbapi.html">Scripting Bridge API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dataformatters.html">Data Formatters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="formatterbytecode.html">Formatter Bytecode</a></li>
+<li class="toctree-l1"><a class="reference internal" href="extensions.html">DWARF Extensions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="lldbgdbremote.html">GDB Remote Protocol Extensions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="lldbplatformpackets.html">LLDB Platform Packets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="caveats.html">Caveats</a></li>
+<li class="toctree-l1"><a class="reference internal" href="projects.html">Open Projects</a></li>
+<li class="toctree-l1"><a class="reference internal" href="lldbdap.html">Contributing to LLDB-DAP</a></li>
+<li class="toctree-l1"><a class="reference internal" href="addinglanguagesupport.html">Adding Programming Language Support</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://lldb.llvm.org/cpp_reference/namespacelldb.html">Public C++ API</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://lldb.llvm.org/cpp_reference/index.html">Private C++ API</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">External Links</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/llvm/llvm-project">Source Code</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/llvm/llvm-project/releases">Releases</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://discord.gg/xS7Z362">Join the Discord</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://discord.com/channels/636084430946959380/636732809708306432">Discord Channel</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://discourse.llvm.org/c/subprojects/lldb/8">Discussion Forums</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://llvm.org/docs/DeveloperPolicy.html">Developer Policy</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/llvm/llvm-project/issues?q=is%3Aissue+label%3Alldb+is%3Aopen">Bug Reports</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/llvm/llvm-project/pulls?q=is%3Apr+label%3Alldb+is%3Aopen">Code Reviews</a></li>
+</ul>
+
+</div>
+</div>
+
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="edit-this-page">
+  <a class="muted-link" href="https://github.com/llvm/llvm-project/edit/main/lldb/docs/resources/qemu-testing.rst" title="Edit this page">
+    <svg aria-hidden="true" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+      <path d="M4 20h4l10.5 -10.5a1.5 1.5 0 0 0 -4 -4l-10.5 10.5v4" />
+      <line x1="13.5" y1="6.5" x2="17.5" y2="10.5" />
+    </svg>
+    <span class="visually-hidden">Edit this page</span>
+  </a>
+</div><div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle">
+              <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+              <svg class="theme-icon-when-auto"><use href="#svg-sun-half"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
+            <div class="visually-hidden">Toggle table of contents sidebar</div>
+            <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+          </label>
+        </div>
+        <article role="main">
+          <section id="testing-lldb-using-qemu">
+<h1>Testing LLDB using QEMU<a class="headerlink" href="#testing-lldb-using-qemu" title="Link to this heading">#</a></h1>
+<section id="qemu-system-mode-emulation">
+<h2>QEMU system mode emulation<a class="headerlink" href="#qemu-system-mode-emulation" title="Link to this heading">#</a></h2>
+<p>QEMU can be used to test LLDB in an emulation environment in the absence of
+actual hardware. This page describes instructions to help setup a QEMU emulation
+environment for testing LLDB.</p>
+<p>The scripts under llvm-project/lldb/scripts/lldb-test-qemu can quickly help
+setup a virtual LLDB testing environment using QEMU. The scripts currently work
+with Arm or AArch64, but support for other architectures can be added easily.</p>
+<ul class="simple">
+<li><p><strong>setup.sh</strong> is used to build the Linux kernel image and QEMU system emulation executable(s) from source.</p></li>
+<li><p><strong>rootfs.sh</strong> is used to generate Ubuntu root file system images to be used for QEMU system mode emulation.</p></li>
+<li><p><strong>run-qemu.sh</strong> utilizes QEMU to boot a Linux kernel image with a root file system image.</p></li>
+</ul>
+<p>Once we have booted our kernel we can run lldb-server in emulation environment.
+Ubuntu Bionic/Focal x86_64 host was used to test these scripts instructions in this
+document. Please update it according to your host distribution/architecture.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Instructions on this page and QEMU helper scripts are verified on a Ubuntu Bionic/Focal (x86_64) host. Moreover, scripts require sudo/root permissions for installing dependencies and setting up QEMU host/guest network.</p>
+</div>
+<p>Given below are some examples of common use-cases of LLDB QEMU testing
+helper scripts:</p>
+</section>
+<section id="create-ubuntu-root-file-system-image-for-qemu-system-emulation-with-rootfs-sh">
+<h2>Create Ubuntu root file system image for QEMU system emulation with rootfs.sh<a class="headerlink" href="#create-ubuntu-root-file-system-image-for-qemu-system-emulation-with-rootfs-sh" title="Link to this heading">#</a></h2>
+<p><strong>Example:</strong> generate Ubuntu Bionic (armhf) rootfs image of size 1 GB</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ bash rootfs.sh --arch armhf --distro bionic --size 1G
+</pre></div>
+</div>
+<p><strong>Example:</strong> generate Ubuntu Focal (arm64) rootfs image of size 2 GB</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ bash rootfs.sh --arch arm64 --distro focal --size 2G
+</pre></div>
+</div>
+<p>rootfs.sh has been tested for generating Ubuntu Bionic and Focal images but they can be used to generate rootfs images of other Debian Linux distribution.</p>
+<p>rootfs.sh defaults username of generated image to your current username on host computer.</p>
+</section>
+<section id="build-qemu-or-cross-compile-linux-kernel-from-source-using-setup-sh">
+<h2>Build QEMU or cross compile Linux kernel from source using setup.sh<a class="headerlink" href="#build-qemu-or-cross-compile-linux-kernel-from-source-using-setup-sh" title="Link to this heading">#</a></h2>
+<p><strong>Example:</strong> Build QEMU binaries and Arm/AArch64 Linux kernel image</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ bash setup.sh --qemu --kernel arm
+$ bash setup.sh --qemu --kernel arm64
+</pre></div>
+</div>
+<p><strong>Example:</strong> Build Linux kernel image only</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ bash setup.sh --kernel arm
+$ bash setup.sh --kernel arm64
+</pre></div>
+</div>
+<p><strong>Example:</strong> Build qemu-system-arm and qemu-system-aarch64 binaries.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ bash setup.sh --qemu
+</pre></div>
+</div>
+<p><strong>Example:</strong> Remove qemu.git, linux.git and linux.build from working directory</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ bash setup.sh --clean
+</pre></div>
+</div>
+</section>
+<section id="run-qemu-arm-or-aarch64-system-emulation-using-run-qemu-sh">
+<h2>Run QEMU Arm or AArch64 system emulation using run-qemu.sh<a class="headerlink" href="#run-qemu-arm-or-aarch64-system-emulation-using-run-qemu-sh" title="Link to this heading">#</a></h2>
+<p>run-qemu.sh has following dependencies:</p>
+<ul class="simple">
+<li><p>Follow <a class="reference external" href="https://wiki.qemu.org/Documentation/Networking/NAT">https://wiki.qemu.org/Documentation/Networking/NAT</a> and set up bridge
+networking for QEMU.</p></li>
+<li><p>Make sure /etc/qemu-ifup script is available with executable permissions.</p></li>
+<li><p>QEMU binaries must be built from source using setup.sh or provided via –qemu
+commandline argument.</p></li>
+<li><p>Linux kernel image must be built from source using setup.sh or provided via
+–kernel commandline argument.</p></li>
+<li><p>linux.build and qemu.git folder must be present in current directory if
+setup.sh was used to build Linux kernel and QEMU binaries.</p></li>
+<li><p>–sve option will enable AArch64 SVE mode.</p></li>
+<li><p>–sme option will enable AArch64 SME mode (SME requires SVE, so this will also
+be enabled).</p></li>
+<li><p>–mte option will enable AArch64 MTE (memory tagging) mode
+(can be used on its own or in addition to –sve).</p></li>
+</ul>
+<p><strong>Example:</strong> Run QEMU Arm or AArch64 system emulation using run-qemu.sh</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ sudo bash run-qemu.sh --arch arm --rootfs &lt;path of rootfs image&gt;
+$ sudo bash run-qemu.sh --arch arm64 --rootfs &lt;path of rootfs image&gt;
+</pre></div>
+</div>
+<p><strong>Example:</strong> Run QEMU with kernel image and qemu binary provided using commandline</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ sudo bash run-qemu.sh --arch arm64 --rootfs &lt;path of rootfs image&gt; \
+--kernel &lt;path of Linux kernel image&gt; --qemu &lt;path of QEMU binary&gt;
+</pre></div>
+</div>
+</section>
+<section id="steps-for-running-lldb-server-in-qemu-system-emulation-environment">
+<h2>Steps for running lldb-server in QEMU system emulation environment<a class="headerlink" href="#steps-for-running-lldb-server-in-qemu-system-emulation-environment" title="Link to this heading">#</a></h2>
+<section id="using-bridge-networking">
+<h3>Using Bridge Networking<a class="headerlink" href="#using-bridge-networking" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p>Make sure bridge networking is enabled between host machine and QEMU VM</p></li>
+<li><p>Find out ip address assigned to eth0 in emulation environment</p></li>
+<li><p>Setup ssh access between host machine and emulation environment</p></li>
+<li><p>Login emulation environment and install dependencies</p></li>
+</ul>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ sudo apt install python-dev libedit-dev libncurses5-dev libexpat1-dev
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>Cross compile LLDB server for AArch64 Linux: Please visit <a class="reference external" href="https://lldb.llvm.org/resources/build.html">https://lldb.llvm.org/resources/build.html</a> for instructions on how to cross compile LLDB server.</p></li>
+<li><p>Transfer LLDB server executable to emulation environment</p></li>
+</ul>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ scp lldb-server username@ip-address-of-emulation-environment:/home/username
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>Run lldb-server inside QEMU VM</p></li>
+<li><p>Try connecting to lldb-server running inside QEMU VM with selected ip:port</p></li>
+</ul>
+</section>
+<section id="without-bridge-networking">
+<h3>Without Bridge Networking<a class="headerlink" href="#without-bridge-networking" title="Link to this heading">#</a></h3>
+<p>Without bridge networking you will have to forward individual ports from the VM
+to the host (refer to QEMU’s manuals for the specific options).</p>
+<ul class="simple">
+<li><p>At least one to connect to the intial <code class="docutils literal notranslate"><span class="pre">lldb-server</span></code>.</p></li>
+<li><p>One more if you want to use <code class="docutils literal notranslate"><span class="pre">lldb-server</span></code> in <code class="docutils literal notranslate"><span class="pre">platform</span> <span class="pre">mode</span></code>, and have it
+start a <code class="docutils literal notranslate"><span class="pre">gdbserver</span></code> instance for you.</p></li>
+</ul>
+<p>If you are doing either of the latter 2 you should also restrict what ports
+<code class="docutils literal notranslate"><span class="pre">lldb-server</span> <span class="pre">tries</span></code> to use, otherwise it will randomly pick one that is almost
+certainly not forwarded. An example of this is shown below.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ lldb-server platform --server --listen 0.0.0.0:54321 --gdbserver-port 49140
+</pre></div>
+</div>
+<p>The result of this is that:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">lldb-server</span></code> platform mode listens externally on port <code class="docutils literal notranslate"><span class="pre">54321</span></code>.</p></li>
+<li><p>When it is asked to start a new gdbserver mode instance, it will use the port
+<code class="docutils literal notranslate"><span class="pre">49140</span></code>.</p></li>
+</ul>
+<p>Your VM configuration should have ports <code class="docutils literal notranslate"><span class="pre">54321</span></code> and <code class="docutils literal notranslate"><span class="pre">49140</span></code> forwarded for
+this to work.</p>
+</section>
+</section>
+<section id="qemu-user-mode-emulation">
+<h2>QEMU user mode emulation<a class="headerlink" href="#qemu-user-mode-emulation" title="Link to this heading">#</a></h2>
+<p>Serious testing of LLDB should be done using system mode emulation. The following
+is presented for information only and is not a supported testing configuration
+supported by the LLDB project.</p>
+<p>However, it is possible to run the test suite against user mode QEMU if you just
+want to test a specific aspect of <code class="docutils literal notranslate"><span class="pre">lldb</span></code> and are ok ignoring a lot of expected
+failures. This method can also be adapted for simulators with a qemu-like command
+line interface.</p>
+<p>(<code class="docutils literal notranslate"><span class="pre">lldb-server</span></code> cannot be tested using user mode QEMU because that does not
+emulate the debugging system calls that <code class="docutils literal notranslate"><span class="pre">lldb-server</span></code> tries to make)</p>
+<p>Change <code class="docutils literal notranslate"><span class="pre">LLDB_TEST_USER_ARGS</span></code> to choose the <code class="docutils literal notranslate"><span class="pre">qemu-user</span></code> platform and
+configure it for your architecture. The example below is for AArch64 and assumes
+that <code class="docutils literal notranslate"><span class="pre">qemu-aarch64</span></code> is installed and on your path.</p>
+<p>If you need to override how the <code class="docutils literal notranslate"><span class="pre">qemu-user</span></code> platform finds the QEMU binary,
+look up the rest of the platform’s settings in LLDB.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">-</span><span class="n">DLLDB_TEST_USER_ARGS</span><span class="o">=</span><span class="s2">&quot;--platform-name;qemu-user;--setting;platform.plugin.qemu-user.architecture=aarch64;--arch;aarch64&quot;</span>
+</pre></div>
+</div>
+<p>Also set <code class="docutils literal notranslate"><span class="pre">LLDB_TEST_COMPILER</span></code> to something that can target the emulated
+architecture. Then you should be able to run <code class="docutils literal notranslate"><span class="pre">ninja</span> <span class="pre">check-lldb</span></code> and it will
+run the tests on QEMU user automatically.</p>
+<p>You will see a number of failures compared to a normal test run. Reasons for
+this can be, but are not limited to:</p>
+<ul class="simple">
+<li><p>QEMU’s built-in debug stub acting differently and supporting different
+features to different extents, when compared to <code class="docutils literal notranslate"><span class="pre">lldb-server</span></code>. We try to
+be compatible but LLDB is not regularly tested with QEMU user.</p></li>
+<li><p>Tests that spawn new processes to attach to. QEMU user only emulates a single
+process.</p></li>
+<li><p>Watchpoints. Either these are not emulated or behave differently to real
+hardware. Add <code class="docutils literal notranslate"><span class="pre">--skip-category;watchpoint</span></code> to <code class="docutils literal notranslate"><span class="pre">-DLLDB_TEST_USER_ARGS</span></code> to
+skip those.</p></li>
+<li><p>Lack of memory region information due to QEMU communicating this in the
+GDB server format which LLDB does not use.</p></li>
+</ul>
+</section>
+</section>
+
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          <a class="next-page" href="debugging.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title">Debugging</div>
+              </div>
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+            </a>
+          <a class="prev-page" href="test.html">
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title">Testing</div>
+                
+              </div>
+            </a>
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; 2007-2025, The LLDB Team
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            <div class="last-updated">
+              Last updated on Aug 13, 2025</div>
+          </div>
+          <div class="right-details">
+            
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer">
+      
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">Testing LLDB using QEMU</a><ul>
+<li><a class="reference internal" href="#qemu-system-mode-emulation">QEMU system mode emulation</a></li>
+<li><a class="reference internal" href="#create-ubuntu-root-file-system-image-for-qemu-system-emulation-with-rootfs-sh">Create Ubuntu root file system image for QEMU system emulation with rootfs.sh</a></li>
+<li><a class="reference internal" href="#build-qemu-or-cross-compile-linux-kernel-from-source-using-setup-sh">Build QEMU or cross compile Linux kernel from source using setup.sh</a></li>
+<li><a class="reference internal" href="#run-qemu-arm-or-aarch64-system-emulation-using-run-qemu-sh">Run QEMU Arm or AArch64 system emulation using run-qemu.sh</a></li>
+<li><a class="reference internal" href="#steps-for-running-lldb-server-in-qemu-system-emulation-environment">Steps for running lldb-server in QEMU system emulation environment</a><ul>
+<li><a class="reference internal" href="#using-bridge-networking">Using Bridge Networking</a></li>
+<li><a class="reference internal" href="#without-bridge-networking">Without Bridge Networking</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#qemu-user-mode-emulation">QEMU user mode emulation</a></li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
+      
+      
+    </aside>
+  </div>
+</div><script src="../_static/documentation_options.js?v=7f41d439"></script>
+    <script src="../_static/doctools.js?v=888ff710"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/scripts/furo.js?v=32e29ea5"></script>
+    </body>
+</html>

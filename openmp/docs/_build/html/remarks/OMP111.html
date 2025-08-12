@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Replaced globalized variable with X bytes of shared memory. [OMP111] &#8212; LLVM/OpenMP  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=d75fae25" />
+    <link rel="stylesheet" type="text/css" href="../_static/agogo.css?v=a323ad78" />
+    <script src="../_static/documentation_options.js?v=7f41d439"></script>
+    <script src="../_static/doctools.js?v=888ff710"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Found thread data sharing on the GPU. Expect degraded performance due to data globalization. [OMP112]" href="OMP112.html" />
+    <link rel="prev" title="Moving globalized variable to the stack. [OMP110]" href="OMP110.html" />
+<style type="text/css">
+  table.right { float: right; margin-left: 20px; }
+  table.right td { border: 1px solid #ccc; }
+</style>
+
+  </head><body>
+    <div class="header-wrapper" role="banner">
+      <div class="header">
+        <div class="headertitle"><a
+          href="../index.html">LLVM/OpenMP  documentation</a></div>
+        <div class="rel" role="navigation" aria-label="related navigation">
+          <a href="../index.html" title="LLVM OpenMP Documentation">HOME</a>
+           |
+          <a href="OMP110.html" title="Moving globalized variable to the stack. [OMP110]"
+             accesskey="P">previous</a> |
+          <a href="OMP112.html" title="Found thread data sharing on the GPU. Expect degraded performance due to data globalization. [OMP112]"
+             accesskey="N">next</a> |
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a>
+        </div>
+       </div>
+    </div>
+
+    <div class="content-wrapper">
+      <div class="content">
+        <div class="document">
+            
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="replaced-globalized-variable-with-x-bytes-of-shared-memory-omp111">
+<span id="omp111"></span><h1>Replaced globalized variable with X bytes of shared memory. [OMP111]<a class="headerlink" href="#replaced-globalized-variable-with-x-bytes-of-shared-memory-omp111" title="Link to this heading">¶</a></h1>
+<p>This optimization occurs when a globalized variable’s data is shared between
+multiple threads, but requires a constant amount of memory that can be
+determined at compile time. This is the case when only a single thread creates
+the memory and is then shared between every thread. The memory can then be
+pushed to a static buffer of shared memory on the device. This optimization
+allows users to declare shared memory on the device without using OpenMP’s
+custom allocators.</p>
+<p>Globalization occurs when a pointer to a thread-local variable escapes the
+current scope. If a single thread is known to be responsible for creating and
+sharing the data it can instead be mapped directly to the device’s shared
+memory. Checking if only a single thread can execute an instruction requires
+that the parent functions have internal linkage. Otherwise, an external caller
+could invalidate this analysis but having multiple threads call that function.
+The optimization pass will make internal copies of each function to use for this
+reason, but it is still recommended to mark them as internal using keywords like
+<code class="docutils literal notranslate"><span class="pre">static</span></code> whenever possible.</p>
+<section id="example">
+<h2>Example<a class="headerlink" href="#example" title="Link to this heading">¶</a></h2>
+<p>This optimization should apply to any variable declared in an OpenMP target
+region that is then shared with every thread in a parallel region. This allows
+the user to declare shared memory without using custom allocators. A simple
+stencil calculation shows how this can be used.</p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="kt">void</span><span class="w"> </span><span class="nf">stencil</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">M</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">N</span><span class="p">,</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="o">*</span><span class="n">X</span><span class="p">,</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="o">*</span><span class="n">Y</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="cp">#pragma omp target teams distribute collapse(2) \</span>
+<span class="cp">  map(to : X [0:M * N]) map(tofrom : Y [0:M * N])</span>
+<span class="w">  </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i0</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i0</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">M</span><span class="p">;</span><span class="w"> </span><span class="n">i0</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">MC</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">j0</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">j0</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">N</span><span class="p">;</span><span class="w"> </span><span class="n">j0</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">NC</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="kt">double</span><span class="w"> </span><span class="n">sX</span><span class="p">[</span><span class="n">MC</span><span class="p">][</span><span class="n">NC</span><span class="p">];</span>
+
+<span class="cp">#pragma omp parallel for collapse(2) shared(sX) default(firstprivate)</span>
+<span class="w">      </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i1</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">MC</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">i1</span><span class="p">)</span>
+<span class="w">        </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">j1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">j1</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">NC</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">j1</span><span class="p">)</span>
+<span class="w">          </span><span class="n">sX</span><span class="p">[</span><span class="n">i1</span><span class="p">][</span><span class="n">j1</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">X</span><span class="p">[(</span><span class="n">i0</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">i1</span><span class="p">)</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">N</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="p">(</span><span class="n">j0</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">j1</span><span class="p">)];</span>
+
+<span class="cp">#pragma omp parallel for collapse(2) shared(sX) default(firstprivate)</span>
+<span class="w">      </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span><span class="w"> </span><span class="n">i1</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">MC</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">i1</span><span class="p">)</span>
+<span class="w">        </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">j1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span><span class="w"> </span><span class="n">j1</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">NC</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">j1</span><span class="p">)</span>
+<span class="w">          </span><span class="n">Y</span><span class="p">[(</span><span class="n">i0</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">i1</span><span class="p">)</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">N</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">j0</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">j1</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">sX</span><span class="p">[</span><span class="n">i1</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="p">][</span><span class="n">j1</span><span class="p">]</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">sX</span><span class="p">[</span><span class="n">i1</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="p">][</span><span class="n">j1</span><span class="p">]</span><span class="w"> </span><span class="o">+</span>
+<span class="w">                                        </span><span class="n">sX</span><span class="p">[</span><span class="n">i1</span><span class="p">][</span><span class="n">j1</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="p">]</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">sX</span><span class="p">[</span><span class="n">i1</span><span class="p">][</span><span class="n">j1</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="p">]</span><span class="w"> </span><span class="o">+</span>
+<span class="w">                                        </span><span class="mf">-4.0</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">sX</span><span class="p">[</span><span class="n">i1</span><span class="p">][</span><span class="n">j1</span><span class="p">])</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="p">(</span><span class="n">dX</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">dX</span><span class="p">);</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>clang++<span class="w"> </span>-fopenmp<span class="w"> </span>-fopenmp-targets<span class="o">=</span>nvptx64<span class="w"> </span>-O1<span class="w"> </span>-Rpass<span class="o">=</span>openmp-opt<span class="w"> </span>-fopenmp-version<span class="o">=</span><span class="m">51</span><span class="w"> </span>omp111.cpp
+<span class="go">omp111.cpp:10:14: remark: Replaced globalized variable with 8192 bytes of shared memory. [OMP111]</span>
+<span class="go">    double sX[MC][NC];</span>
+<span class="go">           ^</span>
+</pre></div>
+</div>
+<p>The default mapping for variables captured in an OpenMP parallel region is
+<code class="docutils literal notranslate"><span class="pre">shared</span></code>. This means taking a pointer to the object which will ultimately
+result in globalization that will be mapped to shared memory when it could have
+been placed in registers. To avoid this, make sure each variable that can be
+copied into the region is marked <code class="docutils literal notranslate"><span class="pre">firstprivate</span></code> either explicitly or using the
+OpenMP 5.1 feature <code class="docutils literal notranslate"><span class="pre">default(firstprivate)</span></code>.</p>
+</section>
+<section id="diagnostic-scope">
+<h2>Diagnostic Scope<a class="headerlink" href="#diagnostic-scope" title="Link to this heading">¶</a></h2>
+<p>OpenMP target offloading optimization remark.</p>
+</section>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+        </div>
+        <div class="sidebar">
+          
+          <h3>Table of Contents</h3>
+          <ul>
+<li class="toctree-l1"><a class="reference internal" href="../index.html">LLVM/OpenMP Documentation</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../design/Overview.html">OpenMP in LLVM — Design Overview</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../openacc/Overview.html">OpenACC Support</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../optimizations/Overview.html">OpenMP Optimizations in LLVM</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="OptimizationRemarks.html">OpenMP Optimization Remarks</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="OMP100.html">Potentially unknown OpenMP target region caller <cite>[OMP100]</cite></a></li>
+<li class="toctree-l2"><a class="reference internal" href="OMP101.html">Parallel region is used in unknown / unexpected ways. Will not attempt to rewrite the state machine. [OMP101]</a></li>
+<li class="toctree-l2"><a class="reference internal" href="OMP102.html">Parallel region is not called from a unique kernel. Will not attempt to rewrite the state machine. [OMP102]</a></li>
+<li class="toctree-l2"><a class="reference internal" href="OMP110.html">Moving globalized variable to the stack. [OMP110]</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Replaced globalized variable with X bytes of shared memory. [OMP111]</a></li>
+<li class="toctree-l2"><a class="reference internal" href="OMP112.html">Found thread data sharing on the GPU. Expect degraded performance due to data globalization. [OMP112]</a></li>
+<li class="toctree-l2"><a class="reference internal" href="OMP113.html">Could not move globalized variable to the stack. Variable is potentially captured in call. Mark parameter as <cite>__attribute__((noescape))</cite> to override. [OMP113]</a></li>
+<li class="toctree-l2"><a class="reference internal" href="OMP120.html">Transformed generic-mode kernel to SPMD-mode [OMP120]</a></li>
+<li class="toctree-l2"><a class="reference internal" href="OMP121.html">Value has potential side effects preventing SPMD-mode execution. Add <cite>[[omp::assume(&quot;ompx_spmd_amenable&quot;)]]</cite> to the called function to override. [OMP121]</a></li>
+<li class="toctree-l2"><a class="reference internal" href="OMP130.html">Removing unused state machine from generic-mode kernel. [OMP130]</a></li>
+<li class="toctree-l2"><a class="reference internal" href="OMP131.html">Rewriting generic-mode kernel with a customized state machine. [OMP131]</a></li>
+<li class="toctree-l2"><a class="reference internal" href="OMP132.html">Generic-mode kernel is executed with a customized state machine that requires a fallback. [OMP132]</a></li>
+<li class="toctree-l2"><a class="reference internal" href="OMP133.html">Call may contain unknown parallel regions. Use <cite>[[omp::assume(“omp_no_parallelism”)]]</cite> to override. [OMP133]</a></li>
+<li class="toctree-l2"><a class="reference internal" href="OMP140.html">Could not internalize function. Some optimizations may not be possible. [OMP140]</a></li>
+<li class="toctree-l2"><a class="reference internal" href="OMP150.html">Parallel region merged with parallel region at &lt;location&gt;. [OMP150]</a></li>
+<li class="toctree-l2"><a class="reference internal" href="OMP160.html">Removing parallel region with no side-effects. [OMP160]</a></li>
+<li class="toctree-l2"><a class="reference internal" href="OMP170.html">OpenMP runtime call &lt;call&gt; deduplicated. [OMP170]</a></li>
+<li class="toctree-l2"><a class="reference internal" href="OMP180.html">Replacing OpenMP runtime call &lt;call&gt; with &lt;value&gt;.</a></li>
+<li class="toctree-l2"><a class="reference internal" href="OMP190.html">Redundant barrier eliminated. (device only)</a></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../CommandLineArgumentReference.html">OpenMP Command-Line Argument Reference</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../SupportAndFAQ.html">Support, Getting Involved, and FAQ</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../ReleaseNotes.html">In-Progress ReleaseNotes</a></li>
+</ul>
+
+          <div role="search">
+            <h3 style="margin-top: 1.5em;">Search</h3>
+            <form class="search" action="../search.html" method="get">
+                <input type="text" name="q" />
+                <input type="submit" value="Go" />
+            </form>
+          </div>
+
+        </div>
+        <div class="clearer"></div>
+      </div>
+    </div>
+
+    <div class="footer-wrapper">
+      <div class="footer">
+        <div class="left">
+          <div role="navigation" aria-label="related navigaton">
+            <a href="../index.html" title="LLVM OpenMP Documentation">HOME</a>
+             |
+            <a href="OMP110.html" title="Moving globalized variable to the stack. [OMP110]"
+              >previous</a> |
+            <a href="OMP112.html" title="Found thread data sharing on the GPU. Expect degraded performance due to data globalization. [OMP112]"
+              >next</a> |
+            <a href="../genindex.html" title="General Index"
+              >index</a>
+          </div>
+          <div role="note" aria-label="source link">
+          </div>
+        </div>
+
+        <div class="right">
+          
+    <div class="footer" role="contentinfo">
+    &#169; Copyright 2013-2025, LLVM/OpenMP.
+      Last updated on 2025-08-13.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.6.
+    </div>
+        </div>
+        <div class="clearer"></div>
+      </div>
+    </div>
+
+  </body>
+</html>

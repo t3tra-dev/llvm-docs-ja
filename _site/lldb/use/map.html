@@ -1,0 +1,1630 @@
+<!doctype html>
+<html class="no-js" lang="en" data-content_root="../">
+  <head><meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Frame and Thread Format" href="formatting.html" /><link rel="prev" title="Tutorial" href="tutorial.html" />
+
+    <!-- Generated with Sphinx 7.2.6 and Furo 2024.01.29 -->
+        <title>GDB to LLDB command map - 🐛 LLDB</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=d75fae25" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=135e06be" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=36a5483c" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #f0f0f0;
+  --color-code-foreground: black;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+      }
+    }
+  }
+</style></head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-half" viewBox="0 0 24 24">
+    <title>Auto light/dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-shadow">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M13 12h5" />
+      <path d="M13 15h4" />
+      <path d="M13 18h1" />
+      <path d="M13 9h4" />
+      <path d="M13 6h1" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc">
+<label class="overlay sidebar-overlay" for="__navigation">
+  <div class="visually-hidden">Hide navigation sidebar</div>
+</label>
+<label class="overlay toc-overlay" for="__toc">
+  <div class="visually-hidden">Hide table of contents sidebar</div>
+</label>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <div class="visually-hidden">Toggle site navigation sidebar</div>
+        <i class="icon"><svg><use href="#svg-menu"></use></svg></i>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="../index.html"><div class="brand">🐛 LLDB</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle">
+          <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+          <svg class="theme-icon-when-auto"><use href="#svg-sun-half"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
+        <div class="visually-hidden">Toggle table of contents sidebar</div>
+        <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="../index.html">
+  
+  
+  <span class="sidebar-brand-text">🐛 LLDB</span>
+  
+</a><form class="sidebar-search-container" method="get" action="../search.html" role="search">
+  <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <p class="caption" role="heading"><span class="caption-text">Using LLDB</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="tutorial.html">Tutorial</a></li>
+<li class="toctree-l1 current current-page"><a class="current reference internal" href="#">GDB to LLDB command map</a></li>
+<li class="toctree-l1"><a class="reference internal" href="formatting.html">Frame and Thread Format</a></li>
+<li class="toctree-l1"><a class="reference internal" href="variable.html">Variable Formatting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="symbolication.html">Symbolication</a></li>
+<li class="toctree-l1"><a class="reference internal" href="symbols.html">Symbols on macOS</a></li>
+<li class="toctree-l1"><a class="reference internal" href="remote.html">Remote Debugging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="intel_pt.html">Tracing with Intel Processor Trace</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ondemand.html">On Demand Symbols</a></li>
+<li class="toctree-l1"><a class="reference internal" href="aarch64-linux.html">Using LLDB On AArch64 Linux</a></li>
+<li class="toctree-l1"><a class="reference internal" href="symbolfilejson.html">JSON Symbol File Format</a></li>
+<li class="toctree-l1"><a class="reference internal" href="mcp.html">Model Context Protocol (MCP)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="troubleshooting.html">Troubleshooting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="links.html">Links</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../man/lldb.html">Man Page</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Scripting LLDB</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="python.html">Python Scripting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="python-reference.html">Python Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../python_api.html">Python API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../python_extensions.html">Python Extensions</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Developing LLDB</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../resources/overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../resources/contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../resources/build.html">Building</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../resources/test.html">Testing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../resources/qemu-testing.html">Testing LLDB using QEMU</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../resources/debugging.html">Debugging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../resources/fuzzing.html">Fuzzing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../resources/sbapi.html">Scripting Bridge API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../resources/dataformatters.html">Data Formatters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../resources/formatterbytecode.html">Formatter Bytecode</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../resources/extensions.html">DWARF Extensions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../resources/lldbgdbremote.html">GDB Remote Protocol Extensions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../resources/lldbplatformpackets.html">LLDB Platform Packets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../resources/caveats.html">Caveats</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../resources/projects.html">Open Projects</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../resources/lldbdap.html">Contributing to LLDB-DAP</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../resources/addinglanguagesupport.html">Adding Programming Language Support</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://lldb.llvm.org/cpp_reference/namespacelldb.html">Public C++ API</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://lldb.llvm.org/cpp_reference/index.html">Private C++ API</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">External Links</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/llvm/llvm-project">Source Code</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/llvm/llvm-project/releases">Releases</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://discord.gg/xS7Z362">Join the Discord</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://discord.com/channels/636084430946959380/636732809708306432">Discord Channel</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://discourse.llvm.org/c/subprojects/lldb/8">Discussion Forums</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://llvm.org/docs/DeveloperPolicy.html">Developer Policy</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/llvm/llvm-project/issues?q=is%3Aissue+label%3Alldb+is%3Aopen">Bug Reports</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/llvm/llvm-project/pulls?q=is%3Apr+label%3Alldb+is%3Aopen">Code Reviews</a></li>
+</ul>
+
+</div>
+</div>
+
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="edit-this-page">
+  <a class="muted-link" href="https://github.com/llvm/llvm-project/edit/main/lldb/docs/use/map.rst" title="Edit this page">
+    <svg aria-hidden="true" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+      <path d="M4 20h4l10.5 -10.5a1.5 1.5 0 0 0 -4 -4l-10.5 10.5v4" />
+      <line x1="13.5" y1="6.5" x2="17.5" y2="10.5" />
+    </svg>
+    <span class="visually-hidden">Edit this page</span>
+  </a>
+</div><div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle">
+              <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+              <svg class="theme-icon-when-auto"><use href="#svg-sun-half"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
+            <div class="visually-hidden">Toggle table of contents sidebar</div>
+            <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+          </label>
+        </div>
+        <article role="main">
+          <section id="gdb-to-lldb-command-map">
+<h1>GDB to LLDB command map<a class="headerlink" href="#gdb-to-lldb-command-map" title="Link to this heading">#</a></h1>
+<p>Below is a table of GDB commands with their LLDB counterparts. The built in
+GDB-compatibility aliases in LLDB are also listed. The full lldb command names
+are often long, but any unique short form can be used. Instead of “<strong>breakpoint
+set</strong>”, “<strong>br se</strong>” is also acceptable.</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#execution-commands">Execution Commands</a></p></li>
+<li><p><a class="reference internal" href="#breakpoint-commands">Breakpoint Commands</a></p></li>
+<li><p><a class="reference internal" href="#watchpoint-commands">Watchpoint Commands</a></p></li>
+<li><p><a class="reference internal" href="#examining-variables">Examining Variables</a></p></li>
+<li><p><a class="reference internal" href="#evaluating-expressions">Evaluating Expressions</a></p></li>
+<li><p><a class="reference internal" href="#examining-thread-state">Examining Thread State</a></p></li>
+<li><p><a class="reference internal" href="#executable-and-shared-library-query-commands">Executable and Shared Library Query Commands</a></p></li>
+<li><p><a class="reference internal" href="#miscellaneous">Miscellaneous</a></p></li>
+</ul>
+<section id="execution-commands">
+<h2>Execution Commands<a class="headerlink" href="#execution-commands" title="Link to this heading">#</a></h2>
+<section id="launch-a-process-no-arguments">
+<h3>Launch a process no arguments<a class="headerlink" href="#launch-a-process-no-arguments" title="Link to this heading">#</a></h3>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>gdb<span class="o">)</span><span class="w"> </span>run
+<span class="o">(</span>gdb<span class="o">)</span><span class="w"> </span>r
+</pre></div>
+</div>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>process<span class="w"> </span>launch
+<span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>run
+<span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>r
+</pre></div>
+</div>
+</section>
+<section id="launch-a-process-with-arguments-args">
+<h3>Launch a process with arguments <code class="docutils literal notranslate"><span class="pre">&lt;args&gt;</span></code><a class="headerlink" href="#launch-a-process-with-arguments-args" title="Link to this heading">#</a></h3>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>gdb<span class="o">)</span><span class="w"> </span>run<span class="w"> </span>&lt;args&gt;
+<span class="o">(</span>gdb<span class="o">)</span><span class="w"> </span>r<span class="w"> </span>&lt;args&gt;
+</pre></div>
+</div>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>process<span class="w"> </span>launch<span class="w"> </span>--<span class="w"> </span>&lt;args&gt;
+<span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>run<span class="w"> </span>&lt;args&gt;
+<span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>r<span class="w"> </span>&lt;args&gt;
+</pre></div>
+</div>
+</section>
+<section id="launch-process-a-out-with-arguments-1-2-3-by-passing-the-args-to-the-debugger">
+<h3>Launch process <code class="docutils literal notranslate"><span class="pre">a.out</span></code> with arguments <code class="docutils literal notranslate"><span class="pre">1</span> <span class="pre">2</span> <span class="pre">3</span></code> by passing the args to the debugger<a class="headerlink" href="#launch-process-a-out-with-arguments-1-2-3-by-passing-the-args-to-the-debugger" title="Link to this heading">#</a></h3>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>gdb<span class="w"> </span>--args<span class="w"> </span>a.out<span class="w"> </span><span class="m">1</span><span class="w"> </span><span class="m">2</span><span class="w"> </span><span class="m">3</span>
+<span class="o">(</span>gdb<span class="o">)</span><span class="w"> </span>run
+...
+<span class="o">(</span>gdb<span class="o">)</span><span class="w"> </span>run
+...
+</pre></div>
+</div>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>lldb<span class="w"> </span>--<span class="w"> </span>a.out<span class="w"> </span><span class="m">1</span><span class="w"> </span><span class="m">2</span><span class="w"> </span><span class="m">3</span>
+<span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>run
+...
+<span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>run
+...
+</pre></div>
+</div>
+</section>
+<section id="launch-process-a-out-with-arguments-1-2-3-by-setting-the-args-in-the-debugger">
+<h3>Launch process a.out with arguments <code class="docutils literal notranslate"><span class="pre">1</span> <span class="pre">2</span> <span class="pre">3</span></code> by setting the args in the debugger<a class="headerlink" href="#launch-process-a-out-with-arguments-1-2-3-by-setting-the-args-in-the-debugger" title="Link to this heading">#</a></h3>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>gdb<span class="o">)</span><span class="w"> </span><span class="nb">set</span><span class="w"> </span>args<span class="w"> </span><span class="m">1</span><span class="w"> </span><span class="m">2</span><span class="w"> </span><span class="m">3</span>
+<span class="o">(</span>gdb<span class="o">)</span><span class="w"> </span>run
+...
+<span class="o">(</span>gdb<span class="o">)</span><span class="w"> </span>run
+...
+</pre></div>
+</div>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>settings<span class="w"> </span><span class="nb">set</span><span class="w"> </span>target.run-args<span class="w"> </span><span class="m">1</span><span class="w"> </span><span class="m">2</span><span class="w"> </span><span class="m">3</span>
+<span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>run
+...
+<span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>run
+...
+</pre></div>
+</div>
+</section>
+<section id="launch-a-process-with-arguments-in-new-terminal-window-macos-only">
+<h3>Launch a process with arguments in new terminal window (macOS only)<a class="headerlink" href="#launch-a-process-with-arguments-in-new-terminal-window-macos-only" title="Link to this heading">#</a></h3>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>process<span class="w"> </span>launch<span class="w"> </span>--tty<span class="w"> </span>--<span class="w"> </span>&lt;args&gt;
+<span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>pro<span class="w"> </span>la<span class="w"> </span>-t<span class="w"> </span>--<span class="w"> </span>&lt;args&gt;
+</pre></div>
+</div>
+</section>
+<section id="launch-a-process-with-arguments-args-in-existing-terminal-dev-ttys006">
+<h3>Launch a process with arguments <code class="docutils literal notranslate"><span class="pre">&lt;args&gt;</span></code> in existing terminal <code class="docutils literal notranslate"><span class="pre">/dev/ttys006</span></code><a class="headerlink" href="#launch-a-process-with-arguments-args-in-existing-terminal-dev-ttys006" title="Link to this heading">#</a></h3>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>process<span class="w"> </span>launch<span class="w"> </span>--tty<span class="o">=</span>/dev/ttys006<span class="w"> </span>--<span class="w"> </span>&lt;args&gt;
+<span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>pro<span class="w"> </span>la<span class="w"> </span>-t/dev/ttys006<span class="w"> </span>--<span class="w"> </span>&lt;args&gt;
+</pre></div>
+</div>
+</section>
+<section id="set-environment-variables-for-process-before-launching">
+<h3>Set environment variables for process before launching<a class="headerlink" href="#set-environment-variables-for-process-before-launching" title="Link to this heading">#</a></h3>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>gdb<span class="o">)</span><span class="w"> </span><span class="nb">set</span><span class="w"> </span>env<span class="w"> </span>DEBUG<span class="w"> </span><span class="m">1</span>
+</pre></div>
+</div>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>settings<span class="w"> </span><span class="nb">set</span><span class="w"> </span>target.env-vars<span class="w"> </span><span class="nv">DEBUG</span><span class="o">=</span><span class="m">1</span>
+<span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span><span class="nb">set</span><span class="w"> </span>se<span class="w"> </span>target.env-vars<span class="w"> </span><span class="nv">DEBUG</span><span class="o">=</span><span class="m">1</span>
+<span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>env<span class="w"> </span><span class="nv">DEBUG</span><span class="o">=</span><span class="m">1</span>
+</pre></div>
+</div>
+</section>
+<section id="unset-environment-variables-for-process-before-launching">
+<h3>Unset environment variables for process before launching<a class="headerlink" href="#unset-environment-variables-for-process-before-launching" title="Link to this heading">#</a></h3>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>gdb<span class="o">)</span><span class="w"> </span><span class="nb">unset</span><span class="w"> </span>env<span class="w"> </span>DEBUG
+</pre></div>
+</div>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>settings<span class="w"> </span>remove<span class="w"> </span>target.env-vars<span class="w"> </span>DEBUG
+<span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span><span class="nb">set</span><span class="w"> </span>rem<span class="w"> </span>target.env-vars<span class="w"> </span>DEBUG
+</pre></div>
+</div>
+</section>
+<section id="show-the-arguments-that-will-be-or-were-passed-to-the-program-when-run">
+<h3>Show the arguments that will be or were passed to the program when run<a class="headerlink" href="#show-the-arguments-that-will-be-or-were-passed-to-the-program-when-run" title="Link to this heading">#</a></h3>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>gdb<span class="o">)</span><span class="w"> </span>show<span class="w"> </span>args
+Argument<span class="w"> </span>list<span class="w"> </span>to<span class="w"> </span>give<span class="w"> </span>program<span class="w"> </span>being<span class="w"> </span>debugged<span class="w"> </span>when<span class="w"> </span>it<span class="w"> </span>is<span class="w"> </span>started<span class="w"> </span>is<span class="w"> </span><span class="s2">&quot;1 2 3&quot;</span>.
+</pre></div>
+</div>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>settings<span class="w"> </span>show<span class="w"> </span>target.run-args
+target.run-args<span class="w"> </span><span class="o">(</span>array<span class="w"> </span>of<span class="w"> </span>strings<span class="o">)</span><span class="w"> </span><span class="o">=</span>
+<span class="o">[</span><span class="m">0</span><span class="o">]</span>:<span class="w"> </span><span class="s2">&quot;1&quot;</span>
+<span class="o">[</span><span class="m">1</span><span class="o">]</span>:<span class="w"> </span><span class="s2">&quot;2&quot;</span>
+<span class="o">[</span><span class="m">2</span><span class="o">]</span>:<span class="w"> </span><span class="s2">&quot;3&quot;</span>
+</pre></div>
+</div>
+</section>
+<section id="set-environment-variables-for-process-and-launch-process-in-one-command">
+<h3>Set environment variables for process and launch process in one command<a class="headerlink" href="#set-environment-variables-for-process-and-launch-process-in-one-command" title="Link to this heading">#</a></h3>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>process<span class="w"> </span>launch<span class="w"> </span>-E<span class="w"> </span><span class="nv">DEBUG</span><span class="o">=</span><span class="m">1</span>
+</pre></div>
+</div>
+</section>
+<section id="attach-to-the-process-with-process-id-123">
+<h3>Attach to the process with process ID 123<a class="headerlink" href="#attach-to-the-process-with-process-id-123" title="Link to this heading">#</a></h3>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>gdb<span class="o">)</span><span class="w"> </span>attach<span class="w"> </span><span class="m">123</span>
+</pre></div>
+</div>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>process<span class="w"> </span>attach<span class="w"> </span>--pid<span class="w"> </span><span class="m">123</span>
+<span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>attach<span class="w"> </span>-p<span class="w"> </span><span class="m">123</span>
+</pre></div>
+</div>
+</section>
+<section id="attach-to-the-process-named-a-out">
+<h3>Attach to the process named <code class="docutils literal notranslate"><span class="pre">a.out</span></code><a class="headerlink" href="#attach-to-the-process-named-a-out" title="Link to this heading">#</a></h3>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>gdb<span class="o">)</span><span class="w"> </span>attach<span class="w"> </span>a.out
+</pre></div>
+</div>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>process<span class="w"> </span>attach<span class="w"> </span>--name<span class="w"> </span>a.out
+<span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>pro<span class="w"> </span>at<span class="w"> </span>-n<span class="w"> </span>a.out
+</pre></div>
+</div>
+</section>
+<section id="wait-for-a-process-named-a-out-to-launch-and-attach">
+<h3>Wait for a process named <code class="docutils literal notranslate"><span class="pre">a.out</span></code> to launch and attach<a class="headerlink" href="#wait-for-a-process-named-a-out-to-launch-and-attach" title="Link to this heading">#</a></h3>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>gdb<span class="o">)</span><span class="w"> </span>attach<span class="w"> </span>-waitfor<span class="w"> </span>a.out
+</pre></div>
+</div>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>process<span class="w"> </span>attach<span class="w"> </span>--name<span class="w"> </span>a.out<span class="w"> </span>--waitfor
+<span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>pro<span class="w"> </span>at<span class="w"> </span>-n<span class="w"> </span>a.out<span class="w"> </span>-w
+</pre></div>
+</div>
+</section>
+<section id="attach-to-a-remote-gdb-protocol-server-running-on-system-eorgadd-port-8000">
+<h3>Attach to a remote gdb protocol server running on system <code class="docutils literal notranslate"><span class="pre">eorgadd</span></code>, port <code class="docutils literal notranslate"><span class="pre">8000</span></code><a class="headerlink" href="#attach-to-a-remote-gdb-protocol-server-running-on-system-eorgadd-port-8000" title="Link to this heading">#</a></h3>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>gdb<span class="o">)</span><span class="w"> </span>target<span class="w"> </span>remote<span class="w"> </span>eorgadd:8000
+</pre></div>
+</div>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>gdb-remote<span class="w"> </span>eorgadd:8000
+</pre></div>
+</div>
+</section>
+<section id="attach-to-a-remote-gdb-protocol-server-running-on-the-local-system-port-8000">
+<h3>Attach to a remote gdb protocol server running on the local system, port <code class="docutils literal notranslate"><span class="pre">8000</span></code><a class="headerlink" href="#attach-to-a-remote-gdb-protocol-server-running-on-the-local-system-port-8000" title="Link to this heading">#</a></h3>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>gdb<span class="o">)</span><span class="w"> </span>target<span class="w"> </span>remote<span class="w"> </span>localhost:8000
+</pre></div>
+</div>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>gdb-remote<span class="w"> </span><span class="m">8000</span>
+</pre></div>
+</div>
+</section>
+<section id="attach-to-a-darwin-kernel-in-kdp-mode-on-system-eorgadd">
+<h3>Attach to a Darwin kernel in kdp mode on system <code class="docutils literal notranslate"><span class="pre">eorgadd</span></code><a class="headerlink" href="#attach-to-a-darwin-kernel-in-kdp-mode-on-system-eorgadd" title="Link to this heading">#</a></h3>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>gdb<span class="o">)</span><span class="w"> </span>kdp-reattach<span class="w"> </span>eorgadd
+</pre></div>
+</div>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>kdp-remote<span class="w"> </span>eorgadd
+</pre></div>
+</div>
+</section>
+<section id="do-a-source-level-single-step-in-the-currently-selected-thread">
+<h3>Do a source level single step in the currently selected thread<a class="headerlink" href="#do-a-source-level-single-step-in-the-currently-selected-thread" title="Link to this heading">#</a></h3>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>gdb<span class="o">)</span><span class="w"> </span>step
+<span class="o">(</span>gdb<span class="o">)</span><span class="w"> </span>s
+</pre></div>
+</div>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>thread<span class="w"> </span>step-in
+<span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>step
+<span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>s
+</pre></div>
+</div>
+</section>
+<section id="ignore-a-function-when-doing-a-source-level-single-step-in">
+<h3>Ignore a function when doing a source level single step in<a class="headerlink" href="#ignore-a-function-when-doing-a-source-level-single-step-in" title="Link to this heading">#</a></h3>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>gdb<span class="o">)</span><span class="w"> </span>skip<span class="w"> </span>abc
+Function<span class="w"> </span>abc<span class="w"> </span>will<span class="w"> </span>be<span class="w"> </span>skipped<span class="w"> </span>when<span class="w"> </span>stepping.
+</pre></div>
+</div>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>settings<span class="w"> </span>show<span class="w"> </span>target.process.thread.step-avoid-regexp
+target.process.thread.step-avoid-regexp<span class="w"> </span><span class="o">(</span>regex<span class="o">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>^std::
+<span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>settings<span class="w"> </span><span class="nb">set</span><span class="w"> </span>target.process.thread.step-avoid-regexp<span class="w"> </span>^std::<span class="p">|</span>^abc
+</pre></div>
+</div>
+<p>You can ignore a function once using:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>thread<span class="w"> </span>step-in<span class="w"> </span>-r<span class="w"> </span>^abc
+</pre></div>
+</div>
+<p>Or you can do the opposite, only step into functions matching a certain name:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="c1"># Step in if abc is a substring of the function name.</span>
+<span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>sif<span class="w"> </span>abc
+<span class="c1"># Which is equivalent to:</span>
+<span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>thread<span class="w"> </span>step-in<span class="w"> </span>-t<span class="w"> </span>abc
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">thread</span> <span class="pre">step-in</span></code> has more options which cover some of <code class="docutils literal notranslate"><span class="pre">skip</span></code>’s other
+features. See <code class="docutils literal notranslate"><span class="pre">help</span> <span class="pre">thread</span> <span class="pre">step-in</span></code> for details.</p>
+</section>
+<section id="do-a-source-level-single-step-over-in-the-currently-selected-thread">
+<h3>Do a source level single step over in the currently selected thread<a class="headerlink" href="#do-a-source-level-single-step-over-in-the-currently-selected-thread" title="Link to this heading">#</a></h3>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>gdb<span class="o">)</span><span class="w"> </span>next
+<span class="o">(</span>gdb<span class="o">)</span><span class="w"> </span>n
+</pre></div>
+</div>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>thread<span class="w"> </span>step-over
+<span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>next
+<span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>n
+</pre></div>
+</div>
+</section>
+<section id="do-an-instruction-level-single-step-in-the-currently-selected-thread">
+<h3>Do an instruction level single step in the currently selected thread<a class="headerlink" href="#do-an-instruction-level-single-step-in-the-currently-selected-thread" title="Link to this heading">#</a></h3>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>gdb<span class="o">)</span><span class="w"> </span>stepi
+<span class="o">(</span>gdb<span class="o">)</span><span class="w"> </span>si
+</pre></div>
+</div>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>thread<span class="w"> </span>step-inst
+<span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>si
+</pre></div>
+</div>
+</section>
+<section id="do-an-instruction-level-single-step-over-in-the-currently-selected-thread">
+<h3>Do an instruction level single step over in the currently selected thread<a class="headerlink" href="#do-an-instruction-level-single-step-over-in-the-currently-selected-thread" title="Link to this heading">#</a></h3>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>gdb<span class="o">)</span><span class="w"> </span>nexti
+<span class="o">(</span>gdb<span class="o">)</span><span class="w"> </span>ni
+</pre></div>
+</div>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>thread<span class="w"> </span>step-inst-over
+<span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>ni
+</pre></div>
+</div>
+</section>
+<section id="step-out-of-the-currently-selected-frame">
+<h3>Step out of the currently selected frame<a class="headerlink" href="#step-out-of-the-currently-selected-frame" title="Link to this heading">#</a></h3>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>gdb<span class="o">)</span><span class="w"> </span>finish
+</pre></div>
+</div>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>thread<span class="w"> </span>step-out
+<span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>finish
+</pre></div>
+</div>
+</section>
+<section id="return-immediately-from-the-currently-selected-frame-with-an-optional-return-value">
+<h3>Return immediately from the currently selected frame, with an optional return value<a class="headerlink" href="#return-immediately-from-the-currently-selected-frame-with-an-optional-return-value" title="Link to this heading">#</a></h3>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>gdb<span class="o">)</span><span class="w"> </span><span class="k">return</span><span class="w"> </span>&lt;RETURN<span class="w"> </span>EXPRESSION&gt;
+</pre></div>
+</div>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>thread<span class="w"> </span><span class="k">return</span><span class="w"> </span>&lt;RETURN<span class="w"> </span>EXPRESSION&gt;
+</pre></div>
+</div>
+</section>
+<section id="backtrace-and-disassemble-every-time-you-stop">
+<h3>Backtrace and disassemble every time you stop<a class="headerlink" href="#backtrace-and-disassemble-every-time-you-stop" title="Link to this heading">#</a></h3>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>target<span class="w"> </span>stop-hook<span class="w"> </span>add
+Enter<span class="w"> </span>your<span class="w"> </span>stop<span class="w"> </span>hook<span class="w"> </span>command<span class="o">(</span>s<span class="o">)</span>.<span class="w"> </span>Type<span class="w"> </span><span class="s1">&#39;DONE&#39;</span><span class="w"> </span>to<span class="w"> </span>end.
+&gt;<span class="w"> </span>bt
+&gt;<span class="w"> </span>disassemble<span class="w"> </span>--pc
+&gt;<span class="w"> </span>DONE
+Stop<span class="w"> </span>hook<span class="w"> </span><span class="c1">#1 added.</span>
+</pre></div>
+</div>
+</section>
+<section id="run-until-we-hit-line-12-or-control-leaves-the-current-function">
+<h3>Run until we hit line 12 or control leaves the current function<a class="headerlink" href="#run-until-we-hit-line-12-or-control-leaves-the-current-function" title="Link to this heading">#</a></h3>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>gdb<span class="o">)</span><span class="w"> </span><span class="k">until</span><span class="w"> </span><span class="m">12</span>
+</pre></div>
+</div>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>thread<span class="w"> </span><span class="k">until</span><span class="w"> </span><span class="m">12</span>
+</pre></div>
+</div>
+</section>
+<section id="show-the-current-frame-and-source-line">
+<h3>Show the current frame and source line<a class="headerlink" href="#show-the-current-frame-and-source-line" title="Link to this heading">#</a></h3>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>gdb<span class="o">)</span><span class="w"> </span>frame
+</pre></div>
+</div>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>frame<span class="w"> </span><span class="k">select</span>
+<span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>f
+<span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>process<span class="w"> </span>status
+</pre></div>
+</div>
+</section>
+</section>
+<section id="breakpoint-commands">
+<h2>Breakpoint Commands<a class="headerlink" href="#breakpoint-commands" title="Link to this heading">#</a></h2>
+<section id="set-a-breakpoint-at-all-functions-named-main">
+<h3>Set a breakpoint at all functions named main<a class="headerlink" href="#set-a-breakpoint-at-all-functions-named-main" title="Link to this heading">#</a></h3>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>gdb<span class="o">)</span><span class="w"> </span><span class="k">break</span><span class="w"> </span>main
+</pre></div>
+</div>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>breakpoint<span class="w"> </span><span class="nb">set</span><span class="w"> </span>--name<span class="w"> </span>main
+<span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>br<span class="w"> </span>s<span class="w"> </span>-n<span class="w"> </span>main
+<span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>b<span class="w"> </span>main
+</pre></div>
+</div>
+</section>
+<section id="set-a-breakpoint-in-file-test-c-at-line-12">
+<h3>Set a breakpoint in file <code class="docutils literal notranslate"><span class="pre">test.c</span></code> at line <code class="docutils literal notranslate"><span class="pre">12</span></code><a class="headerlink" href="#set-a-breakpoint-in-file-test-c-at-line-12" title="Link to this heading">#</a></h3>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>gdb<span class="o">)</span><span class="w"> </span><span class="k">break</span><span class="w"> </span>test.c:12
+</pre></div>
+</div>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>breakpoint<span class="w"> </span><span class="nb">set</span><span class="w"> </span>--file<span class="w"> </span>test.c<span class="w"> </span>--line<span class="w"> </span><span class="m">12</span>
+<span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>br<span class="w"> </span>s<span class="w"> </span>-f<span class="w"> </span>test.c<span class="w"> </span>-l<span class="w"> </span><span class="m">12</span>
+<span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>b<span class="w"> </span>test.c:12
+</pre></div>
+</div>
+</section>
+<section id="set-a-breakpoint-at-all-c-methods-whose-basename-is-main">
+<h3>Set a breakpoint at all C++ methods whose basename is <code class="docutils literal notranslate"><span class="pre">main</span></code><a class="headerlink" href="#set-a-breakpoint-at-all-c-methods-whose-basename-is-main" title="Link to this heading">#</a></h3>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>gdb<span class="o">)</span><span class="w"> </span><span class="k">break</span><span class="w"> </span>main
+<span class="o">(</span>Hope<span class="w"> </span>that<span class="w"> </span>there<span class="w"> </span>are<span class="w"> </span>no<span class="w"> </span>C<span class="w"> </span>functions<span class="w"> </span>named<span class="w"> </span>main<span class="o">)</span>
+</pre></div>
+</div>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>breakpoint<span class="w"> </span><span class="nb">set</span><span class="w"> </span>--method<span class="w"> </span>main
+<span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>br<span class="w"> </span>s<span class="w"> </span>-M<span class="w"> </span>main
+</pre></div>
+</div>
+</section>
+<section id="set-a-breakpoint-at-an-objective-c-function-nsstring-stringwithformat">
+<h3>Set a breakpoint at an Objective-C function <code class="docutils literal notranslate"><span class="pre">-[NSString</span> <span class="pre">stringWithFormat:]</span></code><a class="headerlink" href="#set-a-breakpoint-at-an-objective-c-function-nsstring-stringwithformat" title="Link to this heading">#</a></h3>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>gdb<span class="o">)</span><span class="w"> </span><span class="k">break</span><span class="w"> </span>-<span class="o">[</span>NSString<span class="w"> </span>stringWithFormat:<span class="o">]</span>
+</pre></div>
+</div>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>breakpoint<span class="w"> </span><span class="nb">set</span><span class="w"> </span>--name<span class="w"> </span><span class="s2">&quot;-[NSString stringWithFormat:]&quot;</span>
+<span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>b<span class="w"> </span>-<span class="o">[</span>NSString<span class="w"> </span>stringWithFormat:<span class="o">]</span>
+</pre></div>
+</div>
+</section>
+<section id="set-a-breakpoint-at-all-objective-c-methods-whose-selector-is-count">
+<h3>Set a breakpoint at all Objective-C methods whose selector is <code class="docutils literal notranslate"><span class="pre">count</span></code><a class="headerlink" href="#set-a-breakpoint-at-all-objective-c-methods-whose-selector-is-count" title="Link to this heading">#</a></h3>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>gdb<span class="o">)</span><span class="w"> </span><span class="k">break</span><span class="w"> </span>count
+<span class="o">(</span>Hope<span class="w"> </span>that<span class="w"> </span>there<span class="w"> </span>are<span class="w"> </span>no<span class="w"> </span>C<span class="w"> </span>or<span class="w"> </span>C++<span class="w"> </span>functions<span class="w"> </span>named<span class="w"> </span>count<span class="o">)</span>
+</pre></div>
+</div>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>breakpoint<span class="w"> </span><span class="nb">set</span><span class="w"> </span>--selector<span class="w"> </span>count
+<span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>br<span class="w"> </span>s<span class="w"> </span>-S<span class="w"> </span>count
+</pre></div>
+</div>
+</section>
+<section id="set-a-breakpoint-by-regular-expression-on-function-name">
+<h3>Set a breakpoint by regular expression on function name<a class="headerlink" href="#set-a-breakpoint-by-regular-expression-on-function-name" title="Link to this heading">#</a></h3>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>gdb<span class="o">)</span><span class="w"> </span>rbreak<span class="w"> </span>regular-expression
+</pre></div>
+</div>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>breakpoint<span class="w"> </span><span class="nb">set</span><span class="w"> </span>--func-regex<span class="w"> </span>regular-expression
+<span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>br<span class="w"> </span>s<span class="w"> </span>-r<span class="w"> </span>regular-expression
+</pre></div>
+</div>
+</section>
+<section id="ensure-that-breakpoints-by-file-and-line-work-for-include-c-cpp-m-files">
+<h3>Ensure that breakpoints by file and line work for <code class="docutils literal notranslate"><span class="pre">#include</span> <span class="pre">.c/.cpp/.m</span></code> files<a class="headerlink" href="#ensure-that-breakpoints-by-file-and-line-work-for-include-c-cpp-m-files" title="Link to this heading">#</a></h3>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>gdb<span class="o">)</span><span class="w"> </span>b<span class="w"> </span>foo.c:12
+</pre></div>
+</div>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>settings<span class="w"> </span><span class="nb">set</span><span class="w"> </span>target.inline-breakpoint-strategy<span class="w"> </span>always
+<span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>br<span class="w"> </span>s<span class="w"> </span>-f<span class="w"> </span>foo.c<span class="w"> </span>-l<span class="w"> </span><span class="m">12</span>
+</pre></div>
+</div>
+</section>
+<section id="set-a-breakpoint-by-regular-expression-on-source-file-contents">
+<h3>Set a breakpoint by regular expression on source file contents<a class="headerlink" href="#set-a-breakpoint-by-regular-expression-on-source-file-contents" title="Link to this heading">#</a></h3>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>gdb<span class="o">)</span><span class="w"> </span>shell<span class="w"> </span>grep<span class="w"> </span>-e<span class="w"> </span>-n<span class="w"> </span>pattern<span class="w"> </span>source-file
+<span class="o">(</span>gdb<span class="o">)</span><span class="w"> </span><span class="k">break</span><span class="w"> </span>source-file:CopyLineNumbers
+</pre></div>
+</div>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>breakpoint<span class="w"> </span><span class="nb">set</span><span class="w"> </span>--source-pattern<span class="w"> </span>regular-expression<span class="w"> </span>--file<span class="w"> </span>SourceFile
+<span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>br<span class="w"> </span>s<span class="w"> </span>-p<span class="w"> </span>regular-expression<span class="w"> </span>-f<span class="w"> </span>file
+</pre></div>
+</div>
+</section>
+<section id="set-a-conditional-breakpoint">
+<h3>Set a conditional breakpoint<a class="headerlink" href="#set-a-conditional-breakpoint" title="Link to this heading">#</a></h3>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>gdb<span class="o">)</span><span class="w"> </span><span class="k">break</span><span class="w"> </span>foo<span class="w"> </span><span class="k">if</span><span class="w"> </span>strcmp<span class="o">(</span>y,<span class="s2">&quot;hello&quot;</span><span class="o">)</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="m">0</span>
+</pre></div>
+</div>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>breakpoint<span class="w"> </span><span class="nb">set</span><span class="w"> </span>--name<span class="w"> </span>foo<span class="w"> </span>--condition<span class="w"> </span><span class="s1">&#39;(int)strcmp(y,&quot;hello&quot;) == 0&#39;</span>
+<span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>br<span class="w"> </span>s<span class="w"> </span>-n<span class="w"> </span>foo<span class="w"> </span>-c<span class="w"> </span><span class="s1">&#39;(int)strcmp(y,&quot;hello&quot;) == 0&#39;</span>
+</pre></div>
+</div>
+</section>
+<section id="list-all-breakpoints">
+<h3>List all breakpoints<a class="headerlink" href="#list-all-breakpoints" title="Link to this heading">#</a></h3>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>gdb<span class="o">)</span><span class="w"> </span>info<span class="w"> </span><span class="k">break</span>
+</pre></div>
+</div>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>breakpoint<span class="w"> </span>list
+<span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>br<span class="w"> </span>l
+</pre></div>
+</div>
+</section>
+<section id="delete-a-breakpoint">
+<h3>Delete a breakpoint<a class="headerlink" href="#delete-a-breakpoint" title="Link to this heading">#</a></h3>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>gdb<span class="o">)</span><span class="w"> </span>delete<span class="w"> </span><span class="m">1</span>
+</pre></div>
+</div>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>breakpoint<span class="w"> </span>delete<span class="w"> </span><span class="m">1</span>
+<span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>br<span class="w"> </span>del<span class="w"> </span><span class="m">1</span>
+</pre></div>
+</div>
+</section>
+<section id="disable-a-breakpoint">
+<h3>Disable a breakpoint<a class="headerlink" href="#disable-a-breakpoint" title="Link to this heading">#</a></h3>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>gdb<span class="o">)</span><span class="w"> </span>disable<span class="w"> </span><span class="m">1</span>
+</pre></div>
+</div>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>breakpoint<span class="w"> </span>disable<span class="w"> </span><span class="m">1</span>
+<span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>br<span class="w"> </span>dis<span class="w"> </span><span class="m">1</span>
+</pre></div>
+</div>
+</section>
+<section id="enable-a-breakpoint">
+<h3>Enable a breakpoint<a class="headerlink" href="#enable-a-breakpoint" title="Link to this heading">#</a></h3>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>gdb<span class="o">)</span><span class="w"> </span><span class="nb">enable</span><span class="w"> </span><span class="m">1</span>
+</pre></div>
+</div>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>breakpoint<span class="w"> </span><span class="nb">enable</span><span class="w"> </span><span class="m">1</span>
+<span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>br<span class="w"> </span>en<span class="w"> </span><span class="m">1</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="watchpoint-commands">
+<h2>Watchpoint Commands<a class="headerlink" href="#watchpoint-commands" title="Link to this heading">#</a></h2>
+<section id="set-a-watchpoint-on-a-variable-when-it-is-written-to">
+<h3>Set a watchpoint on a variable when it is written to<a class="headerlink" href="#set-a-watchpoint-on-a-variable-when-it-is-written-to" title="Link to this heading">#</a></h3>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>gdb<span class="o">)</span><span class="w"> </span>watch<span class="w"> </span>global_var
+</pre></div>
+</div>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>watchpoint<span class="w"> </span><span class="nb">set</span><span class="w"> </span>variable<span class="w"> </span>global_var
+<span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>wa<span class="w"> </span>s<span class="w"> </span>v<span class="w"> </span>global_var
+</pre></div>
+</div>
+</section>
+<section id="set-a-watchpoint-on-a-memory-location-when-it-is-written-into">
+<h3>Set a watchpoint on a memory location when it is written into<a class="headerlink" href="#set-a-watchpoint-on-a-memory-location-when-it-is-written-into" title="Link to this heading">#</a></h3>
+<p>The size of the region to watch for defaults to the pointer size if no ‘-x byte_size’ is specified. This command takes raw input, evaluated as an expression returning an unsigned integer pointing to the start of the region, after the ‘–’ option terminator.</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>gdb<span class="o">)</span><span class="w"> </span>watch<span class="w"> </span>-location<span class="w"> </span>g_char_ptr
+</pre></div>
+</div>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>watchpoint<span class="w"> </span><span class="nb">set</span><span class="w"> </span>expression<span class="w"> </span>--<span class="w"> </span>my_ptr
+<span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>wa<span class="w"> </span>s<span class="w"> </span>e<span class="w"> </span>--<span class="w"> </span>my_ptr
+</pre></div>
+</div>
+</section>
+<section id="set-a-condition-on-a-watchpoint">
+<h3>Set a condition on a watchpoint<a class="headerlink" href="#set-a-condition-on-a-watchpoint" title="Link to this heading">#</a></h3>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>watch<span class="w"> </span><span class="nb">set</span><span class="w"> </span>var<span class="w"> </span>global
+<span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>watchpoint<span class="w"> </span>modify<span class="w"> </span>-c<span class="w"> </span><span class="s1">&#39;(global==5)&#39;</span>
+<span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>c
+...
+<span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>bt
+*<span class="w"> </span>thread<span class="w"> </span><span class="c1">#1: tid = 0x1c03, 0x0000000100000ef5 a.out`modify + 21 at main.cpp:16, stop reason = watchpoint 1</span>
+frame<span class="w"> </span><span class="c1">#0: 0x0000000100000ef5 a.out`modify + 21 at main.cpp:16</span>
+frame<span class="w"> </span><span class="c1">#1: 0x0000000100000eac a.out`main + 108 at main.cpp:25</span>
+frame<span class="w"> </span><span class="c1">#2: 0x00007fff8ac9c7e1 libdyld.dylib`start + 1</span>
+<span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>frame<span class="w"> </span>var<span class="w"> </span>global
+<span class="o">(</span>int32_t<span class="o">)</span><span class="w"> </span><span class="nv">global</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">5</span>
+</pre></div>
+</div>
+</section>
+<section id="list-all-watchpoints">
+<h3>List all watchpoints<a class="headerlink" href="#list-all-watchpoints" title="Link to this heading">#</a></h3>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>gdb<span class="o">)</span><span class="w"> </span>info<span class="w"> </span><span class="k">break</span>
+</pre></div>
+</div>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>watchpoint<span class="w"> </span>list
+<span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>watch<span class="w"> </span>l
+</pre></div>
+</div>
+</section>
+<section id="delete-a-watchpoint">
+<h3>Delete a watchpoint<a class="headerlink" href="#delete-a-watchpoint" title="Link to this heading">#</a></h3>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>gdb<span class="o">)</span><span class="w"> </span>delete<span class="w"> </span><span class="m">1</span>
+</pre></div>
+</div>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>watchpoint<span class="w"> </span>delete<span class="w"> </span><span class="m">1</span>
+<span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>watch<span class="w"> </span>del<span class="w"> </span><span class="m">1</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="examining-variables">
+<h2>Examining Variables<a class="headerlink" href="#examining-variables" title="Link to this heading">#</a></h2>
+<section id="show-the-arguments-and-local-variables-for-the-current-frame">
+<h3>Show the arguments and local variables for the current frame<a class="headerlink" href="#show-the-arguments-and-local-variables-for-the-current-frame" title="Link to this heading">#</a></h3>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>gdb<span class="o">)</span><span class="w"> </span>info<span class="w"> </span>args
+<span class="o">(</span>gdb<span class="o">)</span><span class="w"> </span>info<span class="w"> </span>locals
+</pre></div>
+</div>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>frame<span class="w"> </span>variable
+<span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>fr<span class="w"> </span>v
+</pre></div>
+</div>
+</section>
+<section id="show-the-local-variables-for-the-current-frame">
+<h3>Show the local variables for the current frame<a class="headerlink" href="#show-the-local-variables-for-the-current-frame" title="Link to this heading">#</a></h3>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>gdb<span class="o">)</span><span class="w"> </span>info<span class="w"> </span>locals
+</pre></div>
+</div>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>frame<span class="w"> </span>variable<span class="w"> </span>--no-args
+<span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>fr<span class="w"> </span>v<span class="w"> </span>-a
+</pre></div>
+</div>
+</section>
+<section id="show-the-contents-of-local-variable-bar">
+<h3>Show the contents of local variable <code class="docutils literal notranslate"><span class="pre">bar</span></code><a class="headerlink" href="#show-the-contents-of-local-variable-bar" title="Link to this heading">#</a></h3>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>gdb<span class="o">)</span><span class="w"> </span>p<span class="w"> </span>bar
+</pre></div>
+</div>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>frame<span class="w"> </span>variable<span class="w"> </span>bar
+<span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>fr<span class="w"> </span>v<span class="w"> </span>bar
+<span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>p<span class="w"> </span>bar
+</pre></div>
+</div>
+</section>
+<section id="show-the-contents-of-local-variable-bar-formatted-as-hex">
+<h3>Show the contents of local variable <code class="docutils literal notranslate"><span class="pre">bar</span></code> formatted as hex<a class="headerlink" href="#show-the-contents-of-local-variable-bar-formatted-as-hex" title="Link to this heading">#</a></h3>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>gdb<span class="o">)</span><span class="w"> </span>p/x<span class="w"> </span>bar
+</pre></div>
+</div>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>frame<span class="w"> </span>variable<span class="w"> </span>--format<span class="w"> </span>x<span class="w"> </span>bar
+<span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>fr<span class="w"> </span>v<span class="w"> </span>-f<span class="w"> </span>x<span class="w"> </span>bar
+</pre></div>
+</div>
+</section>
+<section id="show-the-contents-of-global-variable-baz">
+<h3>Show the contents of global variable <code class="docutils literal notranslate"><span class="pre">baz</span></code><a class="headerlink" href="#show-the-contents-of-global-variable-baz" title="Link to this heading">#</a></h3>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>gdb<span class="o">)</span><span class="w"> </span>p<span class="w"> </span>baz
+</pre></div>
+</div>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>target<span class="w"> </span>variable<span class="w"> </span>baz
+<span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>ta<span class="w"> </span>v<span class="w"> </span>baz
+</pre></div>
+</div>
+</section>
+<section id="show-the-global-static-variables-defined-in-the-current-source-file">
+<h3>Show the global/static variables defined in the current source file<a class="headerlink" href="#show-the-global-static-variables-defined-in-the-current-source-file" title="Link to this heading">#</a></h3>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>target<span class="w"> </span>variable
+<span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>ta<span class="w"> </span>v
+</pre></div>
+</div>
+</section>
+<section id="display-the-variables-argc-and-argv-every-time-you-stop">
+<h3>Display the variables <code class="docutils literal notranslate"><span class="pre">argc</span></code> and <code class="docutils literal notranslate"><span class="pre">argv</span></code> every time you stop<a class="headerlink" href="#display-the-variables-argc-and-argv-every-time-you-stop" title="Link to this heading">#</a></h3>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>gdb<span class="o">)</span><span class="w"> </span>display<span class="w"> </span>argc
+<span class="o">(</span>gdb<span class="o">)</span><span class="w"> </span>display<span class="w"> </span>argv
+</pre></div>
+</div>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>target<span class="w"> </span>stop-hook<span class="w"> </span>add<span class="w"> </span>--one-liner<span class="w"> </span><span class="s2">&quot;frame variable argc argv&quot;</span>
+<span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>ta<span class="w"> </span>st<span class="w"> </span>a<span class="w"> </span>-o<span class="w"> </span><span class="s2">&quot;fr v argc argv&quot;</span>
+<span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>display<span class="w"> </span>argc
+<span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>display<span class="w"> </span>argv
+</pre></div>
+</div>
+</section>
+<section id="display-the-variables-argc-and-argv-only-when-you-stop-in-the-function-named-main">
+<h3>Display the variables <code class="docutils literal notranslate"><span class="pre">argc</span></code> and <code class="docutils literal notranslate"><span class="pre">argv</span></code> only when you stop in the function named <code class="docutils literal notranslate"><span class="pre">main</span></code><a class="headerlink" href="#display-the-variables-argc-and-argv-only-when-you-stop-in-the-function-named-main" title="Link to this heading">#</a></h3>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>target<span class="w"> </span>stop-hook<span class="w"> </span>add<span class="w"> </span>--name<span class="w"> </span>main<span class="w"> </span>--one-liner<span class="w"> </span><span class="s2">&quot;frame variable argc argv&quot;</span>
+<span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>ta<span class="w"> </span>st<span class="w"> </span>a<span class="w"> </span>-n<span class="w"> </span>main<span class="w"> </span>-o<span class="w"> </span><span class="s2">&quot;fr v argc argv&quot;</span>
+</pre></div>
+</div>
+</section>
+<section id="display-the-variable-this-only-when-you-stop-in-c-class-named-myclass">
+<h3>Display the variable <code class="docutils literal notranslate"><span class="pre">*this</span></code> only when you stop in c class named <code class="docutils literal notranslate"><span class="pre">MyClass</span></code><a class="headerlink" href="#display-the-variable-this-only-when-you-stop-in-c-class-named-myclass" title="Link to this heading">#</a></h3>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>target<span class="w"> </span>stop-hook<span class="w"> </span>add<span class="w"> </span>--classname<span class="w"> </span>MyClass<span class="w"> </span>--one-liner<span class="w"> </span><span class="s2">&quot;frame variable *this&quot;</span>
+<span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>ta<span class="w"> </span>st<span class="w"> </span>a<span class="w"> </span>-c<span class="w"> </span>MyClass<span class="w"> </span>-o<span class="w"> </span><span class="s2">&quot;fr v *this&quot;</span>
+</pre></div>
+</div>
+</section>
+<section id="print-an-array-of-integers-in-memory-assuming-we-have-a-pointer-like-int-ptr">
+<h3>Print an array of integers in memory, assuming we have a pointer like <code class="docutils literal notranslate"><span class="pre">int</span> <span class="pre">*ptr</span></code><a class="headerlink" href="#print-an-array-of-integers-in-memory-assuming-we-have-a-pointer-like-int-ptr" title="Link to this heading">#</a></h3>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>gdb<span class="o">)</span><span class="w"> </span>p<span class="w"> </span>*ptr@10
+</pre></div>
+</div>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>parray<span class="w"> </span><span class="m">10</span><span class="w"> </span>ptr
+</pre></div>
+</div>
+</section>
+</section>
+<section id="evaluating-expressions">
+<h2>Evaluating Expressions<a class="headerlink" href="#evaluating-expressions" title="Link to this heading">#</a></h2>
+<section id="evaluating-a-generalized-expression-in-the-current-frame">
+<h3>Evaluating a generalized expression in the current frame<a class="headerlink" href="#evaluating-a-generalized-expression-in-the-current-frame" title="Link to this heading">#</a></h3>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>gdb<span class="o">)</span><span class="w"> </span>print<span class="w"> </span><span class="o">(</span>int<span class="o">)</span><span class="w"> </span><span class="nb">printf</span><span class="w"> </span><span class="o">(</span><span class="s2">&quot;Print nine: %d.&quot;</span>,<span class="w"> </span><span class="m">4</span><span class="w"> </span>+<span class="w"> </span><span class="m">5</span><span class="o">)</span>
+</pre></div>
+</div>
+<p>or if you don’t want to see void returns:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>gdb<span class="o">)</span><span class="w"> </span>call<span class="w"> </span><span class="o">(</span>int<span class="o">)</span><span class="w"> </span><span class="nb">printf</span><span class="w"> </span><span class="o">(</span><span class="s2">&quot;Print nine: %d.&quot;</span>,<span class="w"> </span><span class="m">4</span><span class="w"> </span>+<span class="w"> </span><span class="m">5</span><span class="o">)</span>
+</pre></div>
+</div>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>expr<span class="w"> </span><span class="o">(</span>int<span class="o">)</span><span class="w"> </span><span class="nb">printf</span><span class="w"> </span><span class="o">(</span><span class="s2">&quot;Print nine: %d.&quot;</span>,<span class="w"> </span><span class="m">4</span><span class="w"> </span>+<span class="w"> </span><span class="m">5</span><span class="o">)</span>
+</pre></div>
+</div>
+<p>or using the print alias:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>print<span class="w"> </span><span class="o">(</span>int<span class="o">)</span><span class="w"> </span><span class="nb">printf</span><span class="w"> </span><span class="o">(</span><span class="s2">&quot;Print nine: %d.&quot;</span>,<span class="w"> </span><span class="m">4</span><span class="w"> </span>+<span class="w"> </span><span class="m">5</span><span class="o">)</span>
+</pre></div>
+</div>
+</section>
+<section id="creating-and-assigning-a-value-to-a-convenience-variable">
+<h3>Creating and assigning a value to a convenience variable<a class="headerlink" href="#creating-and-assigning-a-value-to-a-convenience-variable" title="Link to this heading">#</a></h3>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>gdb<span class="o">)</span><span class="w"> </span><span class="nb">set</span><span class="w"> </span><span class="nv">$foo</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">5</span>
+<span class="o">(</span>gdb<span class="o">)</span><span class="w"> </span><span class="nb">set</span><span class="w"> </span>variable<span class="w"> </span><span class="nv">$foo</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">5</span>
+</pre></div>
+</div>
+<p>or using the print command</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>gdb<span class="o">)</span><span class="w"> </span>print<span class="w"> </span><span class="nv">$foo</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">5</span>
+</pre></div>
+</div>
+<p>or using the call command</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>gdb<span class="o">)</span><span class="w"> </span>call<span class="w"> </span><span class="nv">$foo</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">5</span>
+</pre></div>
+</div>
+<p>and if you want to specify the type of the variable:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>gdb<span class="o">)</span><span class="w"> </span><span class="nb">set</span><span class="w"> </span><span class="nv">$foo</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">(</span>unsigned<span class="w"> </span>int<span class="o">)</span><span class="w"> </span><span class="m">5</span>
+</pre></div>
+</div>
+<p>In lldb you evaluate a variable declaration expression as you would write it in C:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>expr<span class="w"> </span>unsigned<span class="w"> </span>int<span class="w"> </span><span class="nv">$foo</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">5</span>
+</pre></div>
+</div>
+</section>
+<section id="printing-the-objc-description-of-an-object">
+<h3>Printing the ObjC “description” of an object<a class="headerlink" href="#printing-the-objc-description-of-an-object" title="Link to this heading">#</a></h3>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>gdb<span class="o">)</span><span class="w"> </span>po<span class="w"> </span><span class="o">[</span>SomeClass<span class="w"> </span>returnAnObject<span class="o">]</span>
+</pre></div>
+</div>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>expr<span class="w"> </span>-o<span class="w"> </span>--<span class="w"> </span><span class="o">[</span>SomeClass<span class="w"> </span>returnAnObject<span class="o">]</span>
+</pre></div>
+</div>
+<p>or using the po alias:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>po<span class="w"> </span><span class="o">[</span>SomeClass<span class="w"> </span>returnAnObject<span class="o">]</span>
+</pre></div>
+</div>
+</section>
+<section id="print-the-dynamic-type-of-the-result-of-an-expression">
+<h3>Print the dynamic type of the result of an expression<a class="headerlink" href="#print-the-dynamic-type-of-the-result-of-an-expression" title="Link to this heading">#</a></h3>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>gdb<span class="o">)</span><span class="w"> </span><span class="nb">set</span><span class="w"> </span>print<span class="w"> </span>object<span class="w"> </span><span class="m">1</span>
+<span class="o">(</span>gdb<span class="o">)</span><span class="w"> </span>p<span class="w"> </span>someCPPObjectPtrOrReference
+<span class="o">(</span>Only<span class="w"> </span>works<span class="w"> </span><span class="k">for</span><span class="w"> </span>C++<span class="w"> </span>objects<span class="o">)</span>
+</pre></div>
+</div>
+<p>LLDB does this automatically if determining the dynamic type does not require
+running the target (in C++, running the target is never needed). This default is
+controlled by the <code class="xref any docutils literal notranslate"><span class="pre">target.prefer-dynamic-value</span></code> setting. If that is disabled, it
+can be re-enabled on a per-command basis:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>settings<span class="w"> </span><span class="nb">set</span><span class="w"> </span>target.prefer-dynamic-value<span class="w"> </span>no-dynamic-values
+<span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>frame<span class="w"> </span>variable<span class="w"> </span>-d<span class="w"> </span>no-run-target<span class="w"> </span>someCPPObjectPtrOrReference
+<span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>expr<span class="w"> </span>-d<span class="w"> </span>no-run-target<span class="w"> </span>--<span class="w"> </span>someCPPObjectPtr
+</pre></div>
+</div>
+<p>Note that printing of the dynamic type of references is not possible with the
+<code class="xref any docutils literal notranslate"><span class="pre">expr</span></code> command. The workaround is to take the address of the reference and
+instruct lldb to print the children of the resulting pointer.</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>expr<span class="w"> </span>-P1<span class="w"> </span>-d<span class="w"> </span>no-run-target<span class="w"> </span>--<span class="w"> </span><span class="p">&amp;</span>someCPPObjectReference
+</pre></div>
+</div>
+</section>
+<section id="call-a-function-so-you-can-stop-at-a-breakpoint-in-it">
+<h3>Call a function so you can stop at a breakpoint in it<a class="headerlink" href="#call-a-function-so-you-can-stop-at-a-breakpoint-in-it" title="Link to this heading">#</a></h3>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>gdb<span class="o">)</span><span class="w"> </span><span class="nb">set</span><span class="w"> </span>unwindonsignal<span class="w"> </span><span class="m">0</span>
+<span class="o">(</span>gdb<span class="o">)</span><span class="w"> </span>p<span class="w"> </span>function_with_a_breakpoint<span class="o">()</span>
+</pre></div>
+</div>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>expr<span class="w"> </span>-i<span class="w"> </span><span class="m">0</span><span class="w"> </span>--<span class="w"> </span>function_with_a_breakpoint<span class="o">()</span>
+</pre></div>
+</div>
+</section>
+<section id="call-a-function-that-crashes-then-stop-when-it-does">
+<h3>Call a function that crashes, then stop when it does<a class="headerlink" href="#call-a-function-that-crashes-then-stop-when-it-does" title="Link to this heading">#</a></h3>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>gdb<span class="o">)</span><span class="w"> </span><span class="nb">set</span><span class="w"> </span>unwindonsignal<span class="w"> </span><span class="m">0</span>
+<span class="o">(</span>gdb<span class="o">)</span><span class="w"> </span>p<span class="w"> </span>function_which_crashes<span class="o">()</span>
+</pre></div>
+</div>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>expr<span class="w"> </span>-u<span class="w"> </span><span class="m">0</span><span class="w"> </span>--<span class="w"> </span>function_which_crashes<span class="o">()</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="examining-thread-state">
+<h2>Examining Thread State<a class="headerlink" href="#examining-thread-state" title="Link to this heading">#</a></h2>
+<section id="list-the-threads-in-your-program">
+<h3>List the threads in your program<a class="headerlink" href="#list-the-threads-in-your-program" title="Link to this heading">#</a></h3>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>gdb<span class="o">)</span><span class="w"> </span>info<span class="w"> </span>threads
+</pre></div>
+</div>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>thread<span class="w"> </span>list
+</pre></div>
+</div>
+</section>
+<section id="select-thread-1-as-the-default-thread-for-subsequent-commands">
+<h3>Select thread <code class="docutils literal notranslate"><span class="pre">1</span></code> as the default thread for subsequent commands<a class="headerlink" href="#select-thread-1-as-the-default-thread-for-subsequent-commands" title="Link to this heading">#</a></h3>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>gdb<span class="o">)</span><span class="w"> </span>thread<span class="w"> </span><span class="m">1</span>
+</pre></div>
+</div>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>thread<span class="w"> </span><span class="k">select</span><span class="w"> </span><span class="m">1</span>
+<span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>t<span class="w"> </span><span class="m">1</span>
+</pre></div>
+</div>
+</section>
+<section id="show-the-stack-backtrace-for-the-current-thread">
+<h3>Show the stack backtrace for the current thread<a class="headerlink" href="#show-the-stack-backtrace-for-the-current-thread" title="Link to this heading">#</a></h3>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>gdb<span class="o">)</span><span class="w"> </span>bt
+</pre></div>
+</div>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>thread<span class="w"> </span>backtrace
+<span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>bt
+</pre></div>
+</div>
+</section>
+<section id="show-the-stack-backtraces-for-all-threads">
+<h3>Show the stack backtraces for all threads<a class="headerlink" href="#show-the-stack-backtraces-for-all-threads" title="Link to this heading">#</a></h3>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>gdb<span class="o">)</span><span class="w"> </span>thread<span class="w"> </span>apply<span class="w"> </span>all<span class="w"> </span>bt
+</pre></div>
+</div>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>thread<span class="w"> </span>backtrace<span class="w"> </span>all
+<span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>bt<span class="w"> </span>all
+</pre></div>
+</div>
+</section>
+<section id="backtrace-the-first-five-frames-of-the-current-thread">
+<h3>Backtrace the first five frames of the current thread<a class="headerlink" href="#backtrace-the-first-five-frames-of-the-current-thread" title="Link to this heading">#</a></h3>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>gdb<span class="o">)</span><span class="w"> </span>bt<span class="w"> </span><span class="m">5</span>
+</pre></div>
+</div>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>thread<span class="w"> </span>backtrace<span class="w"> </span>-c<span class="w"> </span><span class="m">5</span>
+<span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>bt<span class="w"> </span><span class="m">5</span>
+</pre></div>
+</div>
+</section>
+<section id="select-a-different-stack-frame-by-index-for-the-current-thread">
+<h3>Select a different stack frame by index for the current thread<a class="headerlink" href="#select-a-different-stack-frame-by-index-for-the-current-thread" title="Link to this heading">#</a></h3>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>gdb<span class="o">)</span><span class="w"> </span>frame<span class="w"> </span><span class="m">12</span>
+</pre></div>
+</div>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>frame<span class="w"> </span><span class="k">select</span><span class="w"> </span><span class="m">12</span>
+<span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>fr<span class="w"> </span>s<span class="w"> </span><span class="m">12</span>
+<span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>f<span class="w"> </span><span class="m">12</span>
+</pre></div>
+</div>
+</section>
+<section id="list-information-about-the-currently-selected-frame-in-the-current-thread">
+<h3>List information about the currently selected frame in the current thread<a class="headerlink" href="#list-information-about-the-currently-selected-frame-in-the-current-thread" title="Link to this heading">#</a></h3>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>frame<span class="w"> </span>info
+</pre></div>
+</div>
+</section>
+<section id="select-the-stack-frame-that-called-the-current-stack-frame">
+<h3>Select the stack frame that called the current stack frame<a class="headerlink" href="#select-the-stack-frame-that-called-the-current-stack-frame" title="Link to this heading">#</a></h3>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>gdb<span class="o">)</span><span class="w"> </span>up
+</pre></div>
+</div>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>up
+<span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>frame<span class="w"> </span><span class="k">select</span><span class="w"> </span>--relative<span class="o">=</span><span class="m">1</span>
+</pre></div>
+</div>
+</section>
+<section id="select-the-stack-frame-that-is-called-by-the-current-stack-frame">
+<h3>Select the stack frame that is called by the current stack frame<a class="headerlink" href="#select-the-stack-frame-that-is-called-by-the-current-stack-frame" title="Link to this heading">#</a></h3>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>gdb<span class="o">)</span><span class="w"> </span>down
+</pre></div>
+</div>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>down
+<span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>frame<span class="w"> </span><span class="k">select</span><span class="w"> </span>--relative<span class="o">=</span>-1
+<span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>fr<span class="w"> </span>s<span class="w"> </span>-r-1
+</pre></div>
+</div>
+</section>
+<section id="select-a-different-stack-frame-using-a-relative-offset">
+<h3>Select a different stack frame using a relative offset<a class="headerlink" href="#select-a-different-stack-frame-using-a-relative-offset" title="Link to this heading">#</a></h3>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>gdb<span class="o">)</span><span class="w"> </span>up<span class="w"> </span><span class="m">2</span>
+<span class="o">(</span>gdb<span class="o">)</span><span class="w"> </span>down<span class="w"> </span><span class="m">3</span>
+</pre></div>
+</div>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>frame<span class="w"> </span><span class="k">select</span><span class="w"> </span>--relative<span class="w"> </span><span class="m">2</span>
+<span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>fr<span class="w"> </span>s<span class="w"> </span>-r2
+
+<span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>frame<span class="w"> </span><span class="k">select</span><span class="w"> </span>--relative<span class="w"> </span>-3
+<span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>fr<span class="w"> </span>s<span class="w"> </span>-r-3
+</pre></div>
+</div>
+</section>
+<section id="show-the-general-purpose-registers-for-the-current-thread">
+<h3>show the general purpose registers for the current thread<a class="headerlink" href="#show-the-general-purpose-registers-for-the-current-thread" title="Link to this heading">#</a></h3>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>gdb<span class="o">)</span><span class="w"> </span>info<span class="w"> </span>registers
+</pre></div>
+</div>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>register<span class="w"> </span><span class="nb">read</span>
+</pre></div>
+</div>
+</section>
+<section id="write-a-new-decimal-value-123-to-the-current-thread-register-rax">
+<h3>Write a new decimal value <code class="docutils literal notranslate"><span class="pre">123</span></code> to the current thread register <code class="docutils literal notranslate"><span class="pre">rax</span></code><a class="headerlink" href="#write-a-new-decimal-value-123-to-the-current-thread-register-rax" title="Link to this heading">#</a></h3>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>gdb<span class="o">)</span><span class="w"> </span>p<span class="w"> </span><span class="nv">$rax</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">123</span>
+</pre></div>
+</div>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>register<span class="w"> </span>write<span class="w"> </span>rax<span class="w"> </span><span class="m">123</span>
+</pre></div>
+</div>
+</section>
+<section id="skip-8-bytes-ahead-of-the-current-program-counter-instruction-pointer">
+<h3>Skip 8 bytes ahead of the current program counter (instruction pointer)<a class="headerlink" href="#skip-8-bytes-ahead-of-the-current-program-counter-instruction-pointer" title="Link to this heading">#</a></h3>
+<p>Note that we use backticks to evaluate an expression and insert the scalar result in LLDB.</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>gdb<span class="o">)</span><span class="w"> </span>jump<span class="w"> </span>*<span class="nv">$pc</span>+8
+</pre></div>
+</div>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>register<span class="w"> </span>write<span class="w"> </span>pc<span class="w"> </span><span class="sb">`</span><span class="nv">$pc</span>+8<span class="sb">`</span>
+</pre></div>
+</div>
+</section>
+<section id="show-the-general-purpose-registers-for-the-current-thread-formatted-as-signed-decimal">
+<h3>Show the general purpose registers for the current thread formatted as signed decimal<a class="headerlink" href="#show-the-general-purpose-registers-for-the-current-thread-formatted-as-signed-decimal" title="Link to this heading">#</a></h3>
+<p>LLDB tries to use the same format characters as printf(3) when possible. Type “help format” to see the full list of format specifiers.</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>register<span class="w"> </span><span class="nb">read</span><span class="w"> </span>--format<span class="w"> </span>i
+<span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>re<span class="w"> </span>r<span class="w"> </span>-f<span class="w"> </span>i
+</pre></div>
+</div>
+<p>LLDB now supports the GDB shorthand format syntax but there can’t be space after the command:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>register<span class="w"> </span>read/d
+</pre></div>
+</div>
+</section>
+<section id="show-all-registers-in-all-register-sets-for-the-current-thread">
+<h3>Show all registers in all register sets for the current thread<a class="headerlink" href="#show-all-registers-in-all-register-sets-for-the-current-thread" title="Link to this heading">#</a></h3>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>gdb<span class="o">)</span><span class="w"> </span>info<span class="w"> </span>all-registers
+</pre></div>
+</div>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>register<span class="w"> </span><span class="nb">read</span><span class="w"> </span>--all
+<span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>re<span class="w"> </span>r<span class="w"> </span>-a
+</pre></div>
+</div>
+</section>
+<section id="show-the-values-for-the-registers-named-rax-rsp-and-rbp-in-the-current-thread">
+<h3>Show the values for the registers named <code class="docutils literal notranslate"><span class="pre">rax</span></code>, <code class="docutils literal notranslate"><span class="pre">rsp</span></code> and <code class="docutils literal notranslate"><span class="pre">rbp</span></code> in the current thread<a class="headerlink" href="#show-the-values-for-the-registers-named-rax-rsp-and-rbp-in-the-current-thread" title="Link to this heading">#</a></h3>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>gdb<span class="o">)</span><span class="w"> </span>info<span class="w"> </span>all-registers<span class="w"> </span>rax<span class="w"> </span>rsp<span class="w"> </span>rbp
+</pre></div>
+</div>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>register<span class="w"> </span><span class="nb">read</span><span class="w"> </span>rax<span class="w"> </span>rsp<span class="w"> </span>rbp
+</pre></div>
+</div>
+</section>
+<section id="show-the-values-for-the-register-named-rax-in-the-current-thread-formatted-as-binary">
+<h3>Show the values for the register named <code class="docutils literal notranslate"><span class="pre">rax</span></code> in the current thread formatted as binary<a class="headerlink" href="#show-the-values-for-the-register-named-rax-in-the-current-thread-formatted-as-binary" title="Link to this heading">#</a></h3>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>gdb<span class="o">)</span><span class="w"> </span>p/t<span class="w"> </span><span class="nv">$rax</span>
+</pre></div>
+</div>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>register<span class="w"> </span><span class="nb">read</span><span class="w"> </span>--format<span class="w"> </span>binary<span class="w"> </span>rax
+<span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>re<span class="w"> </span>r<span class="w"> </span>-f<span class="w"> </span>b<span class="w"> </span>rax
+</pre></div>
+</div>
+<p>LLDB now supports the GDB shorthand format syntax but there can’t be space after the command</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>register<span class="w"> </span>read/t<span class="w"> </span>rax
+<span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>p/t<span class="w"> </span><span class="nv">$rax</span>
+</pre></div>
+</div>
+</section>
+<section id="read-memory-from-address-0xbffff3c0-and-show-4-hex-uint32-t-values">
+<h3>Read memory from address <code class="docutils literal notranslate"><span class="pre">0xbffff3c0</span></code> and show 4 hex <code class="docutils literal notranslate"><span class="pre">uint32_t</span></code> values<a class="headerlink" href="#read-memory-from-address-0xbffff3c0-and-show-4-hex-uint32-t-values" title="Link to this heading">#</a></h3>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>gdb<span class="o">)</span><span class="w"> </span>x/4xw<span class="w"> </span>0xbffff3c0
+</pre></div>
+</div>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>memory<span class="w"> </span><span class="nb">read</span><span class="w"> </span>--size<span class="w"> </span><span class="m">4</span><span class="w"> </span>--format<span class="w"> </span>x<span class="w"> </span>--count<span class="w"> </span><span class="m">4</span><span class="w"> </span>0xbffff3c0
+<span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>me<span class="w"> </span>r<span class="w"> </span>-s4<span class="w"> </span>-fx<span class="w"> </span>-c4<span class="w"> </span>0xbffff3c0
+<span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>x<span class="w"> </span>-s4<span class="w"> </span>-fx<span class="w"> </span>-c4<span class="w"> </span>0xbffff3c0
+</pre></div>
+</div>
+<p>LLDB now supports the GDB shorthand format syntax but there can’t be space after the command:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>memory<span class="w"> </span>read/4xw<span class="w"> </span>0xbffff3c0
+<span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>x/4xw<span class="w"> </span>0xbffff3c0
+<span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>memory<span class="w"> </span><span class="nb">read</span><span class="w"> </span>--gdb-format<span class="w"> </span>4xw<span class="w"> </span>0xbffff3c0
+</pre></div>
+</div>
+</section>
+<section id="read-memory-starting-at-the-expression-argv-0">
+<h3>Read memory starting at the expression <code class="docutils literal notranslate"><span class="pre">argv[0]</span></code><a class="headerlink" href="#read-memory-starting-at-the-expression-argv-0" title="Link to this heading">#</a></h3>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>gdb<span class="o">)</span><span class="w"> </span>x<span class="w"> </span>argv<span class="o">[</span><span class="m">0</span><span class="o">]</span>
+</pre></div>
+</div>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>memory<span class="w"> </span><span class="nb">read</span><span class="w"> </span><span class="sb">`</span>argv<span class="o">[</span><span class="m">0</span><span class="o">]</span><span class="sb">`</span>
+</pre></div>
+</div>
+<p>NOTE: any command can inline a scalar expression result (as long as the target is stopped) using backticks around any expression:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>memory<span class="w"> </span><span class="nb">read</span><span class="w"> </span>--size<span class="w"> </span><span class="sb">`</span>sizeof<span class="o">(</span>int<span class="o">)</span><span class="sb">`</span><span class="w"> </span><span class="sb">`</span>argv<span class="o">[</span><span class="m">0</span><span class="o">]</span><span class="sb">`</span>
+</pre></div>
+</div>
+</section>
+<section id="read-512-bytes-of-memory-from-address-0xbffff3c0-and-save-the-results-to-a-local-file-as-text">
+<h3>Read <code class="docutils literal notranslate"><span class="pre">512</span></code> bytes of memory from address <code class="docutils literal notranslate"><span class="pre">0xbffff3c0</span></code> and save the results to a local file as text<a class="headerlink" href="#read-512-bytes-of-memory-from-address-0xbffff3c0-and-save-the-results-to-a-local-file-as-text" title="Link to this heading">#</a></h3>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>gdb<span class="o">)</span><span class="w"> </span><span class="nb">set</span><span class="w"> </span>logging<span class="w"> </span>on
+<span class="o">(</span>gdb<span class="o">)</span><span class="w"> </span><span class="nb">set</span><span class="w"> </span>logging<span class="w"> </span>file<span class="w"> </span>/tmp/mem.txt
+<span class="o">(</span>gdb<span class="o">)</span><span class="w"> </span>x/512bx<span class="w"> </span>0xbffff3c0
+<span class="o">(</span>gdb<span class="o">)</span><span class="w"> </span><span class="nb">set</span><span class="w"> </span>logging<span class="w"> </span>off
+</pre></div>
+</div>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>memory<span class="w"> </span><span class="nb">read</span><span class="w"> </span>--outfile<span class="w"> </span>/tmp/mem.txt<span class="w"> </span>--count<span class="w"> </span><span class="m">512</span><span class="w"> </span>0xbffff3c0
+<span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>me<span class="w"> </span>r<span class="w"> </span>-o/tmp/mem.txt<span class="w"> </span>-c512<span class="w"> </span>0xbffff3c0
+<span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>x/512bx<span class="w"> </span>-o/tmp/mem.txt<span class="w"> </span>0xbffff3c0
+</pre></div>
+</div>
+</section>
+<section id="save-binary-memory-data-starting-at-0x1000-and-ending-at-0x2000-to-a-file">
+<h3>Save binary memory data starting at <code class="docutils literal notranslate"><span class="pre">0x1000</span></code> and ending at <code class="docutils literal notranslate"><span class="pre">0x2000</span></code> to a file<a class="headerlink" href="#save-binary-memory-data-starting-at-0x1000-and-ending-at-0x2000-to-a-file" title="Link to this heading">#</a></h3>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>gdb<span class="o">)</span><span class="w"> </span>dump<span class="w"> </span>memory<span class="w"> </span>/tmp/mem.bin<span class="w"> </span>0x1000<span class="w"> </span>0x2000
+</pre></div>
+</div>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>memory<span class="w"> </span><span class="nb">read</span><span class="w"> </span>--outfile<span class="w"> </span>/tmp/mem.bin<span class="w"> </span>--binary<span class="w"> </span>0x1000<span class="w"> </span>0x2000
+<span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>me<span class="w"> </span>r<span class="w"> </span>-o<span class="w"> </span>/tmp/mem.bin<span class="w"> </span>-b<span class="w"> </span>0x1000<span class="w"> </span>0x2000
+</pre></div>
+</div>
+</section>
+<section id="get-information-about-a-specific-heap-allocation-macos-only">
+<h3>Get information about a specific heap allocation (macOS only)<a class="headerlink" href="#get-information-about-a-specific-heap-allocation-macos-only" title="Link to this heading">#</a></h3>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>gdb<span class="o">)</span><span class="w"> </span>info<span class="w"> </span>malloc<span class="w"> </span>0x10010d680
+</pre></div>
+</div>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span><span class="nb">command</span><span class="w"> </span>script<span class="w"> </span>import<span class="w"> </span>lldb.macosx.heap
+<span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>process<span class="w"> </span>launch<span class="w"> </span>--environment<span class="w"> </span><span class="nv">MallocStackLogging</span><span class="o">=</span><span class="m">1</span><span class="w"> </span>--<span class="w"> </span><span class="o">[</span>ARGS<span class="o">]</span>
+<span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>malloc_info<span class="w"> </span>--stack-history<span class="w"> </span>0x10010d680
+</pre></div>
+</div>
+</section>
+<section id="get-information-about-a-specific-heap-allocation-and-cast-the-result-to-any-dynamic-type-that-can-be-deduced-macos-only">
+<h3>Get information about a specific heap allocation and cast the result to any dynamic type that can be deduced (macOS only)<a class="headerlink" href="#get-information-about-a-specific-heap-allocation-and-cast-the-result-to-any-dynamic-type-that-can-be-deduced-macos-only" title="Link to this heading">#</a></h3>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span><span class="nb">command</span><span class="w"> </span>script<span class="w"> </span>import<span class="w"> </span>lldb.macosx.heap
+<span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>malloc_info<span class="w"> </span>--type<span class="w"> </span>0x10010d680
+</pre></div>
+</div>
+</section>
+<section id="find-all-heap-blocks-that-contain-a-pointer-specified-by-an-expression-expr-macos-only">
+<h3>Find all heap blocks that contain a pointer specified by an expression <code class="docutils literal notranslate"><span class="pre">EXPR</span></code> (macOS only)<a class="headerlink" href="#find-all-heap-blocks-that-contain-a-pointer-specified-by-an-expression-expr-macos-only" title="Link to this heading">#</a></h3>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span><span class="nb">command</span><span class="w"> </span>script<span class="w"> </span>import<span class="w"> </span>lldb.macosx.heap
+<span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>ptr_refs<span class="w"> </span>EXPR
+</pre></div>
+</div>
+</section>
+<section id="find-all-heap-blocks-that-contain-a-c-string-anywhere-in-the-block-macos-only">
+<h3>Find all heap blocks that contain a C string anywhere in the block (macOS only)<a class="headerlink" href="#find-all-heap-blocks-that-contain-a-c-string-anywhere-in-the-block-macos-only" title="Link to this heading">#</a></h3>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span><span class="nb">command</span><span class="w"> </span>script<span class="w"> </span>import<span class="w"> </span>lldb.macosx.heap
+<span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>cstr_refs<span class="w"> </span>CSTRING
+</pre></div>
+</div>
+</section>
+<section id="disassemble-the-current-function-for-the-current-frame">
+<h3>Disassemble the current function for the current frame<a class="headerlink" href="#disassemble-the-current-function-for-the-current-frame" title="Link to this heading">#</a></h3>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>gdb<span class="o">)</span><span class="w"> </span>disassemble
+</pre></div>
+</div>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>disassemble<span class="w"> </span>--frame
+<span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>di<span class="w"> </span>-f
+</pre></div>
+</div>
+</section>
+<section id="disassemble-any-functions-named-main">
+<h3>Disassemble any functions named main<a class="headerlink" href="#disassemble-any-functions-named-main" title="Link to this heading">#</a></h3>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>gdb<span class="o">)</span><span class="w"> </span>disassemble<span class="w"> </span>main
+</pre></div>
+</div>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>disassemble<span class="w"> </span>--name<span class="w"> </span>main
+<span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>di<span class="w"> </span>-n<span class="w"> </span>main
+</pre></div>
+</div>
+</section>
+<section id="disassemble-an-address-range">
+<h3>Disassemble an address range<a class="headerlink" href="#disassemble-an-address-range" title="Link to this heading">#</a></h3>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>gdb<span class="o">)</span><span class="w"> </span>disassemble<span class="w"> </span>0x1eb8<span class="w"> </span>0x1ec3
+</pre></div>
+</div>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>disassemble<span class="w"> </span>--start-address<span class="w"> </span>0x1eb8<span class="w"> </span>--end-address<span class="w"> </span>0x1ec3
+<span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>di<span class="w"> </span>-s<span class="w"> </span>0x1eb8<span class="w"> </span>-e<span class="w"> </span>0x1ec3
+</pre></div>
+</div>
+</section>
+<section id="disassemble-20-instructions-from-a-given-address">
+<h3>Disassemble <code class="docutils literal notranslate"><span class="pre">20</span></code> instructions from a given address<a class="headerlink" href="#disassemble-20-instructions-from-a-given-address" title="Link to this heading">#</a></h3>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>gdb<span class="o">)</span><span class="w"> </span>x/20i<span class="w"> </span>0x1eb8
+</pre></div>
+</div>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>disassemble<span class="w"> </span>--start-address<span class="w"> </span>0x1eb8<span class="w"> </span>--count<span class="w"> </span><span class="m">20</span>
+<span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>di<span class="w"> </span>-s<span class="w"> </span>0x1eb8<span class="w"> </span>-c<span class="w"> </span><span class="m">20</span>
+</pre></div>
+</div>
+</section>
+<section id="show-mixed-source-and-disassembly-for-the-current-function-for-the-current-frame">
+<h3>Show mixed source and disassembly for the current function for the current frame<a class="headerlink" href="#show-mixed-source-and-disassembly-for-the-current-function-for-the-current-frame" title="Link to this heading">#</a></h3>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>disassemble<span class="w"> </span>--frame<span class="w"> </span>--mixed
+<span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>di<span class="w"> </span>-f<span class="w"> </span>-m
+</pre></div>
+</div>
+</section>
+<section id="disassemble-the-current-function-for-the-current-frame-and-show-the-opcode-bytes">
+<h3>Disassemble the current function for the current frame and show the opcode bytes<a class="headerlink" href="#disassemble-the-current-function-for-the-current-frame-and-show-the-opcode-bytes" title="Link to this heading">#</a></h3>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>disassemble<span class="w"> </span>--frame<span class="w"> </span>--bytes
+<span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>di<span class="w"> </span>-f<span class="w"> </span>-b
+</pre></div>
+</div>
+</section>
+<section id="disassemble-the-current-source-line-for-the-current-frame">
+<h3>Disassemble the current source line for the current frame<a class="headerlink" href="#disassemble-the-current-source-line-for-the-current-frame" title="Link to this heading">#</a></h3>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>disassemble<span class="w"> </span>--line
+<span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>di<span class="w"> </span>-l
+</pre></div>
+</div>
+</section>
+</section>
+<section id="executable-and-shared-library-query-commands">
+<h2>Executable and Shared Library Query Commands<a class="headerlink" href="#executable-and-shared-library-query-commands" title="Link to this heading">#</a></h2>
+<section id="list-the-main-executable-and-all-dependent-shared-libraries">
+<h3>List the main executable and all dependent shared libraries<a class="headerlink" href="#list-the-main-executable-and-all-dependent-shared-libraries" title="Link to this heading">#</a></h3>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>gdb<span class="o">)</span><span class="w"> </span>info<span class="w"> </span>shared
+</pre></div>
+</div>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>image<span class="w"> </span>list
+</pre></div>
+</div>
+</section>
+<section id="look-up-information-for-a-raw-address-in-the-executable-or-any-shared-libraries">
+<h3>Look up information for a raw address in the executable or any shared libraries<a class="headerlink" href="#look-up-information-for-a-raw-address-in-the-executable-or-any-shared-libraries" title="Link to this heading">#</a></h3>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>gdb<span class="o">)</span><span class="w"> </span>info<span class="w"> </span>symbol<span class="w"> </span>0x1ec4
+</pre></div>
+</div>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>image<span class="w"> </span>lookup<span class="w"> </span>--address<span class="w"> </span>0x1ec4
+<span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>im<span class="w"> </span>loo<span class="w"> </span>-a<span class="w"> </span>0x1ec4
+</pre></div>
+</div>
+</section>
+<section id="look-up-functions-matching-a-regular-expression-in-a-binary">
+<h3>Look up functions matching a regular expression in a binary<a class="headerlink" href="#look-up-functions-matching-a-regular-expression-in-a-binary" title="Link to this heading">#</a></h3>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>gdb<span class="o">)</span><span class="w"> </span>info<span class="w"> </span><span class="k">function</span><span class="w"> </span>&lt;FUNC_REGEX&gt;
+</pre></div>
+</div>
+<p>This one finds debug symbols:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>image<span class="w"> </span>lookup<span class="w"> </span>-r<span class="w"> </span>-n<span class="w"> </span>&lt;FUNC_REGEX&gt;
+</pre></div>
+</div>
+<p>This one finds non-debug symbols:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>image<span class="w"> </span>lookup<span class="w"> </span>-r<span class="w"> </span>-s<span class="w"> </span>&lt;FUNC_REGEX&gt;
+</pre></div>
+</div>
+<p>Provide a list of binaries as arguments to limit the search.</p>
+</section>
+<section id="find-full-source-line-information">
+<h3>Find full source line information<a class="headerlink" href="#find-full-source-line-information" title="Link to this heading">#</a></h3>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>gdb<span class="o">)</span><span class="w"> </span>info<span class="w"> </span>line<span class="w"> </span>0x1ec4
+</pre></div>
+</div>
+<p>This one is a bit messy at present. Do:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>image<span class="w"> </span>lookup<span class="w"> </span>-v<span class="w"> </span>--address<span class="w"> </span>0x1ec4
+</pre></div>
+</div>
+<p>and look for the LineEntry line, which will have the full source path and line range information.</p>
+</section>
+<section id="look-up-information-for-an-address-in-a-out-only">
+<h3>Look up information for an address in <code class="docutils literal notranslate"><span class="pre">a.out</span></code> only<a class="headerlink" href="#look-up-information-for-an-address-in-a-out-only" title="Link to this heading">#</a></h3>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>image<span class="w"> </span>lookup<span class="w"> </span>--address<span class="w"> </span>0x1ec4<span class="w"> </span>a.out
+<span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>im<span class="w"> </span>loo<span class="w"> </span>-a<span class="w"> </span>0x1ec4<span class="w"> </span>a.out
+</pre></div>
+</div>
+</section>
+<section id="look-up-information-for-for-a-type-point-by-name">
+<h3>Look up information for for a type <code class="docutils literal notranslate"><span class="pre">Point</span></code> by name<a class="headerlink" href="#look-up-information-for-for-a-type-point-by-name" title="Link to this heading">#</a></h3>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>gdb<span class="o">)</span><span class="w"> </span>ptype<span class="w"> </span>Point
+</pre></div>
+</div>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>image<span class="w"> </span>lookup<span class="w"> </span>--type<span class="w"> </span>Point
+<span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>im<span class="w"> </span>loo<span class="w"> </span>-t<span class="w"> </span>Point
+</pre></div>
+</div>
+</section>
+<section id="dump-all-sections-from-the-main-executable-and-any-shared-libraries">
+<h3>Dump all sections from the main executable and any shared libraries<a class="headerlink" href="#dump-all-sections-from-the-main-executable-and-any-shared-libraries" title="Link to this heading">#</a></h3>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>gdb<span class="o">)</span><span class="w"> </span>maintenance<span class="w"> </span>info<span class="w"> </span>sections
+</pre></div>
+</div>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>image<span class="w"> </span>dump<span class="w"> </span>sections
+</pre></div>
+</div>
+</section>
+<section id="dump-all-sections-in-the-a-out-module">
+<h3>Dump all sections in the <code class="docutils literal notranslate"><span class="pre">a.out</span></code> module<a class="headerlink" href="#dump-all-sections-in-the-a-out-module" title="Link to this heading">#</a></h3>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>image<span class="w"> </span>dump<span class="w"> </span>sections<span class="w"> </span>a.out
+</pre></div>
+</div>
+</section>
+<section id="dump-all-symbols-from-the-main-executable-and-any-shared-libraries">
+<h3>Dump all symbols from the main executable and any shared libraries<a class="headerlink" href="#dump-all-symbols-from-the-main-executable-and-any-shared-libraries" title="Link to this heading">#</a></h3>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>image<span class="w"> </span>dump<span class="w"> </span>symtab
+</pre></div>
+</div>
+</section>
+<section id="dump-all-symbols-in-a-out-and-liba-so">
+<h3>Dump all symbols in <code class="docutils literal notranslate"><span class="pre">a.out</span></code> and <code class="docutils literal notranslate"><span class="pre">liba.so</span></code><a class="headerlink" href="#dump-all-symbols-in-a-out-and-liba-so" title="Link to this heading">#</a></h3>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>image<span class="w"> </span>dump<span class="w"> </span>symtab<span class="w"> </span>a.out<span class="w"> </span>liba.so
+</pre></div>
+</div>
+</section>
+<section id="save-current-process-as-a-core-file">
+<h3>Save current process as a core file<a class="headerlink" href="#save-current-process-as-a-core-file" title="Link to this heading">#</a></h3>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>gdb<span class="o">)</span><span class="w"> </span>gcore<span class="w"> </span>filename
+</pre></div>
+</div>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>process<span class="w"> </span>save-core<span class="w"> </span>filename
+</pre></div>
+</div>
+</section>
+</section>
+<section id="miscellaneous">
+<h2>Miscellaneous<a class="headerlink" href="#miscellaneous" title="Link to this heading">#</a></h2>
+<section id="search-command-help-for-a-keyword">
+<h3>Search command help for a keyword<a class="headerlink" href="#search-command-help-for-a-keyword" title="Link to this heading">#</a></h3>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>gdb<span class="o">)</span><span class="w"> </span>apropos<span class="w"> </span>keyword
+</pre></div>
+</div>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>apropos<span class="w"> </span>keyword
+</pre></div>
+</div>
+</section>
+<section id="echo-text-to-the-screen">
+<h3>Echo text to the screen<a class="headerlink" href="#echo-text-to-the-screen" title="Link to this heading">#</a></h3>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>gdb<span class="o">)</span><span class="w"> </span><span class="nb">echo</span><span class="w"> </span>Here<span class="w"> </span>is<span class="w"> </span>some<span class="w"> </span>text<span class="se">\n</span>
+</pre></div>
+</div>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>script<span class="w"> </span>print<span class="w"> </span><span class="s2">&quot;Here is some text&quot;</span>
+</pre></div>
+</div>
+</section>
+<section id="remap-source-file-pathnames-for-the-debug-session">
+<h3>Remap source file pathnames for the debug session<a class="headerlink" href="#remap-source-file-pathnames-for-the-debug-session" title="Link to this heading">#</a></h3>
+<p>If your source files are no longer located in the same location as when the
+program was built (for example, if the program was built on a different
+computer) you need to tell the debugger how to find the sources at their local
+file path instead of the build system’s file path.</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>gdb<span class="o">)</span><span class="w"> </span><span class="nb">set</span><span class="w"> </span>pathname-substitutions<span class="w"> </span>/buildbot/path<span class="w"> </span>/my/path
+</pre></div>
+</div>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>lldb<span class="o">)</span><span class="w"> </span>settings<span class="w"> </span><span class="nb">set</span><span class="w"> </span>target.source-map<span class="w"> </span>/buildbot/path<span class="w"> </span>/my/path
+</pre></div>
+</div>
+<p>Supply a catchall directory to search for source files in.</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>gdb<span class="o">)</span><span class="w"> </span>directory<span class="w"> </span>/my/path
+</pre></div>
+</div>
+</section>
+</section>
+</section>
+
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          <a class="next-page" href="formatting.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title">Frame and Thread Format</div>
+              </div>
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+            </a>
+          <a class="prev-page" href="tutorial.html">
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title">Tutorial</div>
+                
+              </div>
+            </a>
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; 2007-2025, The LLDB Team
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            <div class="last-updated">
+              Last updated on Aug 13, 2025</div>
+          </div>
+          <div class="right-details">
+            
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer">
+      
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">GDB to LLDB command map</a><ul>
+<li><a class="reference internal" href="#execution-commands">Execution Commands</a><ul>
+<li><a class="reference internal" href="#launch-a-process-no-arguments">Launch a process no arguments</a></li>
+<li><a class="reference internal" href="#launch-a-process-with-arguments-args">Launch a process with arguments <code class="docutils literal notranslate"><span class="pre">&lt;args&gt;</span></code></a></li>
+<li><a class="reference internal" href="#launch-process-a-out-with-arguments-1-2-3-by-passing-the-args-to-the-debugger">Launch process <code class="docutils literal notranslate"><span class="pre">a.out</span></code> with arguments <code class="docutils literal notranslate"><span class="pre">1</span> <span class="pre">2</span> <span class="pre">3</span></code> by passing the args to the debugger</a></li>
+<li><a class="reference internal" href="#launch-process-a-out-with-arguments-1-2-3-by-setting-the-args-in-the-debugger">Launch process a.out with arguments <code class="docutils literal notranslate"><span class="pre">1</span> <span class="pre">2</span> <span class="pre">3</span></code> by setting the args in the debugger</a></li>
+<li><a class="reference internal" href="#launch-a-process-with-arguments-in-new-terminal-window-macos-only">Launch a process with arguments in new terminal window (macOS only)</a></li>
+<li><a class="reference internal" href="#launch-a-process-with-arguments-args-in-existing-terminal-dev-ttys006">Launch a process with arguments <code class="docutils literal notranslate"><span class="pre">&lt;args&gt;</span></code> in existing terminal <code class="docutils literal notranslate"><span class="pre">/dev/ttys006</span></code></a></li>
+<li><a class="reference internal" href="#set-environment-variables-for-process-before-launching">Set environment variables for process before launching</a></li>
+<li><a class="reference internal" href="#unset-environment-variables-for-process-before-launching">Unset environment variables for process before launching</a></li>
+<li><a class="reference internal" href="#show-the-arguments-that-will-be-or-were-passed-to-the-program-when-run">Show the arguments that will be or were passed to the program when run</a></li>
+<li><a class="reference internal" href="#set-environment-variables-for-process-and-launch-process-in-one-command">Set environment variables for process and launch process in one command</a></li>
+<li><a class="reference internal" href="#attach-to-the-process-with-process-id-123">Attach to the process with process ID 123</a></li>
+<li><a class="reference internal" href="#attach-to-the-process-named-a-out">Attach to the process named <code class="docutils literal notranslate"><span class="pre">a.out</span></code></a></li>
+<li><a class="reference internal" href="#wait-for-a-process-named-a-out-to-launch-and-attach">Wait for a process named <code class="docutils literal notranslate"><span class="pre">a.out</span></code> to launch and attach</a></li>
+<li><a class="reference internal" href="#attach-to-a-remote-gdb-protocol-server-running-on-system-eorgadd-port-8000">Attach to a remote gdb protocol server running on system <code class="docutils literal notranslate"><span class="pre">eorgadd</span></code>, port <code class="docutils literal notranslate"><span class="pre">8000</span></code></a></li>
+<li><a class="reference internal" href="#attach-to-a-remote-gdb-protocol-server-running-on-the-local-system-port-8000">Attach to a remote gdb protocol server running on the local system, port <code class="docutils literal notranslate"><span class="pre">8000</span></code></a></li>
+<li><a class="reference internal" href="#attach-to-a-darwin-kernel-in-kdp-mode-on-system-eorgadd">Attach to a Darwin kernel in kdp mode on system <code class="docutils literal notranslate"><span class="pre">eorgadd</span></code></a></li>
+<li><a class="reference internal" href="#do-a-source-level-single-step-in-the-currently-selected-thread">Do a source level single step in the currently selected thread</a></li>
+<li><a class="reference internal" href="#ignore-a-function-when-doing-a-source-level-single-step-in">Ignore a function when doing a source level single step in</a></li>
+<li><a class="reference internal" href="#do-a-source-level-single-step-over-in-the-currently-selected-thread">Do a source level single step over in the currently selected thread</a></li>
+<li><a class="reference internal" href="#do-an-instruction-level-single-step-in-the-currently-selected-thread">Do an instruction level single step in the currently selected thread</a></li>
+<li><a class="reference internal" href="#do-an-instruction-level-single-step-over-in-the-currently-selected-thread">Do an instruction level single step over in the currently selected thread</a></li>
+<li><a class="reference internal" href="#step-out-of-the-currently-selected-frame">Step out of the currently selected frame</a></li>
+<li><a class="reference internal" href="#return-immediately-from-the-currently-selected-frame-with-an-optional-return-value">Return immediately from the currently selected frame, with an optional return value</a></li>
+<li><a class="reference internal" href="#backtrace-and-disassemble-every-time-you-stop">Backtrace and disassemble every time you stop</a></li>
+<li><a class="reference internal" href="#run-until-we-hit-line-12-or-control-leaves-the-current-function">Run until we hit line 12 or control leaves the current function</a></li>
+<li><a class="reference internal" href="#show-the-current-frame-and-source-line">Show the current frame and source line</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#breakpoint-commands">Breakpoint Commands</a><ul>
+<li><a class="reference internal" href="#set-a-breakpoint-at-all-functions-named-main">Set a breakpoint at all functions named main</a></li>
+<li><a class="reference internal" href="#set-a-breakpoint-in-file-test-c-at-line-12">Set a breakpoint in file <code class="docutils literal notranslate"><span class="pre">test.c</span></code> at line <code class="docutils literal notranslate"><span class="pre">12</span></code></a></li>
+<li><a class="reference internal" href="#set-a-breakpoint-at-all-c-methods-whose-basename-is-main">Set a breakpoint at all C++ methods whose basename is <code class="docutils literal notranslate"><span class="pre">main</span></code></a></li>
+<li><a class="reference internal" href="#set-a-breakpoint-at-an-objective-c-function-nsstring-stringwithformat">Set a breakpoint at an Objective-C function <code class="docutils literal notranslate"><span class="pre">-[NSString</span> <span class="pre">stringWithFormat:]</span></code></a></li>
+<li><a class="reference internal" href="#set-a-breakpoint-at-all-objective-c-methods-whose-selector-is-count">Set a breakpoint at all Objective-C methods whose selector is <code class="docutils literal notranslate"><span class="pre">count</span></code></a></li>
+<li><a class="reference internal" href="#set-a-breakpoint-by-regular-expression-on-function-name">Set a breakpoint by regular expression on function name</a></li>
+<li><a class="reference internal" href="#ensure-that-breakpoints-by-file-and-line-work-for-include-c-cpp-m-files">Ensure that breakpoints by file and line work for <code class="docutils literal notranslate"><span class="pre">#include</span> <span class="pre">.c/.cpp/.m</span></code> files</a></li>
+<li><a class="reference internal" href="#set-a-breakpoint-by-regular-expression-on-source-file-contents">Set a breakpoint by regular expression on source file contents</a></li>
+<li><a class="reference internal" href="#set-a-conditional-breakpoint">Set a conditional breakpoint</a></li>
+<li><a class="reference internal" href="#list-all-breakpoints">List all breakpoints</a></li>
+<li><a class="reference internal" href="#delete-a-breakpoint">Delete a breakpoint</a></li>
+<li><a class="reference internal" href="#disable-a-breakpoint">Disable a breakpoint</a></li>
+<li><a class="reference internal" href="#enable-a-breakpoint">Enable a breakpoint</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#watchpoint-commands">Watchpoint Commands</a><ul>
+<li><a class="reference internal" href="#set-a-watchpoint-on-a-variable-when-it-is-written-to">Set a watchpoint on a variable when it is written to</a></li>
+<li><a class="reference internal" href="#set-a-watchpoint-on-a-memory-location-when-it-is-written-into">Set a watchpoint on a memory location when it is written into</a></li>
+<li><a class="reference internal" href="#set-a-condition-on-a-watchpoint">Set a condition on a watchpoint</a></li>
+<li><a class="reference internal" href="#list-all-watchpoints">List all watchpoints</a></li>
+<li><a class="reference internal" href="#delete-a-watchpoint">Delete a watchpoint</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#examining-variables">Examining Variables</a><ul>
+<li><a class="reference internal" href="#show-the-arguments-and-local-variables-for-the-current-frame">Show the arguments and local variables for the current frame</a></li>
+<li><a class="reference internal" href="#show-the-local-variables-for-the-current-frame">Show the local variables for the current frame</a></li>
+<li><a class="reference internal" href="#show-the-contents-of-local-variable-bar">Show the contents of local variable <code class="docutils literal notranslate"><span class="pre">bar</span></code></a></li>
+<li><a class="reference internal" href="#show-the-contents-of-local-variable-bar-formatted-as-hex">Show the contents of local variable <code class="docutils literal notranslate"><span class="pre">bar</span></code> formatted as hex</a></li>
+<li><a class="reference internal" href="#show-the-contents-of-global-variable-baz">Show the contents of global variable <code class="docutils literal notranslate"><span class="pre">baz</span></code></a></li>
+<li><a class="reference internal" href="#show-the-global-static-variables-defined-in-the-current-source-file">Show the global/static variables defined in the current source file</a></li>
+<li><a class="reference internal" href="#display-the-variables-argc-and-argv-every-time-you-stop">Display the variables <code class="docutils literal notranslate"><span class="pre">argc</span></code> and <code class="docutils literal notranslate"><span class="pre">argv</span></code> every time you stop</a></li>
+<li><a class="reference internal" href="#display-the-variables-argc-and-argv-only-when-you-stop-in-the-function-named-main">Display the variables <code class="docutils literal notranslate"><span class="pre">argc</span></code> and <code class="docutils literal notranslate"><span class="pre">argv</span></code> only when you stop in the function named <code class="docutils literal notranslate"><span class="pre">main</span></code></a></li>
+<li><a class="reference internal" href="#display-the-variable-this-only-when-you-stop-in-c-class-named-myclass">Display the variable <code class="docutils literal notranslate"><span class="pre">*this</span></code> only when you stop in c class named <code class="docutils literal notranslate"><span class="pre">MyClass</span></code></a></li>
+<li><a class="reference internal" href="#print-an-array-of-integers-in-memory-assuming-we-have-a-pointer-like-int-ptr">Print an array of integers in memory, assuming we have a pointer like <code class="docutils literal notranslate"><span class="pre">int</span> <span class="pre">*ptr</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#evaluating-expressions">Evaluating Expressions</a><ul>
+<li><a class="reference internal" href="#evaluating-a-generalized-expression-in-the-current-frame">Evaluating a generalized expression in the current frame</a></li>
+<li><a class="reference internal" href="#creating-and-assigning-a-value-to-a-convenience-variable">Creating and assigning a value to a convenience variable</a></li>
+<li><a class="reference internal" href="#printing-the-objc-description-of-an-object">Printing the ObjC “description” of an object</a></li>
+<li><a class="reference internal" href="#print-the-dynamic-type-of-the-result-of-an-expression">Print the dynamic type of the result of an expression</a></li>
+<li><a class="reference internal" href="#call-a-function-so-you-can-stop-at-a-breakpoint-in-it">Call a function so you can stop at a breakpoint in it</a></li>
+<li><a class="reference internal" href="#call-a-function-that-crashes-then-stop-when-it-does">Call a function that crashes, then stop when it does</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#examining-thread-state">Examining Thread State</a><ul>
+<li><a class="reference internal" href="#list-the-threads-in-your-program">List the threads in your program</a></li>
+<li><a class="reference internal" href="#select-thread-1-as-the-default-thread-for-subsequent-commands">Select thread <code class="docutils literal notranslate"><span class="pre">1</span></code> as the default thread for subsequent commands</a></li>
+<li><a class="reference internal" href="#show-the-stack-backtrace-for-the-current-thread">Show the stack backtrace for the current thread</a></li>
+<li><a class="reference internal" href="#show-the-stack-backtraces-for-all-threads">Show the stack backtraces for all threads</a></li>
+<li><a class="reference internal" href="#backtrace-the-first-five-frames-of-the-current-thread">Backtrace the first five frames of the current thread</a></li>
+<li><a class="reference internal" href="#select-a-different-stack-frame-by-index-for-the-current-thread">Select a different stack frame by index for the current thread</a></li>
+<li><a class="reference internal" href="#list-information-about-the-currently-selected-frame-in-the-current-thread">List information about the currently selected frame in the current thread</a></li>
+<li><a class="reference internal" href="#select-the-stack-frame-that-called-the-current-stack-frame">Select the stack frame that called the current stack frame</a></li>
+<li><a class="reference internal" href="#select-the-stack-frame-that-is-called-by-the-current-stack-frame">Select the stack frame that is called by the current stack frame</a></li>
+<li><a class="reference internal" href="#select-a-different-stack-frame-using-a-relative-offset">Select a different stack frame using a relative offset</a></li>
+<li><a class="reference internal" href="#show-the-general-purpose-registers-for-the-current-thread">show the general purpose registers for the current thread</a></li>
+<li><a class="reference internal" href="#write-a-new-decimal-value-123-to-the-current-thread-register-rax">Write a new decimal value <code class="docutils literal notranslate"><span class="pre">123</span></code> to the current thread register <code class="docutils literal notranslate"><span class="pre">rax</span></code></a></li>
+<li><a class="reference internal" href="#skip-8-bytes-ahead-of-the-current-program-counter-instruction-pointer">Skip 8 bytes ahead of the current program counter (instruction pointer)</a></li>
+<li><a class="reference internal" href="#show-the-general-purpose-registers-for-the-current-thread-formatted-as-signed-decimal">Show the general purpose registers for the current thread formatted as signed decimal</a></li>
+<li><a class="reference internal" href="#show-all-registers-in-all-register-sets-for-the-current-thread">Show all registers in all register sets for the current thread</a></li>
+<li><a class="reference internal" href="#show-the-values-for-the-registers-named-rax-rsp-and-rbp-in-the-current-thread">Show the values for the registers named <code class="docutils literal notranslate"><span class="pre">rax</span></code>, <code class="docutils literal notranslate"><span class="pre">rsp</span></code> and <code class="docutils literal notranslate"><span class="pre">rbp</span></code> in the current thread</a></li>
+<li><a class="reference internal" href="#show-the-values-for-the-register-named-rax-in-the-current-thread-formatted-as-binary">Show the values for the register named <code class="docutils literal notranslate"><span class="pre">rax</span></code> in the current thread formatted as binary</a></li>
+<li><a class="reference internal" href="#read-memory-from-address-0xbffff3c0-and-show-4-hex-uint32-t-values">Read memory from address <code class="docutils literal notranslate"><span class="pre">0xbffff3c0</span></code> and show 4 hex <code class="docutils literal notranslate"><span class="pre">uint32_t</span></code> values</a></li>
+<li><a class="reference internal" href="#read-memory-starting-at-the-expression-argv-0">Read memory starting at the expression <code class="docutils literal notranslate"><span class="pre">argv[0]</span></code></a></li>
+<li><a class="reference internal" href="#read-512-bytes-of-memory-from-address-0xbffff3c0-and-save-the-results-to-a-local-file-as-text">Read <code class="docutils literal notranslate"><span class="pre">512</span></code> bytes of memory from address <code class="docutils literal notranslate"><span class="pre">0xbffff3c0</span></code> and save the results to a local file as text</a></li>
+<li><a class="reference internal" href="#save-binary-memory-data-starting-at-0x1000-and-ending-at-0x2000-to-a-file">Save binary memory data starting at <code class="docutils literal notranslate"><span class="pre">0x1000</span></code> and ending at <code class="docutils literal notranslate"><span class="pre">0x2000</span></code> to a file</a></li>
+<li><a class="reference internal" href="#get-information-about-a-specific-heap-allocation-macos-only">Get information about a specific heap allocation (macOS only)</a></li>
+<li><a class="reference internal" href="#get-information-about-a-specific-heap-allocation-and-cast-the-result-to-any-dynamic-type-that-can-be-deduced-macos-only">Get information about a specific heap allocation and cast the result to any dynamic type that can be deduced (macOS only)</a></li>
+<li><a class="reference internal" href="#find-all-heap-blocks-that-contain-a-pointer-specified-by-an-expression-expr-macos-only">Find all heap blocks that contain a pointer specified by an expression <code class="docutils literal notranslate"><span class="pre">EXPR</span></code> (macOS only)</a></li>
+<li><a class="reference internal" href="#find-all-heap-blocks-that-contain-a-c-string-anywhere-in-the-block-macos-only">Find all heap blocks that contain a C string anywhere in the block (macOS only)</a></li>
+<li><a class="reference internal" href="#disassemble-the-current-function-for-the-current-frame">Disassemble the current function for the current frame</a></li>
+<li><a class="reference internal" href="#disassemble-any-functions-named-main">Disassemble any functions named main</a></li>
+<li><a class="reference internal" href="#disassemble-an-address-range">Disassemble an address range</a></li>
+<li><a class="reference internal" href="#disassemble-20-instructions-from-a-given-address">Disassemble <code class="docutils literal notranslate"><span class="pre">20</span></code> instructions from a given address</a></li>
+<li><a class="reference internal" href="#show-mixed-source-and-disassembly-for-the-current-function-for-the-current-frame">Show mixed source and disassembly for the current function for the current frame</a></li>
+<li><a class="reference internal" href="#disassemble-the-current-function-for-the-current-frame-and-show-the-opcode-bytes">Disassemble the current function for the current frame and show the opcode bytes</a></li>
+<li><a class="reference internal" href="#disassemble-the-current-source-line-for-the-current-frame">Disassemble the current source line for the current frame</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#executable-and-shared-library-query-commands">Executable and Shared Library Query Commands</a><ul>
+<li><a class="reference internal" href="#list-the-main-executable-and-all-dependent-shared-libraries">List the main executable and all dependent shared libraries</a></li>
+<li><a class="reference internal" href="#look-up-information-for-a-raw-address-in-the-executable-or-any-shared-libraries">Look up information for a raw address in the executable or any shared libraries</a></li>
+<li><a class="reference internal" href="#look-up-functions-matching-a-regular-expression-in-a-binary">Look up functions matching a regular expression in a binary</a></li>
+<li><a class="reference internal" href="#find-full-source-line-information">Find full source line information</a></li>
+<li><a class="reference internal" href="#look-up-information-for-an-address-in-a-out-only">Look up information for an address in <code class="docutils literal notranslate"><span class="pre">a.out</span></code> only</a></li>
+<li><a class="reference internal" href="#look-up-information-for-for-a-type-point-by-name">Look up information for for a type <code class="docutils literal notranslate"><span class="pre">Point</span></code> by name</a></li>
+<li><a class="reference internal" href="#dump-all-sections-from-the-main-executable-and-any-shared-libraries">Dump all sections from the main executable and any shared libraries</a></li>
+<li><a class="reference internal" href="#dump-all-sections-in-the-a-out-module">Dump all sections in the <code class="docutils literal notranslate"><span class="pre">a.out</span></code> module</a></li>
+<li><a class="reference internal" href="#dump-all-symbols-from-the-main-executable-and-any-shared-libraries">Dump all symbols from the main executable and any shared libraries</a></li>
+<li><a class="reference internal" href="#dump-all-symbols-in-a-out-and-liba-so">Dump all symbols in <code class="docutils literal notranslate"><span class="pre">a.out</span></code> and <code class="docutils literal notranslate"><span class="pre">liba.so</span></code></a></li>
+<li><a class="reference internal" href="#save-current-process-as-a-core-file">Save current process as a core file</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#miscellaneous">Miscellaneous</a><ul>
+<li><a class="reference internal" href="#search-command-help-for-a-keyword">Search command help for a keyword</a></li>
+<li><a class="reference internal" href="#echo-text-to-the-screen">Echo text to the screen</a></li>
+<li><a class="reference internal" href="#remap-source-file-pathnames-for-the-debug-session">Remap source file pathnames for the debug session</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
+      
+      
+    </aside>
+  </div>
+</div><script src="../_static/documentation_options.js?v=7f41d439"></script>
+    <script src="../_static/doctools.js?v=888ff710"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/scripts/furo.js?v=32e29ea5"></script>
+    </body>
+</html>

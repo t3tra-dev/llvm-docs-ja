@@ -1,0 +1,528 @@
+<!doctype html>
+<html class="no-js" lang="en" data-content_root="../">
+  <head><meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Adding Programming Language Support" href="addinglanguagesupport.html" /><link rel="prev" title="Open Projects" href="projects.html" />
+
+    <!-- Generated with Sphinx 7.2.6 and Furo 2024.01.29 -->
+        <title>Contributing to LLDB-DAP - 🐛 LLDB</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=d75fae25" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=135e06be" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=36a5483c" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #f0f0f0;
+  --color-code-foreground: black;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+      }
+    }
+  }
+</style></head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-half" viewBox="0 0 24 24">
+    <title>Auto light/dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-shadow">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M13 12h5" />
+      <path d="M13 15h4" />
+      <path d="M13 18h1" />
+      <path d="M13 9h4" />
+      <path d="M13 6h1" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc">
+<label class="overlay sidebar-overlay" for="__navigation">
+  <div class="visually-hidden">Hide navigation sidebar</div>
+</label>
+<label class="overlay toc-overlay" for="__toc">
+  <div class="visually-hidden">Hide table of contents sidebar</div>
+</label>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <div class="visually-hidden">Toggle site navigation sidebar</div>
+        <i class="icon"><svg><use href="#svg-menu"></use></svg></i>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="../index.html"><div class="brand">🐛 LLDB</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle">
+          <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+          <svg class="theme-icon-when-auto"><use href="#svg-sun-half"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
+        <div class="visually-hidden">Toggle table of contents sidebar</div>
+        <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="../index.html">
+  
+  
+  <span class="sidebar-brand-text">🐛 LLDB</span>
+  
+</a><form class="sidebar-search-container" method="get" action="../search.html" role="search">
+  <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <p class="caption" role="heading"><span class="caption-text">Using LLDB</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../use/tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../use/map.html">GDB to LLDB command map</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../use/formatting.html">Frame and Thread Format</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../use/variable.html">Variable Formatting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../use/symbolication.html">Symbolication</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../use/symbols.html">Symbols on macOS</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../use/remote.html">Remote Debugging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../use/intel_pt.html">Tracing with Intel Processor Trace</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../use/ondemand.html">On Demand Symbols</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../use/aarch64-linux.html">Using LLDB On AArch64 Linux</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../use/symbolfilejson.html">JSON Symbol File Format</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../use/mcp.html">Model Context Protocol (MCP)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../use/troubleshooting.html">Troubleshooting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../use/links.html">Links</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../man/lldb.html">Man Page</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Scripting LLDB</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../use/python.html">Python Scripting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../use/python-reference.html">Python Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../python_api.html">Python API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../python_extensions.html">Python Extensions</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Developing LLDB</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="build.html">Building</a></li>
+<li class="toctree-l1"><a class="reference internal" href="test.html">Testing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="qemu-testing.html">Testing LLDB using QEMU</a></li>
+<li class="toctree-l1"><a class="reference internal" href="debugging.html">Debugging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="fuzzing.html">Fuzzing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sbapi.html">Scripting Bridge API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dataformatters.html">Data Formatters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="formatterbytecode.html">Formatter Bytecode</a></li>
+<li class="toctree-l1"><a class="reference internal" href="extensions.html">DWARF Extensions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="lldbgdbremote.html">GDB Remote Protocol Extensions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="lldbplatformpackets.html">LLDB Platform Packets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="caveats.html">Caveats</a></li>
+<li class="toctree-l1"><a class="reference internal" href="projects.html">Open Projects</a></li>
+<li class="toctree-l1 current current-page"><a class="current reference internal" href="#">Contributing to LLDB-DAP</a></li>
+<li class="toctree-l1"><a class="reference internal" href="addinglanguagesupport.html">Adding Programming Language Support</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://lldb.llvm.org/cpp_reference/namespacelldb.html">Public C++ API</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://lldb.llvm.org/cpp_reference/index.html">Private C++ API</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">External Links</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/llvm/llvm-project">Source Code</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/llvm/llvm-project/releases">Releases</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://discord.gg/xS7Z362">Join the Discord</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://discord.com/channels/636084430946959380/636732809708306432">Discord Channel</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://discourse.llvm.org/c/subprojects/lldb/8">Discussion Forums</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://llvm.org/docs/DeveloperPolicy.html">Developer Policy</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/llvm/llvm-project/issues?q=is%3Aissue+label%3Alldb+is%3Aopen">Bug Reports</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/llvm/llvm-project/pulls?q=is%3Apr+label%3Alldb+is%3Aopen">Code Reviews</a></li>
+</ul>
+
+</div>
+</div>
+
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="edit-this-page">
+  <a class="muted-link" href="https://github.com/llvm/llvm-project/edit/main/lldb/docs/resources/lldbdap.md" title="Edit this page">
+    <svg aria-hidden="true" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+      <path d="M4 20h4l10.5 -10.5a1.5 1.5 0 0 0 -4 -4l-10.5 10.5v4" />
+      <line x1="13.5" y1="6.5" x2="17.5" y2="10.5" />
+    </svg>
+    <span class="visually-hidden">Edit this page</span>
+  </a>
+</div><div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle">
+              <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+              <svg class="theme-icon-when-auto"><use href="#svg-sun-half"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
+            <div class="visually-hidden">Toggle table of contents sidebar</div>
+            <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+          </label>
+        </div>
+        <article role="main">
+          <section id="contributing-to-lldb-dap">
+<h1>Contributing to LLDB-DAP<a class="headerlink" href="#contributing-to-lldb-dap" title="Link to this heading">#</a></h1>
+<p>This guide describes how to extend and contribute to lldb-dap.
+For documentation on how to use lldb-dap, see <a class="reference external" href="https://github.com/llvm/llvm-project/blob/main/lldb/tools/lldb-dap/README.md">lldb-dap’s README</a>.</p>
+<p>lldb-dap and LLDB are developed under the umbrella of the
+<a class="reference external" href="https://llvm.org/">LLVM project</a>. As such, the
+“<a class="reference external" href="https://llvm.org/docs/GettingStarted.html">Getting Started with the LLVM System</a>”,
+“<a class="reference external" href="https://llvm.org/docs/Contributing.html">Contributing to LLVM</a>” and
+“<a class="reference external" href="https://llvm.org/docs/CodingStandards.html">LLVM coding standard</a>”
+guides might also be relevant, if you are a first-time contributor to the LLVM
+project.</p>
+<p>lldb-dap’s source code is <a class="reference external" href="https://github.com/llvm/llvm-project/tree/main/lldb/tools/lldb-dap">part of the LLVM
+repository</a>
+on Github. We use Github’s <a class="reference external" href="https://github.com/llvm/llvm-project/tree/main/lldb/tools/lldb-dap">issue
+tracker</a>
+and patches can be submitted via <a class="reference external" href="https://github.com/llvm/llvm-project/pulls">pull
+requests</a>.</p>
+<section id="building-lldb-dap-from-soruce">
+<h2>Building <code class="docutils literal notranslate"><span class="pre">lldb-dap</span></code> from soruce<a class="headerlink" href="#building-lldb-dap-from-soruce" title="Link to this heading">#</a></h2>
+<p>To build lldb-dap from source, first need to <a class="reference external" href="https://lldb.llvm.org/resources/build.html">setup a LLDB build</a>.
+After doing so, run <code class="docutils literal notranslate"><span class="pre">ninja</span> <span class="pre">lldb-dap</span></code>. To use your freshly built <code class="docutils literal notranslate"><span class="pre">lldb-dap</span></code>
+binary, install the VS Code extension and point it to lldb-dap by setting the
+<code class="docutils literal notranslate"><span class="pre">lldb-dap.executable-path</span></code> setting.</p>
+</section>
+<section id="responsibilities-of-lldb-lldb-dap-and-the-visual-studio-code-extension">
+<h2>Responsibilities of LLDB, lldb-dap and the Visual Studio Code Extension<a class="headerlink" href="#responsibilities-of-lldb-lldb-dap-and-the-visual-studio-code-extension" title="Link to this heading">#</a></h2>
+<p>Under the hood, the UI-based debugging experience is fueled by three separate
+components:</p>
+<ul class="simple">
+<li><p>LLDB provides general, IDE-indepedent debugging features, such as:
+loading binaries / core dumps, interpreting debug info, setting breakpoints,
+pretty-printing variables, etc. The <code class="docutils literal notranslate"><span class="pre">lldb</span></code> binary exposes this functionality
+via a command line interface.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">lldb-dap</span></code> exposes LLDB’s functionality via the
+“<a class="reference external" href="https://microsoft.github.io/debug-adapter-protocol/">Debug Adapter Protocol</a>”,
+i.e. a protocol through which various IDEs (VS Code, Emacs, vim, neovim, …)
+can interact with a wide range of debuggers (<code class="docutils literal notranslate"><span class="pre">lldb-dap</span></code> and many others).</p></li>
+<li><p>The VS Code extension exposes the lldb-dap binary within VS Code. It acts
+as a thin wrapper around the lldb-dap binary, and adds VS-Code-specific UI
+integration on top of lldb-dap, such as autocompletion for <code class="docutils literal notranslate"><span class="pre">launch.json</span></code>
+configuration files.</p></li>
+</ul>
+<p>Since lldb-dap builds on top of LLDB, all of LLDB’s extensibility mechanisms
+such as <a class="reference external" href="https://lldb.llvm.org/use/variable.html">Variable Pretty-Printing</a>,
+<a class="reference external" href="https://lldb.llvm.org/use/python-reference.html#writing-lldb-frame-recognizers-in-python">Frame recognizers</a>
+and <a class="reference external" href="https://lldb.llvm.org/use/python.html">Python Scripting</a> are available
+also in lldb-dap.</p>
+<p>When adding new functionality, you generally want to add it on the lowest
+applicable level. I.e., quite frequently you actually want to add functionality
+to LLDB’s core in order to improve your debugging experience in VS Code.</p>
+<section id="the-debug-adapter-protocol">
+<h3>The Debug Adapter Protocol<a class="headerlink" href="#the-debug-adapter-protocol" title="Link to this heading">#</a></h3>
+<p>The most relevant resources for the Debug Adapter Protocol are:</p>
+<ul class="simple">
+<li><p><a class="reference external" href="https://microsoft.github.io/debug-adapter-protocol/overview">The overview</a>
+which provides a high-level introduction,</p></li>
+<li><p>the <a class="reference external" href="https://microsoft.github.io/debug-adapter-protocol/specification">human-readable specification</a>, and</p></li>
+<li><p>the <a class="reference external" href="https://github.com/microsoft/debug-adapter-protocol/blob/main/debugAdapterProtocol.json">JSON-schema specification</a>.</p></li>
+</ul>
+<p>lldb-dap adds some additional non-standard extensions to the protocol. To take
+advantage of those extensions, IDE-specific support code is needed, usually
+inside the VS Code extension. When adding a new extension, please first look
+through the <a class="reference external" href="https://github.com/microsoft/debug-adapter-protocol/issues">issue tracker of the Debug Adapter
+Protocol</a> to check
+if there already is a proposal serving your use case. If so, try to take
+inspiration from it. If not, consider opening an upstream issue.</p>
+<p>To avoid naming collisions with potential future extensions of the Debug
+Adapter protocol, all non-standard extensions should use the prefix
+<code class="docutils literal notranslate"><span class="pre">$__lldb_extension</span></code> in their JSON property names.</p>
+</section>
+<section id="debugging-the-debug-adapter-protocol">
+<h3>Debugging the Debug Adapter Protocol<a class="headerlink" href="#debugging-the-debug-adapter-protocol" title="Link to this heading">#</a></h3>
+<p>To debug the Debug Adapter Protocol, point the <code class="docutils literal notranslate"><span class="pre">LLDBDAP_LOG</span></code> environment
+variable to a file on your disk. lldb-dap will log all communication received
+from / sent to the IDE to the provided path. In the VS Code extension, you
+can also set the log path through the <code class="docutils literal notranslate"><span class="pre">lldb-dap.log-path</span></code> VS Code setting.</p>
+</section>
+</section>
+<section id="building-the-vs-code-extension-from-source">
+<h2>Building the VS Code extension from source<a class="headerlink" href="#building-the-vs-code-extension-from-source" title="Link to this heading">#</a></h2>
+<p>Installing the plug-in is very straightforward and involves just a few steps.</p>
+<p>In most cases, installing the VS Code extension from the <a class="reference external" href="https://marketplace.visualstudio.com/items?itemName=llvm-vs-code-extensions.lldb-dap">VS Code
+Marketplace</a>
+and pointing it to a locally built lldb-dap binary is sufficient. Building
+the VS Code extension from source is only necessary if the TypeScript code is
+changed.</p>
+<section id="pre-requisites">
+<h3>Pre-requisites<a class="headerlink" href="#pre-requisites" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p>Install a modern version of node (e.g. <code class="docutils literal notranslate"><span class="pre">v20.0.0</span></code>).</p></li>
+<li><p>On VS Code, execute the command <code class="docutils literal notranslate"><span class="pre">Install</span> <span class="pre">'code'</span> <span class="pre">command</span> <span class="pre">in</span> <span class="pre">PATH</span></code>. You need to
+do it only once. This enables the command <code class="docutils literal notranslate"><span class="pre">code</span></code> in the PATH.</p></li>
+</ul>
+</section>
+<section id="packaging-and-installation">
+<h3>Packaging and installation<a class="headerlink" href="#packaging-and-installation" title="Link to this heading">#</a></h3>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span><span class="w"> </span>/path/to/lldb/tools/lldb-dap
+npm<span class="w"> </span>install
+npm<span class="w"> </span>run<span class="w"> </span>package<span class="w"> </span><span class="c1"># This also compiles the extension.</span>
+npm<span class="w"> </span>run<span class="w"> </span>vscode-install
+</pre></div>
+</div>
+<p>On VS Code, set the setting <code class="docutils literal notranslate"><span class="pre">lldb-dap.executable-path</span></code> to the path of your local
+build of <code class="docutils literal notranslate"><span class="pre">lldb-dap</span></code>.</p>
+<p>And then you are ready!</p>
+</section>
+<section id="updating-the-extension">
+<h3>Updating the extension<a class="headerlink" href="#updating-the-extension" title="Link to this heading">#</a></h3>
+<p>Updating the extension is pretty much the same process as installing it from
+scratch. However, VS Code expects the version number of the upgraded extension
+to be greater than the previous one, otherwise the installation step might have
+no effect.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Bump version in package.json</span>
+<span class="nb">cd</span><span class="w"> </span>/path/to/lldb/tools/lldb-dap
+npm<span class="w"> </span>install
+npm<span class="w"> </span>run<span class="w"> </span>package
+npm<span class="w"> </span>run<span class="w"> </span>vscode-install
+</pre></div>
+</div>
+<p>Another way upgrade without bumping the extension version is to first uninstall
+the extension, then reload VS Code, and then install it again. This is
+an unfortunate limitation of the editor.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span><span class="w"> </span>/path/to/lldb/tools/lldb-dap
+npm<span class="w"> </span>run<span class="w"> </span>vscode-uninstall
+<span class="c1"># Then reload VS Code: reopen the IDE or execute the `Developer: Reload Window`</span>
+<span class="c1"># command.</span>
+npm<span class="w"> </span>run<span class="w"> </span>package
+npm<span class="w"> </span>run<span class="w"> </span>vscode-install
+</pre></div>
+</div>
+</section>
+<section id="deploying-for-visual-studio-code">
+<h3>Deploying for Visual Studio Code<a class="headerlink" href="#deploying-for-visual-studio-code" title="Link to this heading">#</a></h3>
+<p>The easiest way to deploy the extension for execution on other machines requires
+copying <code class="docutils literal notranslate"><span class="pre">lldb-dap</span></code> and its dependencies into a<code class="docutils literal notranslate"><span class="pre">./bin</span></code> subfolder and then create a
+standalone VSIX package.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span><span class="w"> </span>/path/to/lldb/tools/lldb-dap
+mkdir<span class="w"> </span>-p<span class="w"> </span>./bin
+cp<span class="w"> </span>/path/to/a/built/lldb-dap<span class="w"> </span>./bin/
+cp<span class="w"> </span>/path/to/a/built/liblldb.so<span class="w"> </span>./bin/
+npm<span class="w"> </span>run<span class="w"> </span>package
+</pre></div>
+</div>
+<p>This will produce the file <code class="docutils literal notranslate"><span class="pre">./out/lldb-dap.vsix</span></code> that can be distributed. In
+this type of installation, users don’t need to manually set the path to
+<code class="docutils literal notranslate"><span class="pre">lldb-dap</span></code>. The extension will automatically look for it in the <code class="docutils literal notranslate"><span class="pre">./bin</span></code>
+subfolder.</p>
+<p><em>Note: It’s not possible to use symlinks to <code class="docutils literal notranslate"><span class="pre">lldb-dap</span></code>, as the packaging tool
+forcefully performs a deep copy of all symlinks.</em></p>
+<p><em>Note: It’s possible to use this kind flow for local installations, but it’s
+not recommended because updating <code class="docutils literal notranslate"><span class="pre">lldb-dap</span></code> requires rebuilding the extension.</em></p>
+</section>
+</section>
+<section id="formatting-the-typescript-code">
+<h2>Formatting the Typescript code<a class="headerlink" href="#formatting-the-typescript-code" title="Link to this heading">#</a></h2>
+<p>This is also very simple, just run:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>npm<span class="w"> </span>run<span class="w"> </span>format
+</pre></div>
+</div>
+</section>
+<section id="working-with-the-vs-code-extension-from-another-extension">
+<h2>Working with the VS Code extension from another extension<a class="headerlink" href="#working-with-the-vs-code-extension-from-another-extension" title="Link to this heading">#</a></h2>
+<p>The VS Code extension exposes the following <a class="reference external" href="https://code.visualstudio.com/api/extension-guides/command">VS Code
+commands</a>,
+which can be invoked by other debugger extensions to leverage this extension’s
+settings and logic. The commands help resolve configuration, create adapter
+descriptor, and get the lldb-dap process for state tracking, additional
+interaction, and telemetry.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">//</span> <span class="n">Resolve</span> <span class="n">debug</span> <span class="n">configuration</span>
+<span class="n">const</span> <span class="n">resolvedConfiguration</span> <span class="o">=</span> <span class="k">await</span> <span class="n">vscode</span><span class="o">.</span><span class="n">commands</span><span class="o">.</span><span class="n">executeCommand</span><span class="p">(</span><span class="s2">&quot;lldb-dap.resolveDebugConfiguration&quot;</span><span class="p">,</span> <span class="n">folder</span><span class="p">,</span> <span class="n">configuration</span><span class="p">,</span> <span class="n">token</span><span class="p">);</span>
+
+<span class="o">//</span> <span class="n">Resolve</span> <span class="n">debug</span> <span class="n">configuration</span> <span class="k">with</span> <span class="n">substituted</span> <span class="n">variables</span>
+<span class="n">const</span> <span class="n">resolvedConfigurationWithSubstitutedVariables</span> <span class="o">=</span> <span class="k">await</span> <span class="n">vscode</span><span class="o">.</span><span class="n">commands</span><span class="o">.</span><span class="n">executeCommand</span><span class="p">(</span><span class="s2">&quot;lldb-dap.resolveDebugConfigurationWithSubstitutedVariables&quot;</span><span class="p">,</span> <span class="n">folder</span><span class="p">,</span> <span class="n">configuration</span><span class="p">,</span> <span class="n">token</span><span class="p">);</span>
+
+<span class="o">//</span> <span class="n">Create</span> <span class="n">debug</span> <span class="n">adapter</span> <span class="n">descriptor</span>
+<span class="n">const</span> <span class="n">adapterDescriptor</span> <span class="o">=</span> <span class="k">await</span> <span class="n">vscode</span><span class="o">.</span><span class="n">commands</span><span class="o">.</span><span class="n">executeCommand</span><span class="p">(</span><span class="s2">&quot;lldb-dap.createDebugAdapterDescriptor&quot;</span><span class="p">,</span> <span class="n">session</span><span class="p">,</span> <span class="n">executable</span><span class="p">);</span>
+
+<span class="o">//</span> <span class="n">Get</span> <span class="n">DAP</span> <span class="n">server</span> <span class="n">process</span>
+<span class="n">const</span> <span class="n">process</span> <span class="o">=</span> <span class="k">await</span> <span class="n">vscode</span><span class="o">.</span><span class="n">commands</span><span class="o">.</span><span class="n">executeCommand</span><span class="p">(</span><span class="s2">&quot;lldb-dap.getServerProcess&quot;</span><span class="p">);</span>
+</pre></div>
+</div>
+</section>
+</section>
+
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          <a class="next-page" href="addinglanguagesupport.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title">Adding Programming Language Support</div>
+              </div>
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+            </a>
+          <a class="prev-page" href="projects.html">
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title">Open Projects</div>
+                
+              </div>
+            </a>
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; 2007-2025, The LLDB Team
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            <div class="last-updated">
+              Last updated on Aug 13, 2025</div>
+          </div>
+          <div class="right-details">
+            
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer">
+      
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">Contributing to LLDB-DAP</a><ul>
+<li><a class="reference internal" href="#building-lldb-dap-from-soruce">Building <code class="docutils literal notranslate"><span class="pre">lldb-dap</span></code> from soruce</a></li>
+<li><a class="reference internal" href="#responsibilities-of-lldb-lldb-dap-and-the-visual-studio-code-extension">Responsibilities of LLDB, lldb-dap and the Visual Studio Code Extension</a><ul>
+<li><a class="reference internal" href="#the-debug-adapter-protocol">The Debug Adapter Protocol</a></li>
+<li><a class="reference internal" href="#debugging-the-debug-adapter-protocol">Debugging the Debug Adapter Protocol</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#building-the-vs-code-extension-from-source">Building the VS Code extension from source</a><ul>
+<li><a class="reference internal" href="#pre-requisites">Pre-requisites</a></li>
+<li><a class="reference internal" href="#packaging-and-installation">Packaging and installation</a></li>
+<li><a class="reference internal" href="#updating-the-extension">Updating the extension</a></li>
+<li><a class="reference internal" href="#deploying-for-visual-studio-code">Deploying for Visual Studio Code</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#formatting-the-typescript-code">Formatting the Typescript code</a></li>
+<li><a class="reference internal" href="#working-with-the-vs-code-extension-from-another-extension">Working with the VS Code extension from another extension</a></li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
+      
+      
+    </aside>
+  </div>
+</div><script src="../_static/documentation_options.js?v=7f41d439"></script>
+    <script src="../_static/doctools.js?v=888ff710"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/scripts/furo.js?v=32e29ea5"></script>
+    </body>
+</html>

@@ -1,0 +1,543 @@
+<!doctype html>
+<html class="no-js" lang="en" data-content_root="../">
+  <head><meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Tracing with Intel Processor Trace" href="intel_pt.html" /><link rel="prev" title="Symbols on macOS" href="symbols.html" />
+
+    <!-- Generated with Sphinx 7.2.6 and Furo 2024.01.29 -->
+        <title>Remote Debugging - 🐛 LLDB</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=d75fae25" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=135e06be" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=36a5483c" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #f0f0f0;
+  --color-code-foreground: black;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+      }
+    }
+  }
+</style></head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-half" viewBox="0 0 24 24">
+    <title>Auto light/dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-shadow">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M13 12h5" />
+      <path d="M13 15h4" />
+      <path d="M13 18h1" />
+      <path d="M13 9h4" />
+      <path d="M13 6h1" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc">
+<label class="overlay sidebar-overlay" for="__navigation">
+  <div class="visually-hidden">Hide navigation sidebar</div>
+</label>
+<label class="overlay toc-overlay" for="__toc">
+  <div class="visually-hidden">Hide table of contents sidebar</div>
+</label>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <div class="visually-hidden">Toggle site navigation sidebar</div>
+        <i class="icon"><svg><use href="#svg-menu"></use></svg></i>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="../index.html"><div class="brand">🐛 LLDB</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle">
+          <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+          <svg class="theme-icon-when-auto"><use href="#svg-sun-half"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
+        <div class="visually-hidden">Toggle table of contents sidebar</div>
+        <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="../index.html">
+  
+  
+  <span class="sidebar-brand-text">🐛 LLDB</span>
+  
+</a><form class="sidebar-search-container" method="get" action="../search.html" role="search">
+  <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <p class="caption" role="heading"><span class="caption-text">Using LLDB</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="map.html">GDB to LLDB command map</a></li>
+<li class="toctree-l1"><a class="reference internal" href="formatting.html">Frame and Thread Format</a></li>
+<li class="toctree-l1"><a class="reference internal" href="variable.html">Variable Formatting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="symbolication.html">Symbolication</a></li>
+<li class="toctree-l1"><a class="reference internal" href="symbols.html">Symbols on macOS</a></li>
+<li class="toctree-l1 current current-page"><a class="current reference internal" href="#">Remote Debugging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="intel_pt.html">Tracing with Intel Processor Trace</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ondemand.html">On Demand Symbols</a></li>
+<li class="toctree-l1"><a class="reference internal" href="aarch64-linux.html">Using LLDB On AArch64 Linux</a></li>
+<li class="toctree-l1"><a class="reference internal" href="symbolfilejson.html">JSON Symbol File Format</a></li>
+<li class="toctree-l1"><a class="reference internal" href="mcp.html">Model Context Protocol (MCP)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="troubleshooting.html">Troubleshooting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="links.html">Links</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../man/lldb.html">Man Page</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Scripting LLDB</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="python.html">Python Scripting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="python-reference.html">Python Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../python_api.html">Python API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../python_extensions.html">Python Extensions</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Developing LLDB</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../resources/overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../resources/contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../resources/build.html">Building</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../resources/test.html">Testing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../resources/qemu-testing.html">Testing LLDB using QEMU</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../resources/debugging.html">Debugging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../resources/fuzzing.html">Fuzzing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../resources/sbapi.html">Scripting Bridge API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../resources/dataformatters.html">Data Formatters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../resources/formatterbytecode.html">Formatter Bytecode</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../resources/extensions.html">DWARF Extensions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../resources/lldbgdbremote.html">GDB Remote Protocol Extensions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../resources/lldbplatformpackets.html">LLDB Platform Packets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../resources/caveats.html">Caveats</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../resources/projects.html">Open Projects</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../resources/lldbdap.html">Contributing to LLDB-DAP</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../resources/addinglanguagesupport.html">Adding Programming Language Support</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://lldb.llvm.org/cpp_reference/namespacelldb.html">Public C++ API</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://lldb.llvm.org/cpp_reference/index.html">Private C++ API</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">External Links</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/llvm/llvm-project">Source Code</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/llvm/llvm-project/releases">Releases</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://discord.gg/xS7Z362">Join the Discord</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://discord.com/channels/636084430946959380/636732809708306432">Discord Channel</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://discourse.llvm.org/c/subprojects/lldb/8">Discussion Forums</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://llvm.org/docs/DeveloperPolicy.html">Developer Policy</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/llvm/llvm-project/issues?q=is%3Aissue+label%3Alldb+is%3Aopen">Bug Reports</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/llvm/llvm-project/pulls?q=is%3Apr+label%3Alldb+is%3Aopen">Code Reviews</a></li>
+</ul>
+
+</div>
+</div>
+
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="edit-this-page">
+  <a class="muted-link" href="https://github.com/llvm/llvm-project/edit/main/lldb/docs/use/remote.rst" title="Edit this page">
+    <svg aria-hidden="true" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+      <path d="M4 20h4l10.5 -10.5a1.5 1.5 0 0 0 -4 -4l-10.5 10.5v4" />
+      <line x1="13.5" y1="6.5" x2="17.5" y2="10.5" />
+    </svg>
+    <span class="visually-hidden">Edit this page</span>
+  </a>
+</div><div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle">
+              <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+              <svg class="theme-icon-when-auto"><use href="#svg-sun-half"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
+            <div class="visually-hidden">Toggle table of contents sidebar</div>
+            <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+          </label>
+        </div>
+        <article role="main">
+          <section id="remote-debugging">
+<h1>Remote Debugging<a class="headerlink" href="#remote-debugging" title="Link to this heading">#</a></h1>
+<p>Remote debugging refers to the act of debugging a process which is running on a
+different system, than the debugger itself. We shall refer to the system
+running the debugger as the local system, while the system running the debugged
+process will be the remote system.</p>
+<p>To enable remote debugging, LLDB employs a client-server architecture. The
+client part runs on the local system and the remote system runs the server. The
+client and server communicate using the gdb-remote protocol, usually
+transported over TCP/IP. More information on the protocol can be found here and
+the LLDB-specific extensions are documented in docs/lldb-gdb-remote.txt file
+inside LLDB source repository. Besides the gdb-remote stub, the server part of
+LLDB also consists of a platform binary, which is responsible for performing
+advanced debugging operations, like copying files from/to the remote system and
+can be used to execute arbitrary shell commands on the remote system.</p>
+<p>In order to reduce code complexity and improve remote debugging experience LLDB
+on Linux and macOS uses the remote debugging stub even when debugging a process
+locally. This is achieved by spawning a remote stub process locally and
+communicating with it over the loopback interface. In the case of local
+debugging this whole process is transparent to the user. The platform binary is
+not used in this case, since no file transfers are needed.</p>
+<section id="preparation-for-remote-debugging">
+<h2>Preparation for Remote Debugging<a class="headerlink" href="#preparation-for-remote-debugging" title="Link to this heading">#</a></h2>
+<p>While the process of actual debugging (stepping, backtraces, evaluating
+expressions) is same as in the local case, in the case of remote debugging,
+more preparation is needed as the required binaries cannot started on the
+remote system automatically. Also, if the remote system runs a different OS or
+architecture, the server component needs to be compiled separately.</p>
+<section id="remote-system">
+<h3>Remote system<a class="headerlink" href="#remote-system" title="Link to this heading">#</a></h3>
+<p>On Linux and Android, all required remote functionality is contained in the
+lldb-server binary. This binary combines the functionality of the platform and
+gdb-remote stub. A single binary facilitates deployment and reduces code size,
+since the two functions share a lot of code. The lldb-server binary is also
+statically linked with the rest of LLDB (unlike lldb, which dynamically links
+to liblldb.so by default), so it does not have any dependencies on the rest of
+lldb. On macOS and iOS, the remote-gdb functionality is implemented by the
+debugserver binary, which you will need to deploy alongside lldb-server.</p>
+<p>The binaries mentioned above need to be present on the remote system to enable
+remote debugging. You can either compile on the remote system directly or copy
+them from the local machine. If compiling locally and the remote architecture
+differs from the local one, you will need to cross-compile the correct version
+of the binaries. More information on cross-compiling LLDB can be found on the
+build page.</p>
+<p>Once the binaries are in place, you just need to run the lldb-server in
+platform mode and specify the port it should listen on. For example, the
+command</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">remote</span><span class="o">%</span> <span class="n">lldb</span><span class="o">-</span><span class="n">server</span> <span class="n">platform</span> <span class="o">--</span><span class="n">listen</span> <span class="s2">&quot;*:1234&quot;</span> <span class="o">--</span><span class="n">server</span>
+</pre></div>
+</div>
+<p>will start the LLDB platform and wait for incoming connections from any address
+to port 1234. Specifying an address instead of * will only allow connections
+originating from that address. Adding a –server parameter to the command line
+will fork off a new process for every incoming connection, allowing multiple
+parallel debug sessions.</p>
+</section>
+<section id="local-system">
+<h3>Local system<a class="headerlink" href="#local-system" title="Link to this heading">#</a></h3>
+<p>On the local system, you need to let LLDB know that you intend to do remote
+debugging. This is achieved through the platform command and its sub-commands.
+As a first step you need to choose the correct platform plug-in for your remote
+system. A list of available plug-ins can be obtained through platform list.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">local</span><span class="o">%</span> <span class="n">lldb</span>
+<span class="p">(</span><span class="n">lldb</span><span class="p">)</span> <span class="n">platform</span> <span class="nb">list</span>
+<span class="n">Available</span> <span class="n">platforms</span><span class="p">:</span>
+<span class="n">host</span><span class="p">:</span> <span class="n">Local</span> <span class="n">macOS</span> <span class="n">user</span> <span class="n">platform</span> <span class="n">plug</span><span class="o">-</span><span class="ow">in</span><span class="o">.</span>
+<span class="n">remote</span><span class="o">-</span><span class="n">freebsd</span><span class="p">:</span> <span class="n">Remote</span> <span class="n">FreeBSD</span> <span class="n">user</span> <span class="n">platform</span> <span class="n">plug</span><span class="o">-</span><span class="ow">in</span><span class="o">.</span>
+<span class="n">remote</span><span class="o">-</span><span class="n">linux</span><span class="p">:</span> <span class="n">Remote</span> <span class="n">Linux</span> <span class="n">user</span> <span class="n">platform</span> <span class="n">plug</span><span class="o">-</span><span class="ow">in</span><span class="o">.</span>
+<span class="n">remote</span><span class="o">-</span><span class="n">netbsd</span><span class="p">:</span> <span class="n">Remote</span> <span class="n">NetBSD</span> <span class="n">user</span> <span class="n">platform</span> <span class="n">plug</span><span class="o">-</span><span class="ow">in</span><span class="o">.</span>
+<span class="n">remote</span><span class="o">-</span><span class="n">windows</span><span class="p">:</span> <span class="n">Remote</span> <span class="n">Windows</span> <span class="n">user</span> <span class="n">platform</span> <span class="n">plug</span><span class="o">-</span><span class="ow">in</span><span class="o">.</span>
+<span class="n">remote</span><span class="o">-</span><span class="n">android</span><span class="p">:</span> <span class="n">Remote</span> <span class="n">Android</span> <span class="n">user</span> <span class="n">platform</span> <span class="n">plug</span><span class="o">-</span><span class="ow">in</span><span class="o">.</span>
+<span class="n">remote</span><span class="o">-</span><span class="n">ios</span><span class="p">:</span> <span class="n">Remote</span> <span class="n">iOS</span> <span class="n">platform</span> <span class="n">plug</span><span class="o">-</span><span class="ow">in</span><span class="o">.</span>
+<span class="n">remote</span><span class="o">-</span><span class="n">macosx</span><span class="p">:</span> <span class="n">Remote</span> <span class="n">macOS</span> <span class="n">user</span> <span class="n">platform</span> <span class="n">plug</span><span class="o">-</span><span class="ow">in</span><span class="o">.</span>
+<span class="n">ios</span><span class="o">-</span><span class="n">simulator</span><span class="p">:</span> <span class="n">iOS</span> <span class="n">simulator</span> <span class="n">platform</span> <span class="n">plug</span><span class="o">-</span><span class="ow">in</span><span class="o">.</span>
+<span class="n">darwin</span><span class="o">-</span><span class="n">kernel</span><span class="p">:</span> <span class="n">Darwin</span> <span class="n">Kernel</span> <span class="n">platform</span> <span class="n">plug</span><span class="o">-</span><span class="ow">in</span><span class="o">.</span>
+<span class="n">tvos</span><span class="o">-</span><span class="n">simulator</span><span class="p">:</span> <span class="n">Apple</span> <span class="n">TV</span> <span class="n">simulator</span> <span class="n">platform</span> <span class="n">plug</span><span class="o">-</span><span class="ow">in</span><span class="o">.</span>
+<span class="n">watchos</span><span class="o">-</span><span class="n">simulator</span><span class="p">:</span> <span class="n">Apple</span> <span class="n">Watch</span> <span class="n">simulator</span> <span class="n">platform</span> <span class="n">plug</span><span class="o">-</span><span class="ow">in</span><span class="o">.</span>
+<span class="n">remote</span><span class="o">-</span><span class="n">tvos</span><span class="p">:</span> <span class="n">Remote</span> <span class="n">Apple</span> <span class="n">TV</span> <span class="n">platform</span> <span class="n">plug</span><span class="o">-</span><span class="ow">in</span><span class="o">.</span>
+<span class="n">remote</span><span class="o">-</span><span class="n">watchos</span><span class="p">:</span> <span class="n">Remote</span> <span class="n">Apple</span> <span class="n">Watch</span> <span class="n">platform</span> <span class="n">plug</span><span class="o">-</span><span class="ow">in</span><span class="o">.</span>
+<span class="n">remote</span><span class="o">-</span><span class="n">gdb</span><span class="o">-</span><span class="n">server</span><span class="p">:</span> <span class="n">A</span> <span class="n">platform</span> <span class="n">that</span> <span class="n">uses</span> <span class="n">the</span> <span class="n">GDB</span> <span class="n">remote</span> <span class="n">protocol</span> <span class="k">as</span> <span class="n">the</span> <span class="n">communication</span> <span class="n">transport</span><span class="o">.</span>
+</pre></div>
+</div>
+<p>The default platform is the platform host which is used for local debugging.
+Apart from this, the list should contain a number of plug-ins, for debugging
+different kinds of systems. The remote plug-ins are prefixed with “remote-“.
+For example, to debug a remote Linux application:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">(</span><span class="n">lldb</span><span class="p">)</span> <span class="n">platform</span> <span class="n">select</span> <span class="n">remote</span><span class="o">-</span><span class="n">linux</span>
+</pre></div>
+</div>
+<p>After selecting the platform plug-in, you should receive a prompt which
+confirms the selected platform, and states that you are not connected. This is
+because remote plug-ins need to be connected to their remote platform
+counterpart to operate. This is achieved using the platform connect command.
+This command takes a number of arguments (as always, use the help command to
+find out more), but normally you only need to specify the address to connect
+to, e.g.:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">(</span><span class="n">lldb</span><span class="p">)</span> <span class="n">platform</span> <span class="n">connect</span> <span class="n">connect</span><span class="p">:</span><span class="o">//</span><span class="n">remote</span><span class="p">:</span><span class="mi">1234</span>
+  <span class="n">Platform</span><span class="p">:</span> <span class="n">remote</span><span class="o">-</span><span class="n">linux</span>
+    <span class="n">Triple</span><span class="p">:</span> <span class="n">x86_64</span><span class="o">-</span><span class="n">gnu</span><span class="o">-</span><span class="n">linux</span>
+  <span class="n">Hostname</span><span class="p">:</span> <span class="n">remote</span>
+ <span class="n">Connected</span><span class="p">:</span> <span class="n">yes</span>
+<span class="n">WorkingDir</span><span class="p">:</span> <span class="o">/</span><span class="n">tmp</span>
+</pre></div>
+</div>
+<p>Note that the platform has a working directory of /tmp. This directory will be
+used as the directory that executables will be uploaded to by default when
+launching a process from local.</p>
+<p>After this, you should be able to debug normally. You can use the process
+attach to attach to an existing remote process or target create, process launch
+to start a new one. The platform plugin will transparently take care of
+uploading or downloading the executable in order to be able to debug. If your
+application needs additional files, you can transfer them using the platform
+commands: get-file, put-file, mkdir, etc. The environment can be prepared
+further using the platform shell command.</p>
+<p>When using the “remote-android” platform, the client LLDB forwards two ports, one
+for connecting to the platform, and another for connecting to the gdbserver.
+The client ports are configurable through the environment variables
+ANDROID_PLATFORM_LOCAL_PORT and ANDROID_PLATFORM_LOCAL_GDB_PORT, respectively.</p>
+</section>
+</section>
+<section id="launching-a-locally-built-process-on-the-remote-machine">
+<h2>Launching a locally built process on the remote machine<a class="headerlink" href="#launching-a-locally-built-process-on-the-remote-machine" title="Link to this heading">#</a></h2>
+<section id="install-and-run-in-the-platform-working-directory">
+<h3>Install and run in the platform working directory<a class="headerlink" href="#install-and-run-in-the-platform-working-directory" title="Link to this heading">#</a></h3>
+<p>To launch a locally built process on the remote system in the platform working
+directory:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">(</span><span class="n">lldb</span><span class="p">)</span> <span class="n">file</span> <span class="n">a</span><span class="o">.</span><span class="n">out</span>
+<span class="p">(</span><span class="n">lldb</span><span class="p">)</span> <span class="n">run</span>
+</pre></div>
+</div>
+<p>This will cause LLDB to create a target with the “a.out” executable that you
+cross built. The “run” command will cause LLDB to upload “a.out” to the
+platform’s current working directory only if the file has changed. The platform
+connection allows us to transfer files, but also allows us to get the MD5
+checksum of the file on the other end and only upload the file if it has
+changed. LLDB will automatically launch a lldb-server in gdbremote mode to
+allow you to debug this executable, connect to it and start your debug session
+for you.</p>
+</section>
+<section id="changing-the-platform-working-directory">
+<h3>Changing the platform working directory<a class="headerlink" href="#changing-the-platform-working-directory" title="Link to this heading">#</a></h3>
+<p>You can change the platform working directory while connected to the platform
+with:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">(</span><span class="n">lldb</span><span class="p">)</span> <span class="n">platform</span> <span class="n">settings</span> <span class="o">-</span><span class="n">w</span> <span class="o">/</span><span class="n">usr</span><span class="o">/</span><span class="n">local</span><span class="o">/</span><span class="nb">bin</span>
+</pre></div>
+</div>
+<p>And you can verify it worked using “platform status”:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">(</span><span class="n">lldb</span><span class="p">)</span> <span class="n">platform</span> <span class="n">status</span>
+  <span class="n">Platform</span><span class="p">:</span> <span class="n">remote</span><span class="o">-</span><span class="n">linux</span>
+    <span class="n">Triple</span><span class="p">:</span> <span class="n">x86_64</span><span class="o">-</span><span class="n">gnu</span><span class="o">-</span><span class="n">linux</span>
+  <span class="n">Hostname</span><span class="p">:</span> <span class="n">remote</span>
+ <span class="n">Connected</span><span class="p">:</span> <span class="n">yes</span>
+<span class="n">WorkingDir</span><span class="p">:</span> <span class="o">/</span><span class="n">usr</span><span class="o">/</span><span class="n">local</span><span class="o">/</span><span class="nb">bin</span>
+</pre></div>
+</div>
+<p>If we run again, the program will be installed into <code class="docutils literal notranslate"><span class="pre">/usr/local/bin</span></code>.</p>
+</section>
+<section id="install-and-run-by-specifying-a-remote-install-path">
+<h3>Install and run by specifying a remote install path<a class="headerlink" href="#install-and-run-by-specifying-a-remote-install-path" title="Link to this heading">#</a></h3>
+<p>If you want the “a.out” executable to be installed into “/bin/a.out” instead of
+the platform’s current working directory, we can set the platform file
+specification using python:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">(</span><span class="n">lldb</span><span class="p">)</span> <span class="n">file</span> <span class="n">a</span><span class="o">.</span><span class="n">out</span>
+<span class="p">(</span><span class="n">lldb</span><span class="p">)</span> <span class="n">script</span> <span class="n">lldb</span><span class="o">.</span><span class="n">target</span><span class="o">.</span><span class="n">module</span><span class="p">[</span><span class="s1">&#39;a.out&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">SetPlatformFileSpec</span><span class="p">(</span><span class="s2">&quot;/bin/a.out&quot;</span><span class="p">)</span>
+<span class="p">(</span><span class="n">lldb</span><span class="p">)</span> <span class="n">run</span>
+</pre></div>
+</div>
+<p>Now when you run your program, the program will be uploaded to “/bin/a.out”
+instead of the platform current working directory. Only the main executable is
+uploaded to the remote system by default when launching the application. If you
+have shared libraries that should also be uploaded, then you can add the
+locally build shared library to the current target and set its platform file
+specification:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">(</span><span class="n">lldb</span><span class="p">)</span> <span class="n">file</span> <span class="n">a</span><span class="o">.</span><span class="n">out</span>
+<span class="p">(</span><span class="n">lldb</span><span class="p">)</span> <span class="n">target</span> <span class="n">module</span> <span class="n">add</span> <span class="o">/</span><span class="n">local</span><span class="o">/</span><span class="n">build</span><span class="o">/</span><span class="n">libfoo</span><span class="o">.</span><span class="n">so</span>
+<span class="p">(</span><span class="n">lldb</span><span class="p">)</span> <span class="n">target</span> <span class="n">module</span> <span class="n">add</span> <span class="o">/</span><span class="n">local</span><span class="o">/</span><span class="n">build</span><span class="o">/</span><span class="n">libbar</span><span class="o">.</span><span class="n">so</span>
+<span class="p">(</span><span class="n">lldb</span><span class="p">)</span> <span class="n">script</span> <span class="n">lldb</span><span class="o">.</span><span class="n">target</span><span class="o">.</span><span class="n">module</span><span class="p">[</span><span class="s1">&#39;libfoo.so&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">SetPlatformFileSpec</span><span class="p">(</span><span class="s2">&quot;/usr/lib/libfoo.so&quot;</span><span class="p">)</span>
+<span class="p">(</span><span class="n">lldb</span><span class="p">)</span> <span class="n">script</span> <span class="n">lldb</span><span class="o">.</span><span class="n">target</span><span class="o">.</span><span class="n">module</span><span class="p">[</span><span class="s1">&#39;libbar.so&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">SetPlatformFileSpec</span><span class="p">(</span><span class="s2">&quot;/usr/local/lib/libbar.so&quot;</span><span class="p">)</span>
+<span class="p">(</span><span class="n">lldb</span><span class="p">)</span> <span class="n">run</span>
+</pre></div>
+</div>
+</section>
+<section id="attaching-to-a-remote-process">
+<h3>Attaching to a remote process<a class="headerlink" href="#attaching-to-a-remote-process" title="Link to this heading">#</a></h3>
+<p>If you want to attach to a remote process, you can first list the processes on
+the remote system:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">(</span><span class="n">lldb</span><span class="p">)</span> <span class="n">platform</span> <span class="n">process</span> <span class="nb">list</span>
+<span class="mi">223</span> <span class="n">matching</span> <span class="n">processes</span> <span class="n">were</span> <span class="n">found</span> <span class="n">on</span> <span class="s2">&quot;remote-linux&quot;</span>
+<span class="n">PID</span>    <span class="n">PARENT</span> <span class="n">USER</span>       <span class="n">TRIPLE</span>                   <span class="n">NAME</span>
+<span class="o">======</span> <span class="o">======</span> <span class="o">==========</span> <span class="o">========================</span> <span class="o">============================</span>
+<span class="mi">68639</span>  <span class="mi">90652</span>             <span class="n">x86_64</span><span class="o">-</span><span class="n">apple</span><span class="o">-</span><span class="n">macosx</span>      <span class="n">lldb</span>
+<span class="o">...</span>
+</pre></div>
+</div>
+<p>Then attaching is as simple as specifying the remote process ID:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">(</span><span class="n">lldb</span><span class="p">)</span> <span class="n">attach</span> <span class="mi">68639</span>
+</pre></div>
+</div>
+</section>
+</section>
+</section>
+
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          <a class="next-page" href="intel_pt.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title">Tracing with Intel Processor Trace</div>
+              </div>
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+            </a>
+          <a class="prev-page" href="symbols.html">
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title">Symbols on macOS</div>
+                
+              </div>
+            </a>
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; 2007-2025, The LLDB Team
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            <div class="last-updated">
+              Last updated on Aug 13, 2025</div>
+          </div>
+          <div class="right-details">
+            
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer">
+      
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">Remote Debugging</a><ul>
+<li><a class="reference internal" href="#preparation-for-remote-debugging">Preparation for Remote Debugging</a><ul>
+<li><a class="reference internal" href="#remote-system">Remote system</a></li>
+<li><a class="reference internal" href="#local-system">Local system</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#launching-a-locally-built-process-on-the-remote-machine">Launching a locally built process on the remote machine</a><ul>
+<li><a class="reference internal" href="#install-and-run-in-the-platform-working-directory">Install and run in the platform working directory</a></li>
+<li><a class="reference internal" href="#changing-the-platform-working-directory">Changing the platform working directory</a></li>
+<li><a class="reference internal" href="#install-and-run-by-specifying-a-remote-install-path">Install and run by specifying a remote install path</a></li>
+<li><a class="reference internal" href="#attaching-to-a-remote-process">Attaching to a remote process</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
+      
+      
+    </aside>
+  </div>
+</div><script src="../_static/documentation_options.js?v=7f41d439"></script>
+    <script src="../_static/doctools.js?v=888ff710"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/scripts/furo.js?v=32e29ea5"></script>
+    </body>
+</html>

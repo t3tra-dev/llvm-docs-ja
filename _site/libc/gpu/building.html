@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Building libs for GPUs &#8212; The LLVM C Library</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=d75fae25" />
+    <link rel="stylesheet" type="text/css" href="../_static/alabaster.css?v=2e637bd6" />
+    <script src="../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../_static/doctools.js?v=888ff710"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Using libc for GPUs" href="using.html" />
+    <link rel="prev" title="libc for GPUs" href="index.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="building-libs-for-gpus">
+<span id="libc-gpu-building"></span><h1>Building libs for GPUs<a class="headerlink" href="#building-libs-for-gpus" title="Link to this heading">¶</a></h1>
+<nav class="contents local" id="table-of-contents">
+<p class="topic-title">Table of Contents</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#building-the-gpu-c-library" id="id1">Building the GPU C library</a></p>
+<ul>
+<li><p><a class="reference internal" href="#standard-runtimes-build" id="id2">Standard runtimes build</a></p></li>
+<li><p><a class="reference internal" href="#runtimes-cross-build" id="id3">Runtimes cross build</a></p></li>
+<li><p><a class="reference internal" href="#standalone-cross-build" id="id4">Standalone cross build</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#build-overview" id="id5">Build overview</a></p></li>
+<li><p><a class="reference internal" href="#cmake-options" id="id6">CMake options</a></p></li>
+</ul>
+</nav>
+<section id="building-the-gpu-c-library">
+<h2><a class="toc-backref" href="#id1" role="doc-backlink">Building the GPU C library</a><a class="headerlink" href="#building-the-gpu-c-library" title="Link to this heading">¶</a></h2>
+<p>This document will present recipes to build the LLVM C library targeting a GPU
+architecture. The GPU build uses the same <a class="reference internal" href="../full_cross_build.html#full-cross-build"><span class="std std-ref">cross build</span></a>
+support as the other targets. However, the GPU target has the restriction that
+it <em>must</em> be built with an up-to-date <code class="docutils literal notranslate"><span class="pre">clang</span></code> compiler. This is because the
+GPU target uses several compiler extensions to target GPU architectures.</p>
+<p>The LLVM C library currently supports two GPU targets. This is either
+<code class="docutils literal notranslate"><span class="pre">nvptx64-nvidia-cuda</span></code> for NVIDIA GPUs or <code class="docutils literal notranslate"><span class="pre">amdgcn-amd-amdhsa</span></code> for AMD GPUs.
+Targeting these architectures is done through <code class="docutils literal notranslate"><span class="pre">clang</span></code>’s cross-compiling
+support using the <code class="docutils literal notranslate"><span class="pre">--target=&lt;triple&gt;</span></code> flag. The following sections will
+describe how to build the GPU support specifically.</p>
+<p>Once you have finished building, refer to <a class="reference internal" href="using.html#libc-gpu-usage"><span class="std std-ref">Using libc for GPUs</span></a> to get started
+with the newly built C library.</p>
+<section id="standard-runtimes-build">
+<h3><a class="toc-backref" href="#id2" role="doc-backlink">Standard runtimes build</a><a class="headerlink" href="#standard-runtimes-build" title="Link to this heading">¶</a></h3>
+<p>The simplest way to build the GPU libc is to use the existing LLVM runtimes
+support. This will automatically handle bootstrapping an up-to-date <code class="docutils literal notranslate"><span class="pre">clang</span></code>
+compiler and using it to build the C library. The following CMake invocation
+will instruct it to build the <code class="docutils literal notranslate"><span class="pre">libc</span></code> runtime targeting both AMD and NVIDIA
+GPUs. The <code class="docutils literal notranslate"><span class="pre">LIBC_GPU_BUILD</span></code> option can also be enabled to add the relevant
+arguments automatically.</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>$&gt;<span class="w"> </span><span class="nb">cd</span><span class="w"> </span>llvm-project<span class="w">  </span><span class="c1"># The llvm-project checkout</span>
+$&gt;<span class="w"> </span>mkdir<span class="w"> </span>build
+$&gt;<span class="w"> </span><span class="nb">cd</span><span class="w"> </span>build
+$&gt;<span class="w"> </span>cmake<span class="w"> </span>../llvm<span class="w"> </span>-G<span class="w"> </span>Ninja<span class="w">                                                 </span><span class="se">\</span>
+<span class="w">   </span>-DLLVM_ENABLE_PROJECTS<span class="o">=</span><span class="s2">&quot;clang;lld&quot;</span><span class="w">                                     </span><span class="se">\</span>
+<span class="w">   </span>-DLLVM_ENABLE_RUNTIMES<span class="o">=</span><span class="s2">&quot;openmp;offload&quot;</span><span class="w">                                </span><span class="se">\</span>
+<span class="w">   </span>-DCMAKE_BUILD_TYPE<span class="o">=</span>&lt;Debug<span class="p">|</span>Release&gt;<span class="w">   </span><span class="se">\ </span><span class="c1"># Select build type</span>
+<span class="w">   </span>-DCMAKE_INSTALL_PREFIX<span class="o">=</span>&lt;PATH&gt;<span class="w">        </span><span class="se">\ </span><span class="c1"># Where the libraries will live</span>
+<span class="w">   </span>-DRUNTIMES_nvptx64-nvidia-cuda_LLVM_ENABLE_RUNTIMES<span class="o">=</span>libc<span class="w">               </span><span class="se">\</span>
+<span class="w">   </span>-DRUNTIMES_amdgcn-amd-amdhsa_LLVM_ENABLE_RUNTIMES<span class="o">=</span>libc<span class="w">                 </span><span class="se">\</span>
+<span class="w">   </span>-DLLVM_RUNTIME_TARGETS<span class="o">=</span><span class="s2">&quot;default;amdgcn-amd-amdhsa;nvptx64-nvidia-cuda&quot;</span>
+$&gt;<span class="w"> </span>ninja<span class="w"> </span>install
+</pre></div>
+</div>
+<p>We need <code class="docutils literal notranslate"><span class="pre">clang</span></code> to build the GPU C library and <code class="docutils literal notranslate"><span class="pre">lld</span></code> to link AMDGPU
+executables, so we enable them in <code class="docutils literal notranslate"><span class="pre">LLVM_ENABLE_PROJECTS</span></code>. We add <code class="docutils literal notranslate"><span class="pre">openmp</span></code> to
+<code class="docutils literal notranslate"><span class="pre">LLVM_ENABLED_RUNTIMES</span></code> so it is built for the default target and provides
+OpenMP support. We then set <code class="docutils literal notranslate"><span class="pre">RUNTIMES_&lt;triple&gt;_LLVM_ENABLE_RUNTIMES</span></code> to enable
+<code class="docutils literal notranslate"><span class="pre">libc</span></code> for the GPU targets. The <code class="docutils literal notranslate"><span class="pre">LLVM_RUNTIME_TARGETS</span></code> sets the enabled
+targets to build, in this case we want the default target and the GPU targets.
+Note that if <code class="docutils literal notranslate"><span class="pre">libc</span></code> were included in <code class="docutils literal notranslate"><span class="pre">LLVM_ENABLE_RUNTIMES</span></code> it would build
+targeting the default host environment as well. Alternatively, you can point
+your build towards the <code class="docutils literal notranslate"><span class="pre">libc/cmake/caches/gpu.cmake</span></code> cache file with <code class="docutils literal notranslate"><span class="pre">-C</span></code>.</p>
+</section>
+<section id="runtimes-cross-build">
+<h3><a class="toc-backref" href="#id3" role="doc-backlink">Runtimes cross build</a><a class="headerlink" href="#runtimes-cross-build" title="Link to this heading">¶</a></h3>
+<p>For users wanting more direct control over the build process, the build steps
+can be done manually instead. This build closely follows the instructions in the
+<a class="reference internal" href="../full_cross_build.html#full-cross-build"><span class="std std-ref">main documentation</span></a> but is specialized for the GPU
+build. We follow the same steps to first build the libc tools and a suitable
+compiler. These tools must all be up-to-date with the libc source.</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>$&gt;<span class="w"> </span><span class="nb">cd</span><span class="w"> </span>llvm-project<span class="w">  </span><span class="c1"># The llvm-project checkout</span>
+$&gt;<span class="w"> </span>mkdir<span class="w"> </span>build-libc-tools<span class="w"> </span><span class="c1"># A different build directory for the build tools</span>
+$&gt;<span class="w"> </span><span class="nb">cd</span><span class="w"> </span>build-libc-tools
+$&gt;<span class="w"> </span><span class="nv">HOST_C_COMPILER</span><span class="o">=</span>&lt;C<span class="w"> </span>compiler<span class="w"> </span><span class="k">for</span><span class="w"> </span>the<span class="w"> </span>host&gt;<span class="w"> </span><span class="c1"># For example &quot;clang&quot;</span>
+$&gt;<span class="w"> </span><span class="nv">HOST_CXX_COMPILER</span><span class="o">=</span>&lt;C++<span class="w"> </span>compiler<span class="w"> </span><span class="k">for</span><span class="w"> </span>the<span class="w"> </span>host&gt;<span class="w"> </span><span class="c1"># For example &quot;clang++&quot;</span>
+$&gt;<span class="w"> </span>cmake<span class="w"> </span>../llvm<span class="w">                            </span><span class="se">\</span>
+<span class="w">   </span>-G<span class="w"> </span>Ninja<span class="w">                                 </span><span class="se">\</span>
+<span class="w">   </span>-DLLVM_ENABLE_PROJECTS<span class="o">=</span><span class="s2">&quot;clang&quot;</span><span class="w">           </span><span class="se">\</span>
+<span class="w">   </span>-DCMAKE_C_COMPILER<span class="o">=</span><span class="nv">$HOST_C_COMPILER</span><span class="w">      </span><span class="se">\</span>
+<span class="w">   </span>-DCMAKE_CXX_COMPILER<span class="o">=</span><span class="nv">$HOST_CXX_COMPILER</span><span class="w">  </span><span class="se">\</span>
+<span class="w">   </span>-DLLVM_LIBC_FULL_BUILD<span class="o">=</span>ON<span class="w">                </span><span class="se">\</span>
+<span class="w">   </span>-DCMAKE_BUILD_TYPE<span class="o">=</span>Release<span class="w"> </span><span class="c1"># Release suggested to make &quot;clang&quot; fast</span>
+$&gt;<span class="w"> </span>ninja<span class="w"> </span><span class="c1"># Build the &#39;clang&#39; compiler</span>
+</pre></div>
+</div>
+<p>Once this has finished the build directory should contain the <code class="docutils literal notranslate"><span class="pre">clang</span></code>
+compiler executable. We will use the <code class="docutils literal notranslate"><span class="pre">clang</span></code> compiler to build the GPU code.
+We use these tools to bootstrap the build out of the runtimes directory
+targeting a GPU architecture.</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>$&gt;<span class="w"> </span><span class="nb">cd</span><span class="w"> </span>llvm-project<span class="w">  </span><span class="c1"># The llvm-project checkout</span>
+$&gt;<span class="w"> </span>mkdir<span class="w"> </span>build<span class="w"> </span><span class="c1"># A different build directory for the build tools</span>
+$&gt;<span class="w"> </span><span class="nb">cd</span><span class="w"> </span>build
+$&gt;<span class="w"> </span><span class="nv">TARGET_TRIPLE</span><span class="o">=</span>&lt;amdgcn-amd-amdhsa<span class="w"> </span>or<span class="w"> </span>nvptx64-nvidia-cuda&gt;
+$&gt;<span class="w"> </span><span class="nv">TARGET_C_COMPILER</span><span class="o">=</span>&lt;/path/to/clang&gt;
+$&gt;<span class="w"> </span><span class="nv">TARGET_CXX_COMPILER</span><span class="o">=</span>&lt;/path/to/clang++&gt;
+$&gt;<span class="w"> </span>cmake<span class="w"> </span>../runtimes<span class="w"> </span><span class="se">\ </span><span class="c1"># Point to the runtimes build</span>
+<span class="w">   </span>-G<span class="w"> </span>Ninja<span class="w">                                  </span><span class="se">\</span>
+<span class="w">   </span>-DLLVM_ENABLE_RUNTIMES<span class="o">=</span>libc<span class="w">               </span><span class="se">\</span>
+<span class="w">   </span>-DCMAKE_C_COMPILER<span class="o">=</span><span class="nv">$TARGET_C_COMPILER</span><span class="w">     </span><span class="se">\</span>
+<span class="w">   </span>-DCMAKE_CXX_COMPILER<span class="o">=</span><span class="nv">$TARGET_CXX_COMPILER</span><span class="w"> </span><span class="se">\</span>
+<span class="w">   </span>-DLLVM_LIBC_FULL_BUILD<span class="o">=</span>ON<span class="w">                 </span><span class="se">\</span>
+<span class="w">   </span>-DLLVM_RUNTIMES_TARGET<span class="o">=</span><span class="nv">$TARGET_TRIPLE</span><span class="w">     </span><span class="se">\</span>
+<span class="w">   </span>-DCMAKE_BUILD_TYPE<span class="o">=</span>Release
+$&gt;<span class="w"> </span>ninja<span class="w"> </span>install
+</pre></div>
+</div>
+<p>The above steps will result in a build targeting one of the supported GPU
+architectures. Building for multiple targets requires separate CMake
+invocations.</p>
+</section>
+<section id="standalone-cross-build">
+<h3><a class="toc-backref" href="#id4" role="doc-backlink">Standalone cross build</a><a class="headerlink" href="#standalone-cross-build" title="Link to this heading">¶</a></h3>
+<p>The GPU build can also be targeted directly as long as the compiler used is a
+supported <code class="docutils literal notranslate"><span class="pre">clang</span></code> compiler. This method is generally not recommended as it can
+only target a single GPU architecture.</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>$&gt;<span class="w"> </span><span class="nb">cd</span><span class="w"> </span>llvm-project<span class="w">  </span><span class="c1"># The llvm-project checkout</span>
+$&gt;<span class="w"> </span>mkdir<span class="w"> </span>build<span class="w"> </span><span class="c1"># A different build directory for the build tools</span>
+$&gt;<span class="w"> </span><span class="nb">cd</span><span class="w"> </span>build
+$&gt;<span class="w"> </span><span class="nv">CLANG_C_COMPILER</span><span class="o">=</span>&lt;/path/to/clang&gt;<span class="w"> </span><span class="c1"># Must be a trunk build</span>
+$&gt;<span class="w"> </span><span class="nv">CLANG_CXX_COMPILER</span><span class="o">=</span>&lt;/path/to/clang++&gt;<span class="w"> </span><span class="c1"># Must be a trunk build</span>
+$&gt;<span class="w"> </span><span class="nv">TARGET_TRIPLE</span><span class="o">=</span>&lt;amdgcn-amd-amdhsa<span class="w"> </span>or<span class="w"> </span>nvptx64-nvidia-cuda&gt;
+$&gt;<span class="w"> </span>cmake<span class="w"> </span>../llvm<span class="w"> </span><span class="se">\ </span><span class="c1"># Point to the llvm directory</span>
+<span class="w">   </span>-G<span class="w"> </span>Ninja<span class="w">                                 </span><span class="se">\</span>
+<span class="w">   </span>-DLLVM_ENABLE_PROJECTS<span class="o">=</span>libc<span class="w">              </span><span class="se">\</span>
+<span class="w">   </span>-DCMAKE_C_COMPILER<span class="o">=</span><span class="nv">$CLANG_C_COMPILER</span><span class="w">     </span><span class="se">\</span>
+<span class="w">   </span>-DCMAKE_CXX_COMPILER<span class="o">=</span><span class="nv">$CLANG_CXX_COMPILER</span><span class="w"> </span><span class="se">\</span>
+<span class="w">   </span>-DLLVM_LIBC_FULL_BUILD<span class="o">=</span>ON<span class="w">                </span><span class="se">\</span>
+<span class="w">   </span>-DLIBC_TARGET_TRIPLE<span class="o">=</span><span class="nv">$TARGET_TRIPLE</span><span class="w">      </span><span class="se">\</span>
+<span class="w">   </span>-DCMAKE_BUILD_TYPE<span class="o">=</span>Release
+$&gt;<span class="w"> </span>ninja<span class="w"> </span>install
+</pre></div>
+</div>
+<p>This will build and install the GPU C library along with all the other LLVM
+libraries.</p>
+</section>
+</section>
+<section id="build-overview">
+<h2><a class="toc-backref" href="#id5" role="doc-backlink">Build overview</a><a class="headerlink" href="#build-overview" title="Link to this heading">¶</a></h2>
+<p>Once installed, the GPU build will create several files used for different
+targets. This section will briefly describe their purpose.</p>
+<dl class="simple">
+<dt><strong>include/&lt;target-triple&gt;</strong></dt><dd><p>The include directory where all of the generated headers for the target will
+go. These definitions are strictly for the GPU when being targeted directly.</p>
+</dd>
+<dt><strong>lib/clang/&lt;llvm-major-version&gt;/include/llvm-libc-wrappers/llvm-libc-decls</strong></dt><dd><p>These are wrapper headers created for offloading languages like CUDA, HIP, or
+OpenMP. They contain functions supported in the GPU libc along with attributes
+and metadata that declare them on the target device and make them compatible
+with the host headers.</p>
+</dd>
+<dt><strong>lib/&lt;target-triple&gt;/libc.a</strong></dt><dd><p>The main C library static archive containing LLVM-IR targeting the given GPU.
+It can be linked directly or inspected depending on the target support.</p>
+</dd>
+<dt><strong>lib/&lt;target-triple&gt;/libm.a</strong></dt><dd><p>The C library static archive providing implementations of the standard math
+functions.</p>
+</dd>
+<dt><strong>lib/&lt;target-triple&gt;/libc.bc</strong></dt><dd><p>An alternate form of the library provided as a single LLVM-IR bitcode blob.
+This can be used similarly to NVIDIA’s or AMD’s device libraries.</p>
+</dd>
+<dt><strong>lib/&lt;target-triple&gt;/libm.bc</strong></dt><dd><p>An alternate form of the library provided as a single LLVM-IR bitcode blob
+containing the standard math functions.</p>
+</dd>
+<dt><strong>lib/&lt;target-triple&gt;/crt1.o</strong></dt><dd><p>An LLVM-IR file containing startup code to call the <code class="docutils literal notranslate"><span class="pre">main</span></code> function on the
+GPU. This is used similarly to the standard C library startup object.</p>
+</dd>
+<dt><strong>bin/amdhsa-loader</strong></dt><dd><p>A binary utility used to launch executables compiled targeting the AMD GPU.
+This will be included if the build system found the <code class="docutils literal notranslate"><span class="pre">hsa-runtime64</span></code> library
+either in <code class="docutils literal notranslate"><span class="pre">/opt/rocm</span></code> or the current CMake installation directory. This is
+required to build the GPU tests .See the <a class="reference internal" href="using.html#libc-gpu-usage"><span class="std std-ref">libc GPU usage</span></a>
+for more information.</p>
+</dd>
+<dt><strong>bin/nvptx-loader</strong></dt><dd><p>A binary utility used to launch executables compiled targeting the NVIDIA GPU.
+This will be included if the build system found the CUDA driver API. This is
+required for building tests.</p>
+</dd>
+<dt><strong>include/llvm-libc-rpc-server.h</strong></dt><dd><p>A header file containing definitions that can be used to interface with the
+<a class="reference internal" href="rpc.html#libc-gpu-rpc"><span class="std std-ref">RPC server</span></a>.</p>
+</dd>
+<dt><strong>lib/libllvmlibc_rpc_server.a</strong></dt><dd><p>The static library containing the implementation of the RPC server. This can
+be used to enable host services for anyone looking to interface with the
+<a class="reference internal" href="rpc.html#libc-gpu-rpc"><span class="std std-ref">RPC client</span></a>.</p>
+</dd>
+</dl>
+</section>
+<section id="cmake-options">
+<span id="gpu-cmake-options"></span><h2><a class="toc-backref" href="#id6" role="doc-backlink">CMake options</a><a class="headerlink" href="#cmake-options" title="Link to this heading">¶</a></h2>
+<p>This section briefly lists a few of the CMake variables that specifically
+control the GPU build of the C library. These options can be passed individually
+to each target using <code class="docutils literal notranslate"><span class="pre">-DRUNTIMES_&lt;target&gt;_&lt;variable&gt;=&lt;value&gt;</span></code> when using a
+standard runtime build.</p>
+<dl class="simple">
+<dt><strong>LLVM_LIBC_FULL_BUILD</strong>:BOOL</dt><dd><p>This flag controls whether or not the libc build will generate its own
+headers. This must always be on when targeting the GPU.</p>
+</dd>
+<dt><strong>LIBC_GPU_BUILD</strong>:BOOL</dt><dd><p>Shorthand for enabling GPU support. Equivalent to enabling support for both
+AMDGPU and NVPTX builds for <code class="docutils literal notranslate"><span class="pre">libc</span></code>.</p>
+</dd>
+<dt><strong>LIBC_GPU_TEST_ARCHITECTURE</strong>:STRING</dt><dd><p>Sets the architecture used to build the GPU tests for, such as <code class="docutils literal notranslate"><span class="pre">gfx90a</span></code> or
+<code class="docutils literal notranslate"><span class="pre">sm_80</span></code> for AMD and NVIDIA GPUs respectively. The default behavior is to
+detect the system’s GPU architecture using the <code class="docutils literal notranslate"><span class="pre">native</span></code> option. If this
+option is not set and a GPU was not detected the tests will not be built.</p>
+</dd>
+<dt><strong>LIBC_GPU_TEST_JOBS</strong>:STRING</dt><dd><p>Sets the number of threads used to run GPU tests. The GPU test suite will
+commonly run out of resources if this is not constrained so it is recommended
+to keep it low. The default value is a single thread.</p>
+</dd>
+<dt><strong>LIBC_GPU_LOADER_EXECUTABLE</strong>:STRING</dt><dd><p>Overrides the default loader used for running GPU tests. If this is not
+provided the standard one will be built.</p>
+</dd>
+</dl>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../index.html">libc</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">Status &amp; Support</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../headers/index.html">Implementation Status</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../arch_support.html">Architecture Support</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../platform_support.html">Platform Support</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../compiler_support.html">Compiler Support</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Simple Usage</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../getting_started.html">Getting Started</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Advanced Usage</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../full_host_build.html">Full Host Build</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../full_cross_build.html">Full Cross Build</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../overlay_mode.html">Overlay Mode</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">libc for GPUs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../uefi/index.html">libc for UEFI</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../configure.html">Configure Options</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Development</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Maintainers.html">LLVM-libc Maintainers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../build_and_test.html">Building and Testing the libc</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../dev/index.html">Developer Guides</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../porting.html">Bringup on a New OS or Architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../contributing.html">Contributing to the libc Project</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Useful Links</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../talks.html">Talks</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/llvm/llvm-project/tree/main/libc">Source Code</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/llvm/llvm-project/labels/libc">Bug Reports</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://discourse.llvm.org/c/runtimes/libc">Discourse</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://discord.gg/xS7Z362">Join the Discord</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://discord.com/channels/636084430946959380/636732994891284500">Discord Channel</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://lab.llvm.org/buildbot/#/builders?tags=libc">Buildbot</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  <li><a href="index.html">libc for GPUs</a><ul>
+      <li>Previous: <a href="index.html" title="previous chapter">libc for GPUs</a></li>
+      <li>Next: <a href="using.html" title="next chapter">Using libc for GPUs</a></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;2011-2025, LLVM Project.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 7.2.6</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 0.7.16</a>
+      
+      |
+      <a href="../_sources/gpu/building.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

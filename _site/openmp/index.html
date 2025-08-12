@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="./">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Welcome to the documentation of OpenMP in LLVM! &#8212; LLVM/OpenMP  documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=d75fae25" />
+    <link rel="stylesheet" type="text/css" href="_static/agogo.css?v=a323ad78" />
+    <script src="_static/documentation_options.js?v=7f41d439"></script>
+    <script src="_static/doctools.js?v=888ff710"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="OpenMP in LLVM — Design Overview" href="design/Overview.html" />
+<style type="text/css">
+  table.right { float: right; margin-left: 20px; }
+  table.right td { border: 1px solid #ccc; }
+</style>
+
+  </head><body>
+    <div class="header-wrapper" role="banner">
+      <div class="header">
+        <div class="headertitle"><a
+          href="#">LLVM/OpenMP  documentation</a></div>
+        <div class="rel" role="navigation" aria-label="related navigation">
+          <a href="#" title="LLVM OpenMP Documentation">HOME</a>
+           |
+          <a href="design/Overview.html" title="OpenMP in LLVM — Design Overview"
+             accesskey="N">next</a> |
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a>
+        </div>
+       </div>
+    </div>
+
+    <div class="content-wrapper">
+      <div class="content">
+        <div class="document">
+            
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This document is a work in progress and most of the expected content is not
+yet available. While you can expect changes, we always welcome feedback and
+additions. Please post on the <a class="reference external" href="https://discourse.llvm.org/c/runtimes/openmp/35">Discourse forums (Runtimes -
+OpenMP)</a>..</p>
+</div>
+<div class="toctree-wrapper compound">
+</div>
+<section id="building-llvm-openmp-offloading">
+<h1>Building LLVM/OpenMP Offloading<a class="headerlink" href="#building-llvm-openmp-offloading" title="Link to this heading">¶</a></h1>
+<p>Building LLVM/OpenMP with offloading support is fully documented in the
+<a class="reference internal" href="SupportAndFAQ.html"><span class="doc">Support and FAQ</span></a> page. For a quick start, we recommend
+the following template.</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>$&gt;<span class="w"> </span><span class="nb">cd</span><span class="w"> </span>llvm-project<span class="w">  </span><span class="c1"># The llvm-project checkout</span>
+$&gt;<span class="w"> </span>mkdir<span class="w"> </span>build
+$&gt;<span class="w"> </span><span class="nb">cd</span><span class="w"> </span>build
+$&gt;<span class="w"> </span>cmake<span class="w"> </span>../llvm<span class="w"> </span>-G<span class="w"> </span>Ninja<span class="w">                                                 </span><span class="se">\</span>
+<span class="w">   </span>-C<span class="w"> </span>../offload/cmake/caches/Offload.cmake<span class="w"> </span><span class="se">\ </span><span class="c1"># The preset cache file</span>
+<span class="w">   </span>-DCMAKE_BUILD_TYPE<span class="o">=</span>&lt;Debug<span class="p">|</span>Release&gt;<span class="w">   </span><span class="se">\ </span><span class="c1"># Select build type</span>
+<span class="w">   </span>-DCMAKE_INSTALL_PREFIX<span class="o">=</span>&lt;PATH&gt;<span class="w">        </span><span class="se">\ </span><span class="c1"># Where the libraries will live</span>
+$&gt;<span class="w"> </span>ninja<span class="w"> </span>install
+</pre></div>
+</div>
+</section>
+<section id="llvm-openmp-design-overview">
+<h1>LLVM/OpenMP Design &amp; Overview<a class="headerlink" href="#llvm-openmp-design-overview" title="Link to this heading">¶</a></h1>
+<p>OpenMP impacts various parts of the LLVM project, from the frontends (<a class="reference external" href="https://clang.llvm.org/docs/OpenMPSupport.html">Clang</a> and Flang), through
+middle-end <a class="reference internal" href="optimizations/Overview.html#llvm-openmp-optimizations"><span class="std std-ref">optimizations</span></a>, up to the
+multitude of available <a class="reference internal" href="design/Runtimes.html#openmp-runtimes"><span class="std std-ref">OpenMP runtimes</span></a>.</p>
+<p>A high-level overview of OpenMP in LLVM can be found <a class="reference internal" href="design/Overview.html"><span class="doc">here</span></a>.</p>
+<div class="toctree-wrapper compound">
+</div>
+</section>
+<section id="openacc-support">
+<h1>OpenACC Support<a class="headerlink" href="#openacc-support" title="Link to this heading">¶</a></h1>
+<p><a class="reference internal" href="openacc/Overview.html"><span class="doc">OpenACC support</span></a> is under development for
+both Flang and Clang.  For this purpose, LLVM’s OpenMP runtimes are
+being extended to serve as OpenACC runtimes.  In some cases, Clang
+supports <a class="reference internal" href="openacc/OpenMPExtensions.html"><span class="doc">OpenMP extensions</span></a> to make
+the additional functionality also available in OpenMP applications.</p>
+<div class="toctree-wrapper compound">
+</div>
+</section>
+<section id="llvm-openmp-optimizations">
+<h1>LLVM/OpenMP Optimizations<a class="headerlink" href="#llvm-openmp-optimizations" title="Link to this heading">¶</a></h1>
+<p>LLVM, since <a class="reference external" href="https://releases.llvm.org/download.html#11.0.0">version 11</a> (12 Oct
+2020), has an <a class="reference internal" href="optimizations/OpenMPOpt.html"><span class="doc">OpenMP-Aware optimization pass</span></a>
+as well as the ability to <a class="reference internal" href="optimizations/OpenMPUnawareOptimizations.html"><span class="doc">perform “scalar optimizations” across OpenMP region
+boundaries</span></a>.</p>
+<p>In-depth discussion of the topic can be found <a class="reference internal" href="optimizations/Overview.html"><span class="doc">here</span></a>.</p>
+<div class="toctree-wrapper compound">
+</div>
+</section>
+<section id="llvm-openmp-optimization-remarks">
+<h1>LLVM/OpenMP Optimization Remarks<a class="headerlink" href="#llvm-openmp-optimization-remarks" title="Link to this heading">¶</a></h1>
+<p>LLVM has an elaborate ecosystem around <a class="reference external" href="https://llvm.org/docs/Remarks.html">analysis and optimization remarks</a> issues during
+compilation. The remarks can be enabled from the clang frontend <a class="reference external" href="https://clang.llvm.org/docs/UsersManual.html#options-to-emit-optimization-reports">[1]</a> <a class="reference external" href="https://clang.llvm.org/docs/ClangCommandLineReference.html#diagnostic-flags">[2]</a>
+in various formats <a class="reference external" href="https://clang.llvm.org/docs/ClangCommandLineReference.html#cmdoption-clang-foptimization-record-file">[3]</a> <a class="reference external" href="https://clang.llvm.org/docs/ClangCommandLineReference.html#cmdoption-clang1-fsave-optimization-record">[4]</a> to be used by tools, i.a., <cite>opt-viewer</cite> or
+<cite>llvm-opt-report</cite> (dated).</p>
+<p>The OpenMP optimizations in LLVM have been developed with remark support as a
+priority. For a list of OpenMP specific remarks and more information on them,
+please refer to <a class="reference internal" href="remarks/OptimizationRemarks.html"><span class="doc">OpenMP Optimization Remarks</span></a>.</p>
+<ul class="simple">
+<li><p><a class="reference external" href="https://clang.llvm.org/docs/UsersManual.html#options-to-emit-optimization-reports">[1]</a> <a class="reference external" href="https://clang.llvm.org/docs/UsersManual.html#options-to-emit-optimization-reports">https://clang.llvm.org/docs/UsersManual.html#options-to-emit-optimization-reports</a></p></li>
+<li><p><a class="reference external" href="https://clang.llvm.org/docs/ClangCommandLineReference.html#diagnostic-flags">[2]</a> <a class="reference external" href="https://clang.llvm.org/docs/ClangCommandLineReference.html#diagnostic-flags">https://clang.llvm.org/docs/ClangCommandLineReference.html#diagnostic-flags</a></p></li>
+<li><p><a class="reference external" href="https://clang.llvm.org/docs/ClangCommandLineReference.html#cmdoption-clang-foptimization-record-file">[3]</a> <a class="reference external" href="https://clang.llvm.org/docs/ClangCommandLineReference.html#cmdoption-clang-foptimization-record-file">https://clang.llvm.org/docs/ClangCommandLineReference.html#cmdoption-clang-foptimization-record-file</a></p></li>
+<li><p><a class="reference external" href="https://clang.llvm.org/docs/ClangCommandLineReference.html#cmdoption-clang1-fsave-optimization-record">[4]</a> <a class="reference external" href="https://clang.llvm.org/docs/ClangCommandLineReference.html#cmdoption-clang1-fsave-optimization-record">https://clang.llvm.org/docs/ClangCommandLineReference.html#cmdoption-clang1-fsave-optimization-record</a></p></li>
+</ul>
+<div class="toctree-wrapper compound">
+</div>
+</section>
+<section id="openmp-command-line-argument-reference">
+<h1>OpenMP Command-Line Argument Reference<a class="headerlink" href="#openmp-command-line-argument-reference" title="Link to this heading">¶</a></h1>
+<p>In addition to the
+<a class="reference external" href="https://clang.llvm.org/docs/ClangCommandLineReference.html">Clang command-line argument reference</a>
+we also recommend the OpenMP
+<a class="reference internal" href="CommandLineArgumentReference.html"><span class="doc">command-line argument reference</span></a>
+page that offers a detailed overview of options specific to OpenMP. It also
+contains a list of OpenMP offloading related command-line arguments.</p>
+<div class="toctree-wrapper compound">
+</div>
+</section>
+<section id="support-getting-involved-and-frequently-asked-questions-faq">
+<h1>Support, Getting Involved, and Frequently Asked Questions (FAQ)<a class="headerlink" href="#support-getting-involved-and-frequently-asked-questions-faq" title="Link to this heading">¶</a></h1>
+<p>Dealing with OpenMP can be complicated. For help with the setup of an OpenMP
+(offload) capable compiler toolchain, its usage, and common problems, consult
+the <a class="reference internal" href="SupportAndFAQ.html"><span class="doc">Support and FAQ</span></a> page.</p>
+<p>We also encourage everyone interested in OpenMP in LLVM to <a class="reference internal" href="SupportAndFAQ.html"><span class="doc">get involved</span></a>.</p>
+<div class="toctree-wrapper compound">
+</div>
+</section>
+<section id="release-notes">
+<h1>Release Notes<a class="headerlink" href="#release-notes" title="Link to this heading">¶</a></h1>
+<p>The current (in-progress) release notes can be found <a class="reference internal" href="ReleaseNotes.html"><span class="doc">here</span></a> while
+release notes for releases, starting with LLVM 12, will be available on <a class="reference external" href="https://releases.llvm.org/download.html">the
+Download Page</a>.</p>
+<div class="toctree-wrapper compound">
+</div>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+        </div>
+        <div class="sidebar">
+          
+          <h3>Table of Contents</h3>
+          <ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">LLVM/OpenMP Documentation</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="design/Overview.html">OpenMP in LLVM — Design Overview</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="openacc/Overview.html">OpenACC Support</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="optimizations/Overview.html">OpenMP Optimizations in LLVM</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="remarks/OptimizationRemarks.html">OpenMP Optimization Remarks</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="CommandLineArgumentReference.html">OpenMP Command-Line Argument Reference</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="SupportAndFAQ.html">Support, Getting Involved, and FAQ</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="ReleaseNotes.html">In-Progress ReleaseNotes</a></li>
+</ul>
+
+          <div role="search">
+            <h3 style="margin-top: 1.5em;">Search</h3>
+            <form class="search" action="search.html" method="get">
+                <input type="text" name="q" />
+                <input type="submit" value="Go" />
+            </form>
+          </div>
+
+        </div>
+        <div class="clearer"></div>
+      </div>
+    </div>
+
+    <div class="footer-wrapper">
+      <div class="footer">
+        <div class="left">
+          <div role="navigation" aria-label="related navigaton">
+            <a href="#" title="LLVM OpenMP Documentation">HOME</a>
+             |
+            <a href="design/Overview.html" title="OpenMP in LLVM — Design Overview"
+              >next</a> |
+            <a href="genindex.html" title="General Index"
+              >index</a>
+          </div>
+          <div role="note" aria-label="source link">
+          </div>
+        </div>
+
+        <div class="right">
+          
+    <div class="footer" role="contentinfo">
+    &#169; Copyright 2013-2025, LLVM/OpenMP.
+      Last updated on 2025-08-13.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.6.
+    </div>
+        </div>
+        <div class="clearer"></div>
+      </div>
+    </div>
+
+  </body>
+</html>

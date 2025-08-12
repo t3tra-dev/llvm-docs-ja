@@ -1,0 +1,482 @@
+<!doctype html>
+<html class="no-js" lang="en" data-content_root="../">
+  <head><meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Building" href="build.html" /><link rel="prev" title="Overview" href="overview.html" />
+
+    <!-- Generated with Sphinx 7.2.6 and Furo 2024.01.29 -->
+        <title>Contributing - 🐛 LLDB</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=d75fae25" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=135e06be" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=36a5483c" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #f0f0f0;
+  --color-code-foreground: black;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+      }
+    }
+  }
+</style></head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-half" viewBox="0 0 24 24">
+    <title>Auto light/dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-shadow">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M13 12h5" />
+      <path d="M13 15h4" />
+      <path d="M13 18h1" />
+      <path d="M13 9h4" />
+      <path d="M13 6h1" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc">
+<label class="overlay sidebar-overlay" for="__navigation">
+  <div class="visually-hidden">Hide navigation sidebar</div>
+</label>
+<label class="overlay toc-overlay" for="__toc">
+  <div class="visually-hidden">Hide table of contents sidebar</div>
+</label>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <div class="visually-hidden">Toggle site navigation sidebar</div>
+        <i class="icon"><svg><use href="#svg-menu"></use></svg></i>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="../index.html"><div class="brand">🐛 LLDB</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle">
+          <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+          <svg class="theme-icon-when-auto"><use href="#svg-sun-half"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
+        <div class="visually-hidden">Toggle table of contents sidebar</div>
+        <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="../index.html">
+  
+  
+  <span class="sidebar-brand-text">🐛 LLDB</span>
+  
+</a><form class="sidebar-search-container" method="get" action="../search.html" role="search">
+  <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <p class="caption" role="heading"><span class="caption-text">Using LLDB</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../use/tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../use/map.html">GDB to LLDB command map</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../use/formatting.html">Frame and Thread Format</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../use/variable.html">Variable Formatting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../use/symbolication.html">Symbolication</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../use/symbols.html">Symbols on macOS</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../use/remote.html">Remote Debugging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../use/intel_pt.html">Tracing with Intel Processor Trace</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../use/ondemand.html">On Demand Symbols</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../use/aarch64-linux.html">Using LLDB On AArch64 Linux</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../use/symbolfilejson.html">JSON Symbol File Format</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../use/mcp.html">Model Context Protocol (MCP)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../use/troubleshooting.html">Troubleshooting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../use/links.html">Links</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../man/lldb.html">Man Page</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Scripting LLDB</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../use/python.html">Python Scripting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../use/python-reference.html">Python Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../python_api.html">Python API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../python_extensions.html">Python Extensions</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Developing LLDB</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="overview.html">Overview</a></li>
+<li class="toctree-l1 current current-page"><a class="current reference internal" href="#">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="build.html">Building</a></li>
+<li class="toctree-l1"><a class="reference internal" href="test.html">Testing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="qemu-testing.html">Testing LLDB using QEMU</a></li>
+<li class="toctree-l1"><a class="reference internal" href="debugging.html">Debugging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="fuzzing.html">Fuzzing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sbapi.html">Scripting Bridge API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dataformatters.html">Data Formatters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="formatterbytecode.html">Formatter Bytecode</a></li>
+<li class="toctree-l1"><a class="reference internal" href="extensions.html">DWARF Extensions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="lldbgdbremote.html">GDB Remote Protocol Extensions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="lldbplatformpackets.html">LLDB Platform Packets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="caveats.html">Caveats</a></li>
+<li class="toctree-l1"><a class="reference internal" href="projects.html">Open Projects</a></li>
+<li class="toctree-l1"><a class="reference internal" href="lldbdap.html">Contributing to LLDB-DAP</a></li>
+<li class="toctree-l1"><a class="reference internal" href="addinglanguagesupport.html">Adding Programming Language Support</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://lldb.llvm.org/cpp_reference/namespacelldb.html">Public C++ API</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://lldb.llvm.org/cpp_reference/index.html">Private C++ API</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">External Links</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/llvm/llvm-project">Source Code</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/llvm/llvm-project/releases">Releases</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://discord.gg/xS7Z362">Join the Discord</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://discord.com/channels/636084430946959380/636732809708306432">Discord Channel</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://discourse.llvm.org/c/subprojects/lldb/8">Discussion Forums</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://llvm.org/docs/DeveloperPolicy.html">Developer Policy</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/llvm/llvm-project/issues?q=is%3Aissue+label%3Alldb+is%3Aopen">Bug Reports</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/llvm/llvm-project/pulls?q=is%3Apr+label%3Alldb+is%3Aopen">Code Reviews</a></li>
+</ul>
+
+</div>
+</div>
+
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="edit-this-page">
+  <a class="muted-link" href="https://github.com/llvm/llvm-project/edit/main/lldb/docs/resources/contributing.rst" title="Edit this page">
+    <svg aria-hidden="true" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+      <path d="M4 20h4l10.5 -10.5a1.5 1.5 0 0 0 -4 -4l-10.5 10.5v4" />
+      <line x1="13.5" y1="6.5" x2="17.5" y2="10.5" />
+    </svg>
+    <span class="visually-hidden">Edit this page</span>
+  </a>
+</div><div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle">
+              <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+              <svg class="theme-icon-when-auto"><use href="#svg-sun-half"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
+            <div class="visually-hidden">Toggle table of contents sidebar</div>
+            <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+          </label>
+        </div>
+        <article role="main">
+          <section id="contributing">
+<h1>Contributing<a class="headerlink" href="#contributing" title="Link to this heading">#</a></h1>
+<section id="getting-started">
+<h2>Getting Started<a class="headerlink" href="#getting-started" title="Link to this heading">#</a></h2>
+<p>Please refer to the <a class="reference external" href="https://llvm.org/docs/GettingStarted.html">LLVM Getting Started Guide</a> for general information on how to
+get started on the LLVM project. A detailed explanation on how to build and
+test LLDB can be found in the <a class="reference external" href="build.html">build instructions</a> and <a class="reference external" href="test.html">test
+instructions</a> respectively.</p>
+</section>
+<section id="contributing-to-lldb">
+<h2>Contributing to LLDB<a class="headerlink" href="#contributing-to-lldb" title="Link to this heading">#</a></h2>
+<p>Please refer to the <a class="reference external" href="https://llvm.org/docs/DeveloperPolicy.html">LLVM Developer Policy</a> for information about
+authoring and uploading a patch. LLDB differs from the LLVM Developer
+Policy in the following respects.</p>
+<p>For anything not explicitly listed here, assume that LLDB follows the LLVM
+policy.</p>
+<section id="coding-style">
+<h3>Coding Style<a class="headerlink" href="#coding-style" title="Link to this heading">#</a></h3>
+<p>LLDB’s code style differs from <a class="reference external" href="https://llvm.org/docs/CodingStandards.html">LLVM’s coding style</a>
+in a few ways. The 2 main ones are:</p>
+<ul class="simple">
+<li><p><a class="reference external" href="https://llvm.org/docs/CodingStandards.html#name-types-functions-variables-and-enumerators-properly">Variable and function naming</a>:</p>
+<ul>
+<li><p>Variables are <code class="docutils literal notranslate"><span class="pre">snake_case</span></code>.</p></li>
+<li><p>Functions and methods are <code class="docutils literal notranslate"><span class="pre">UpperCamelCase</span></code>.</p></li>
+<li><p>Static, global and member variables have <code class="docutils literal notranslate"><span class="pre">s_</span></code>, <code class="docutils literal notranslate"><span class="pre">g_</span></code> and <code class="docutils literal notranslate"><span class="pre">m_</span></code>
+prefixes respectively.</p></li>
+</ul>
+</li>
+<li><p><a class="reference external" href="https://llvm.org/docs/CodingStandards.html#assert-liberally">Use of asserts</a>:
+See the <a class="reference internal" href="#error-handling"><span class="std std-ref">section below</span></a>.</p></li>
+</ul>
+<p>For any other contradictions, consider the
+<a class="reference external" href="https://llvm.org/docs/CodingStandards.html#introduction">golden rule</a>
+before choosing to update the style of existing code.</p>
+<p>All new code in LLDB should be formatted with clang-format. Existing code may
+not conform and should be updated prior to being modified. Bulk reformatting
+is discouraged.</p>
+</section>
+<section id="test-infrastructure">
+<h3>Test Infrastructure<a class="headerlink" href="#test-infrastructure" title="Link to this heading">#</a></h3>
+<p>Like LLVM it is important to submit tests with your patches, but note that  a
+subset of LLDB tests (the API tests) use a different system. Refer to the
+<a class="reference external" href="test.html">test documentation</a> for more details and the
+<a class="reference external" href="https://github.com/llvm/llvm-project/tree/main/lldb/test">lldb/test</a> folder
+for examples.</p>
+</section>
+</section>
+<section id="lldb-plugins-and-their-dependencies">
+<h2>LLDB plugins and their dependencies<a class="headerlink" href="#lldb-plugins-and-their-dependencies" title="Link to this heading">#</a></h2>
+<p>LLDB has a concept of <em>plugins</em>, which are used to provide abstraction
+boundaries over functionality that is specific to a certain architecture,
+operating system, programming language, etc. A plugin implements an abstract
+base class (rarely, a set of related base classes), which is a part of LLDB
+core. This setup allows the LLDB core to remain generic while making it possible
+to support for new architectures, languages, and so on. For this to work, all
+code needs to obey certain rules.</p>
+<p>The principal rule is that LLDB core (defined as: everything under lldb/source
+<em>minus</em> lldb/source/Plugins) must not depend on any specific plugin. The only
+way it can interact with them is through the abstract interface. Explicit
+dependencies such as casting the base class to the plugin type are not permitted
+and neither are more subtle dependencies like checking the name plugin or or
+other situations where some code in LLDB core is tightly coupled to the
+implementation details of a specific plugin.</p>
+<p>The rule for interaction between different plugins is more nuanced. We recognize
+that some cross-plugin dependencies are unavoidable or even desirable. For
+example, a plugin may want to extend a plugin of the same kind to
+add/override/refine some functionality (e.g., Android is a “kind of” Linux, but
+it handles some things differently). Alternatively, a plugin of one kind may
+want to build on the functionality offered by a specific plugin of another kind
+(ELFCore Process plugin uses ELF ObjectFile plugin to create a process out of an
+ELF core file).</p>
+<p>In cases such as these, direct dependencies are acceptable. However, to keep the
+dependency graph manageable, we still have some rules to govern these
+relationships:</p>
+<ul class="simple">
+<li><p>All dependencies between plugins of the same kind must flow in the same
+direction (if plugin <code class="xref any docutils literal notranslate"><span class="pre">A1</span></code> depends on plugin <code class="xref any docutils literal notranslate"><span class="pre">B1</span></code>, then <code class="xref any docutils literal notranslate"><span class="pre">B2</span></code> must not depend on
+<code class="xref any docutils literal notranslate"><span class="pre">A2</span></code>)</p></li>
+<li><p>Dependency graph of plugin kinds must not contain loops (dependencies like
+<code class="xref any docutils literal notranslate"><span class="pre">A1-&gt;B1</span></code>, <code class="xref any docutils literal notranslate"><span class="pre">B2-&gt;C2</span></code> and <code class="xref any docutils literal notranslate"><span class="pre">C3-&gt;A3</span></code> are forbidden because they induce a cycle in
+the plugin kind graph even though the plugins themselves are acyclical)</p></li>
+</ul>
+<p>The first of these rules is checked via CMake scripts (using the
+<code class="xref any docutils literal notranslate"><span class="pre">LLDB_ACCEPTABLE_PLUGIN_DEPENDENCIES</span></code> property). Dependencies in this category
+are expected and permitted (subject to other constraints such as that dependency
+making sense for the particular pair of plugins). Unfortunately, due to historic
+reasons, not all plugin dependencies follow this rule, which is why we have
+another category called <code class="xref any docutils literal notranslate"><span class="pre">LLDB_TOLERATED_PLUGIN_DEPENDENCIES</span></code>. New dependencies
+are forbidden (even though they are accepted by CMake) and existing ones should
+be removed wherever possible.</p>
+</section>
+<section id="error-handling-and-use-of-assertions-in-lldb">
+<span id="error-handling"></span><h2>Error handling and use of assertions in LLDB<a class="headerlink" href="#error-handling-and-use-of-assertions-in-lldb" title="Link to this heading">#</a></h2>
+<p>Contrary to Clang, which is typically a short-lived process, LLDB
+debuggers stay up and running for a long time, often serving multiple
+debug sessions initiated by an IDE. For this reason LLDB code needs to
+be extra thoughtful about how to handle errors. Below are a couple
+rules of thumb:</p>
+<ul class="simple">
+<li><p>Invalid input.  To deal with invalid input, such as malformed DWARF,
+missing object files, or otherwise inconsistent debug info,
+error handling types such as <a class="reference external" href="https://llvm.org/doxygen/classllvm_1_1Expected.html">llvm::Expected&lt;T&gt;</a> or
+<code class="docutils literal notranslate"><span class="pre">std::optional&lt;T&gt;</span></code> should be used. Functions that may fail
+should return their result using these wrapper types instead of
+using a bool to indicate success. Returning a default value when an
+error occurred is also discouraged.</p></li>
+<li><p>Assertions.  Assertions (from <code class="docutils literal notranslate"><span class="pre">assert.h</span></code>) should be used liberally
+to assert internal consistency.  Assertions shall <strong>never</strong> be
+used to detect invalid user input, such as malformed DWARF.  An
+assertion should be placed to assert invariants that the developer
+is convinced will always hold, regardless what an end-user does with
+LLDB. Because assertions are not present in release builds, the
+checks in an assertion may be more expensive than otherwise
+permissible. In combination with the LLDB test suite, assertions are
+what allows us to refactor and evolve the LLDB code base.</p></li>
+<li><p>Logging. LLDB provides a very rich logging API. When recoverable
+errors cannot reasonably be surfaced to the end user, the error may
+be written to a topical log channel.</p></li>
+<li><p>Soft assertions.  LLDB provides <code class="docutils literal notranslate"><span class="pre">lldbassert()</span></code> as a soft
+alternative to cover the middle ground of situations that indicate a
+recoverable bug in LLDB.  When asserts are enabled <code class="docutils literal notranslate"><span class="pre">lldbassert()</span></code>
+behaves like <code class="docutils literal notranslate"><span class="pre">assert()</span></code>. When asserts are disabled, it will print a
+warning and encourage the user to file a bug report, similar to
+LLVM’s crash handler, and then return execution. Use these sparingly
+and only if error handling is not otherwise feasible.</p></li>
+</ul>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>New code should not be using <code class="docutils literal notranslate"><span class="pre">lldbassert()</span></code> and existing uses should
+be replaced by other means of error handling.</p>
+</div>
+<ul class="simple">
+<li><p>Fatal errors.  Aborting LLDB’s process using
+<code class="docutils literal notranslate"><span class="pre">llvm::report_fatal_error()</span></code> or <code class="docutils literal notranslate"><span class="pre">abort()</span></code> should be avoided at all
+costs.  It’s acceptable to use <code class="docutils literal notranslate"><span class="pre">llvm_unreachable()</span></code> for actually
+unreachable code such as the default in an otherwise exhaustive
+switch statement.</p></li>
+</ul>
+<p>Overall, please keep in mind that the debugger is often used as a last
+resort, and a crash in the debugger is rarely appreciated by the
+end-user.</p>
+</section>
+</section>
+
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          <a class="next-page" href="build.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title">Building</div>
+              </div>
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+            </a>
+          <a class="prev-page" href="overview.html">
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title">Overview</div>
+                
+              </div>
+            </a>
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; 2007-2025, The LLDB Team
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            <div class="last-updated">
+              Last updated on Aug 13, 2025</div>
+          </div>
+          <div class="right-details">
+            
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer">
+      
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">Contributing</a><ul>
+<li><a class="reference internal" href="#getting-started">Getting Started</a></li>
+<li><a class="reference internal" href="#contributing-to-lldb">Contributing to LLDB</a><ul>
+<li><a class="reference internal" href="#coding-style">Coding Style</a></li>
+<li><a class="reference internal" href="#test-infrastructure">Test Infrastructure</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#lldb-plugins-and-their-dependencies">LLDB plugins and their dependencies</a></li>
+<li><a class="reference internal" href="#error-handling-and-use-of-assertions-in-lldb">Error handling and use of assertions in LLDB</a></li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
+      
+      
+    </aside>
+  </div>
+</div><script src="../_static/documentation_options.js?v=7f41d439"></script>
+    <script src="../_static/doctools.js?v=888ff710"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/scripts/furo.js?v=32e29ea5"></script>
+    </body>
+</html>
