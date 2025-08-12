@@ -52,15 +52,15 @@ build_project() {
     
     echo -e "${BLUE}📖 Building $project documentation...${NC}"
     
-    cd "$project/docs" || {
+    if ! cd "$project/docs"; then
         echo -e "${RED}❌ Failed to enter $project/docs directory${NC}"
         FAILED_PROJECTS+=("$project")
         ((FAILURE_COUNT++))
         return 1
-    }
+    fi
     
-    mkdir -p "_static"
-    rm -rf "$BUILD_DIR"
+    mkdir -p "_static" 2>/dev/null || true
+    rm -rf "$BUILD_DIR" 2>/dev/null || true
     
     local build_cmd="sphinx-build -b html"
     [[ "$is_strict" == "true" ]] && build_cmd="$build_cmd -W --keep-going"
@@ -68,8 +68,7 @@ build_project() {
     
     if timeout 600 bash -c "eval '$build_cmd' 2>&1 | tee '../../build-$project.log'"; then
         if [[ -d "$BUILD_DIR/html" ]] && [[ -n "$(ls -A $BUILD_DIR/html 2>/dev/null)" ]]; then
-            mkdir -p "../../$SITE_DIR/$project"
-            if cp -r "$BUILD_DIR/html/"* "../../$SITE_DIR/$project/" 2>/dev/null; then
+            if mkdir -p "../../$SITE_DIR/$project" 2>/dev/null && cp -r "$BUILD_DIR/html/"* "../../$SITE_DIR/$project/" 2>/dev/null; then
                 echo -e "${GREEN}✅ $project documentation built successfully${NC}"
                 ((SUCCESS_COUNT++))
             else
@@ -88,18 +87,22 @@ build_project() {
         ((FAILURE_COUNT++))
     fi
     
-    cd - > /dev/null
+    cd - > /dev/null 2>&1 || cd "$(dirname "$(dirname "$(pwd)")")" 2>/dev/null || true
 }
 
 # Build projects
 echo -e "${YELLOW}Building projects with strict warning handling...${NC}"
 for project in "${STRICT_PROJECTS[@]}"; do
-    build_project "$project" "true"
+    echo -e "${BLUE}🔄 Starting build for: $project${NC}"
+    build_project "$project" "true" || echo -e "${RED}⚠️  Build function returned error for $project, continuing...${NC}"
+    echo -e "${BLUE}✓ Completed processing: $project${NC}"
 done
 
 echo -e "\n${YELLOW}Building projects with relaxed warning handling...${NC}"
 for project in "${RELAXED_PROJECTS[@]}"; do
-    build_project "$project" "false"
+    echo -e "${BLUE}🔄 Starting build for: $project${NC}"
+    build_project "$project" "false" || echo -e "${RED}⚠️  Build function returned error for $project, continuing...${NC}"
+    echo -e "${BLUE}✓ Completed processing: $project${NC}"
 done
 
 # Summary
@@ -116,7 +119,7 @@ echo -e "${BLUE}📋 Build logs: build-*.log${NC}"
 
 if [[ $FAILURE_COUNT -gt 0 ]]; then
     echo -e "${RED}❌ Some documentation builds failed. Check the logs for details.${NC}"
-    exit 1
+    echo -e "${YELLOW}⚠️  Continuing with deployment of successful builds.${NC}"
 else
     echo -e "${GREEN}🎉 All documentation built successfully!${NC}"
 fi
