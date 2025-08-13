@@ -1,44 +1,64 @@
-# The LLVM Compiler Infrastructure
+# LLVM ドキュメント日本語版
 
-[![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/llvm/llvm-project/badge)](https://securityscorecards.dev/viewer/?uri=github.com/llvm/llvm-project)
-[![OpenSSF Best Practices](https://www.bestpractices.dev/projects/8273/badge)](https://www.bestpractices.dev/projects/8273)
-[![libc++](https://github.com/llvm/llvm-project/actions/workflows/libcxx-build-and-test.yaml/badge.svg?branch=main&event=schedule)](https://github.com/llvm/llvm-project/actions/workflows/libcxx-build-and-test.yaml?query=event%3Aschedule)
+LLVMドキュメントの非公式日本語翻訳プロジェクトへようこそ！
 
-Welcome to the LLVM project!
+## プロジェクトについて
 
-This repository contains the source code for LLVM, a toolkit for the
-construction of highly optimized compilers, optimizers, and run-time
-environments.
+このリポジトリは、LLVMコンパイラインフラストラクチャのドキュメントを
+日本語に翻訳したものを含んでいます。LLVMは、高度に最適化された
+コンパイラ、オプティマイザ、実行時環境を構築するためのツールキットです。
 
-The LLVM project has multiple components. The core of the project is
-itself called "LLVM". This contains all of the tools, libraries, and header
-files needed to process intermediate representations and convert them into
-object files. Tools include an assembler, disassembler, bitcode analyzer, and
-bitcode optimizer.
+LLVMプロジェクトには複数のコンポーネントがあります。プロジェクトの
+コア部分は「LLVM」と呼ばれ、中間表現を処理してオブジェクトファイルに
+変換するために必要なすべてのツール、ライブラリ、ヘッダファイルが
+含まれています。ツールには、アセンブラ、逆アセンブラ、ビットコード
+アナライザ、ビットコードオプティマイザなどがあります。
 
-C-like languages use the [Clang](https://clang.llvm.org/) frontend. This
-component compiles C, C++, Objective-C, and Objective-C++ code into LLVM bitcode
--- and from there into object files, using LLVM.
+C系言語には[Clang](https://clang.llvm.org/)フロントエンドを使用します。
+このコンポーネントは、C、C++、Objective-C、Objective-C++コードを
+LLVMビットコードにコンパイルし、そこからLLVMを使用してオブジェクト
+ファイルに変換します。
 
-Other components include:
-the [libc++ C++ standard library](https://libcxx.llvm.org),
-the [LLD linker](https://lld.llvm.org), and more.
+その他のコンポーネントには、[libc++ C++標準ライブラリ](https://libcxx.llvm.org)、
+[LLD リンカ](https://lld.llvm.org)などがあります。
 
-## Getting the Source Code and Building LLVM
+## 翻訳の状況
 
-Consult the
-[Getting Started with LLVM](https://llvm.org/docs/GettingStarted.html#getting-the-source-code-and-building-llvm)
-page for information on building and running LLVM.
+このプロジェクトでは、LLVMの公式ドキュメントを日本語に翻訳しています。
+現在翻訳中のコンポーネント:
 
-For information on how to contribute to the LLVM project, please take a look at
-the [Contributing to LLVM](https://llvm.org/docs/Contributing.html) guide.
+- LLVM Core ドキュメント
+- Clang ドキュメント  
+- LLDB ドキュメント
+- その他のLLVMサブプロジェクト
 
-## Getting in touch
+## ドキュメントの閲覧
 
-Join the [LLVM Discourse forums](https://discourse.llvm.org/), [Discord
-chat](https://discord.gg/xS7Z362),
-[LLVM Office Hours](https://llvm.org/docs/GettingInvolved.html#office-hours) or
-[Regular sync-ups](https://llvm.org/docs/GettingInvolved.html#online-sync-ups).
+翻訳されたドキュメントは `_site/` ディレクトリに生成されます。
+`index.html` からメインページにアクセスできます。
 
-The LLVM project has adopted a [code of conduct](https://llvm.org/docs/CodeOfConduct.html) for
-participants to all modes of communication within the project.
+## 翻訳への貢献
+
+翻訳に貢献したい方は以下のガイドラインに従ってください:
+
+1. **LLVM固有の用語**（LLVM、Clang、LLDB等）はそのまま使用
+2. **自然な日本語**への翻訳を心がけ、直訳は避ける
+3. **一貫性**のある用語使用を保つ
+4. **技術的な正確性**を維持する
+
+## 元のLLVMプロジェクト情報
+
+LLVMプロジェクトの詳細情報については、以下を参照してください:
+
+- [LLVM公式サイト](https://llvm.org/)
+- [LLVM入門ガイド](https://llvm.org/docs/GettingStarted.html)
+- [LLVMへの貢献方法](https://llvm.org/docs/Contributing.html)
+
+## コミュニケーション
+
+LLVMプロジェクトのコミュニティ:
+- [LLVM Discourse フォーラム](https://discourse.llvm.org/)
+- [Discord チャット](https://discord.gg/xS7Z362)
+- [LLVM オフィスアワー](https://llvm.org/docs/GettingInvolved.html#office-hours)
+
+LLVMプロジェクトの[行動規範](https://llvm.org/docs/CodeOfConduct.html)を採用しています。
