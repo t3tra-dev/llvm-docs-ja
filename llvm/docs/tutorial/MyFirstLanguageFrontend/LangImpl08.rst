@@ -1,57 +1,40 @@
 ========================================
- Kaleidoscope: Compiling to Object Code
+Kaleidoscope: オブジェクトコードへのコンパイル
 ========================================
 
 .. contents::
    :local:
 
-Chapter 8 Introduction
-======================
+第8章 はじめに
+==============
 
-Welcome to Chapter 8 of the "`Implementing a language with LLVM
-<index.html>`_" tutorial. This chapter describes how to compile our
-language down to object files.
+「 `LLVMを使った言語実装 <index.html>`_」チュートリアルの第8章へようこそ。この章では、私たちの言語をオブジェクトファイルへとコンパイルする方法について説明します。
 
-Choosing a target
-=================
+ターゲットの選択
+===============
 
-LLVM has native support for cross-compilation. You can compile to the
-architecture of your current machine, or just as easily compile for
-other architectures. In this tutorial, we'll target the current
-machine.
+LLVMはクロスコンパイルをネイティブサポートしています。現在のマシンのアーキテクチャにコンパイルすることも、他のアーキテクチャ用にコンパイルすることも同様に簡単です。このチュートリアルでは、現在のマシンをターゲットにします。
 
-To specify the architecture that you want to target, we use a string
-called a "target triple". This takes the form
-``<arch><sub>-<vendor>-<sys>-<abi>`` (see the `cross compilation docs
-<https://clang.llvm.org/docs/CrossCompilation.html#target-triple>`_).
+ターゲットにしたいアーキテクチャを指定するために、「ターゲットトリプル」と呼ばれる文字列を使用します。これは ``<arch><sub>-<vendor>-<sys>-<abi>`` の形式を取ります (`クロスコンパイルドキュメント <https://clang.llvm.org/docs/CrossCompilation.html#target-triple>`_ を参照してください) 。
 
-As an example, we can see what clang thinks is our current target
-triple:
+例として、clangが考える現在のターゲットトリプルを見ることができます: 
 
 ::
 
     $ clang --version | grep Target
     Target: x86_64-unknown-linux-gnu
 
-Running this command may show something different on your machine as
-you might be using a different architecture or operating system to me.
+このコマンドを実行すると、あなたのマシンでは異なる結果が表示される可能性があります。私とは異なるアーキテクチャやオペレーティングシステムを使用している可能性があるためです。
 
-Fortunately, we don't need to hard-code a target triple to target the
-current machine. LLVM provides ``sys::getDefaultTargetTriple``, which
-returns the target triple of the current machine.
+幸いなことに、現在のマシンをターゲットにするためにターゲットトリプルをハードコーディングする必要はありません。LLVMは現在のマシンのターゲットトリプルを返す ``sys::getDefaultTargetTriple`` を提供しています。
 
 .. code-block:: c++
 
     auto TargetTriple = sys::getDefaultTargetTriple();
 
-LLVM doesn't require us to link in all the target
-functionality. For example, if we're just using the JIT, we don't need
-the assembly printers. Similarly, if we're only targeting certain
-architectures, we can only link in the functionality for those
-architectures.
+LLVMは、すべてのターゲット機能をリンクすることを要求していません。たとえば、JITのみを使用している場合、アセンブリプリンターは必要ありません。同様に、特定のアーキテクチャのみをターゲットにしている場合は、それらのアーキテクチャの機能のみをリンクできます。
 
-For this example, we'll initialize all the targets for emitting object
-code.
+この例では、オブジェクトコード生成用のすべてのターゲットを初期化します。
 
 .. code-block:: c++
 
@@ -61,31 +44,27 @@ code.
     InitializeAllAsmParsers();
     InitializeAllAsmPrinters();
 
-We can now use our target triple to get a ``Target``:
+これで、ターゲットトリプルを使用して ``Target`` を取得できます: 
 
 .. code-block:: c++
 
   std::string Error;
   auto Target = TargetRegistry::lookupTarget(TargetTriple, Error);
 
-  // Print an error and exit if we couldn't find the requested target.
-  // This generally occurs if we've forgotten to initialise the
-  // TargetRegistry or we have a bogus target triple.
+  // 要求されたターゲットが見つからなかった場合はエラーを印刷して終了。
+  // これは通常、TargetRegistryを初期化し忘れたか、
+  // 偽のターゲットトリプルを持っている場合に発生する。
   if (!Target) {
     errs() << Error;
     return 1;
   }
 
-Target Machine
-==============
+ターゲットマシン
+===============
 
-We will also need a ``TargetMachine``. This class provides a complete
-machine description of the machine we're targeting. If we want to
-target a specific feature (such as SSE) or a specific CPU (such as
-Intel's Sandylake), we do so now.
+``TargetMachine`` も必要です。このクラスは、ターゲットにしているマシンの完全なマシン記述を提供します。特定の機能 (SSEなど) や特定のCPU (IntelのSandylakeなど) をターゲットにしたい場合は、ここで行います。
 
-To see which features and CPUs that LLVM knows about, we can use
-``llc``. For example, let's look at x86:
+LLVMが認識している機能とCPUを確認するには、 ``llc`` を使用できます。たとえば、x86を見てみましょう: 
 
 ::
 
@@ -105,8 +84,7 @@ To see which features and CPUs that LLVM knows about, we can use
       3dnowa                - Enable 3DNow! Athlon instructions.
       ...
 
-For our example, we'll use the generic CPU without any additional feature or
-target option.
+この例では、追加の機能やターゲットオプションなしで汎用CPUを使用します。
 
 .. code-block:: c++
 
@@ -117,25 +95,20 @@ target option.
   auto TargetMachine = Target->createTargetMachine(TargetTriple, CPU, Features, opt, Reloc::PIC_);
 
 
-Configuring the Module
-======================
+モジュールの設定
+===============
 
-We're now ready to configure our module, to specify the target and
-data layout. This isn't strictly necessary, but the `frontend
-performance guide <../../Frontend/PerformanceTips.html>`_ recommends
-this. Optimizations benefit from knowing about the target and data
-layout.
+モジュールを設定してターゲットとデータレイアウトを指定する準備ができました。これは厳密には必要ありませんが、 `フロントエンドパフォーマンスガイド <../../Frontend/PerformanceTips.html>`_ でこれを推奨しています。最適化はターゲットとデータレイアウトについて知ることで恩恵を受けます。
 
 .. code-block:: c++
 
   TheModule->setDataLayout(TargetMachine->createDataLayout());
   TheModule->setTargetTriple(TargetTriple);
 
-Emit Object Code
-================
+オブジェクトコードの生成
+======================
 
-We're ready to emit object code! Let's define where we want to write
-our file to:
+オブジェクトコードを生成する準備ができました！ファイルを書き込みたい場所を定義しましょう: 
 
 .. code-block:: c++
 
@@ -148,8 +121,7 @@ our file to:
     return 1;
   }
 
-Finally, we define a pass that emits object code, then we run that
-pass:
+最後に、オブジェクトコードを生成するパスを定義し、そのパスを実行します: 
 
 .. code-block:: c++
 
@@ -164,18 +136,16 @@ pass:
   pass.run(*TheModule);
   dest.flush();
 
-Putting It All Together
-=======================
+すべてを組み合わせる
+==================
 
-Does it work? Let's give it a try. We need to compile our code, but
-note that the arguments to ``llvm-config`` are different to the previous chapters.
+これは機能するでしょうか？試してみましょう。コードをコンパイルする必要がありますが、 ``llvm-config`` への引数が前の章と異なることに注意してください。
 
 ::
 
     $ clang++ -g -O3 toy.cpp `llvm-config --cxxflags --ldflags --system-libs --libs all` -o toy
 
-Let's run it, and define a simple ``average`` function. Press Ctrl-D
-when you're done.
+実行して、シンプルな ``average`` 関数を定義してみましょう。完了したらCtrl-Dを押してください。
 
 ::
 
@@ -184,8 +154,7 @@ when you're done.
     ^D
     Wrote output.o
 
-We have an object file! To test it, let's write a simple program and
-link it with our output. Here's the source code:
+オブジェクトファイルができました！これをテストするために、シンプルなプログラムを作成し、出力にリンクしてみましょう。ソースコードは次の通りです: 
 
 .. code-block:: c++
 
@@ -199,8 +168,7 @@ link it with our output. Here's the source code:
         std::cout << "average of 3.0 and 4.0: " << average(3.0, 4.0) << std::endl;
     }
 
-We link our program to output.o and check the result is what we
-expected:
+プログラムをoutput.oにリンクし、結果が期待通りであることを確認します: 
 
 ::
 
@@ -208,10 +176,10 @@ expected:
     $ ./main
     average of 3.0 and 4.0: 3.5
 
-Full Code Listing
-=================
+完全なコードリスト
+================
 
 .. literalinclude:: ../../../examples/Kaleidoscope/Chapter8/toy.cpp
    :language: c++
 
-`Next: Adding Debug Information <LangImpl09.html>`_
+`次: デバッグ情報の追加 <LangImpl09.html>`_

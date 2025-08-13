@@ -1,137 +1,49 @@
 ======================================================
-Kaleidoscope: Conclusion and other useful LLVM tidbits
+Kaleidoscope: 結論とその他の有用なLLVMの情報
 ======================================================
 
 .. contents::
    :local:
 
-Tutorial Conclusion
-===================
+チュートリアルの結論
+==================
 
-Welcome to the final chapter of the "`Implementing a language with
-LLVM <index.html>`_" tutorial. In the course of this tutorial, we have
-grown our little Kaleidoscope language from being a useless toy, to
-being a semi-interesting (but probably still useless) toy. :)
+「 `LLVMを使った言語実装 <index.html>`_」チュートリアルの最終章へようこそ。このチュートリアルの過程で、私たちの小さなKaleidoscope言語を無用なおもちゃから、半分興味深い (しかしおそらく今でも無用な) おもちゃへと成長させました。:)
 
-It is interesting to see how far we've come, and how little code it has
-taken. We built the entire lexer, parser, AST, code generator, an
-interactive run-loop (with a JIT!), and emitted debug information in
-standalone executables - all in under 1000 lines of (non-comment/non-blank)
-code.
+どこまで来たか、そしていかに少ないコードでそれが達成されたかを見るのは興味深いことです。私たちは完全なlexer、parser、AST、コードジェネレーター、インタラクティブな実行ループ (JIT付き！) を構築し、スタンドアロン実行可能ファイルでデバッグ情報を出力しました。すべて1000行未満の (コメント・空行を除く) コードで実現しました。
 
-Our little language supports a couple of interesting features: it
-supports user defined binary and unary operators, it uses JIT
-compilation for immediate evaluation, and it supports a few control flow
-constructs with SSA construction.
+私たちの小さな言語はいくつかの興味深い機能をサポートしています: ユーザー定義の二項・単項演算子をサポートし、即座の評価のためにJITコンパイルを使用し、SSA構築を使ったいくつかの制御フロー構成をサポートしています。
 
-Part of the idea of this tutorial was to show you how easy and fun it
-can be to define, build, and play with languages. Building a compiler
-need not be a scary or mystical process! Now that you've seen some of
-the basics, I strongly encourage you to take the code and hack on it.
-For example, try adding:
+このチュートリアルのアイデアの一部は、言語の定義、構築、そして操作がいかに簡単で楽しいものであるかを示すことでした。コンパイラーの構築は恐ろしい神秘的なプロセスである必要はありません！基本的なことを見てきたので、コードを取得してハックしてみることを強くお勧めします。例えば、以下を追加してみてください:
 
--  **global variables** - While global variables have questionable value
-   in modern software engineering, they are often useful when putting
-   together quick little hacks like the Kaleidoscope compiler itself.
-   Fortunately, our current setup makes it very easy to add global
-   variables: just have value lookup check to see if an unresolved
-   variable is in the global variable symbol table before rejecting it.
-   To create a new global variable, make an instance of the LLVM
-   ``GlobalVariable`` class.
--  **typed variables** - Kaleidoscope currently only supports variables
-   of type double. This gives the language a very nice elegance, because
-   only supporting one type means that you never have to specify types.
-   Different languages have different ways of handling this. The easiest
-   way is to require the user to specify types for every variable
-   definition, and record the type of the variable in the symbol table
-   along with its Value\*.
--  **arrays, structs, vectors, etc** - Once you add types, you can start
-   extending the type system in all sorts of interesting ways. Simple
-   arrays are very easy and are quite useful for many different
-   applications. Adding them is mostly an exercise in learning how the
-   LLVM `getelementptr <../../LangRef.html#getelementptr-instruction>`_ instruction
-   works: it is so nifty/unconventional, it `has its own
-   FAQ <../../GetElementPtr.html>`_!
--  **standard runtime** - Our current language allows the user to access
-   arbitrary external functions, and we use it for things like "printd"
-   and "putchard". As you extend the language to add higher-level
-   constructs, often these constructs make the most sense if they are
-   lowered to calls into a language-supplied runtime. For example, if
-   you add hash tables to the language, it would probably make sense to
-   add the routines to a runtime, instead of inlining them all the way.
--  **memory management** - Currently we can only access the stack in
-   Kaleidoscope. It would also be useful to be able to allocate heap
-   memory, either with calls to the standard libc malloc/free interface
-   or with a garbage collector. If you would like to use garbage
-   collection, note that LLVM fully supports `Accurate Garbage
-   Collection <../../GarbageCollection.html>`_ including algorithms that
-   move objects and need to scan/update the stack.
--  **exception handling support** - LLVM supports generation of `zero
-   cost exceptions <../../ExceptionHandling.html>`_ which interoperate with
-   code compiled in other languages. You could also generate code by
-   implicitly making every function return an error value and checking
-   it. You could also make explicit use of setjmp/longjmp. There are
-   many different ways to go here.
--  **object orientation, generics, database access, complex numbers,
-   geometric programming, ...** - Really, there is no end of crazy
-   features that you can add to the language.
--  **unusual domains** - We've been talking about applying LLVM to a
-   domain that many people are interested in: building a compiler for a
-   specific language. However, there are many other domains that can use
-   compiler technology that are not typically considered. For example,
-   LLVM has been used to implement OpenGL graphics acceleration,
-   translate C++ code to ActionScript, and many other cute and clever
-   things. Maybe you will be the first to JIT compile a regular
-   expression interpreter into native code with LLVM?
+-  **グローバル変数** - グローバル変数は現代のソフトウェア工学において価値が疑問視されていますが、Kaleidoscopeコンパイラー自体のような手軽で小さなハックをまとめる際にはしばしば有用です。幸いなことに、現在のセットアップはグローバル変数の追加を非常に簡単にします: 未解決変数を拒否する前に、その変数がグローバル変数シンボルテーブルにあるかどうかを値の検索でチェックするだけです。新しいグローバル変数を作成するには、LLVM ``GlobalVariable`` クラスのインスタンスを作成してください。
+-  **型付き変数** - Kaleidoscopeは現在double型の変数のみをサポートしています。これにより言語に非常に美しいエレガンスが与えられます。なぜなら、1つの型のみをサポートするということは、型を指定する必要がないことを意味するからです。異なる言語はこれを処理するための異なる方法があります。最も簡単な方法は、ユーザーにすべての変数定義で型を指定することを要求し、その Value\* と共に変数の型をシンボルテーブルに記録することです。
+-  **配列、構造体、ベクター等** - 型を追加したら、さまざまな興味深い方法で型システムを拡張し始めることができます。シンプルな配列は非常に簡単で、多くの異なるアプリケーションにとって非常に有用です。それらを追加するのは主にLLVM `getelementptr <../../LangRef.html#getelementptr-instruction>`_ 命令がどのように動作するかを学ぶ練習です: それは非常に巧妙で型にはまらないため、 `専用のFAQ <../../GetElementPtr.html>`_ があります！
+-  **標準ランタイム** - 現在の言語では、ユーザーが任意の外部関数にアクセスでき、「printd」や「putchard」などにそれを使用しています。高レベルな構成を追加するために言語を拡張する際、これらの構成は言語が提供するランタイムへの呼び出しに低レベル化される場合に最も意味があることが多いです。例えば、言語にハッシュテーブルを追加する場合、それらをすべてインライン化するのではなく、ルーチンをランタイムに追加することがおそらく理に適っているでしょう。
+-  **メモリ管理** - 現在、Kaleidoscopeではスタックにのみアクセスできます。標準libc malloc/freeインターフェースへの呼び出しか、ガベージコレクターを使用してヒープメモリを割り当てることができれば有用でしょう。ガベージコレクションを使用したい場合は、LLVMがオブジェクトを移動し、スタックをスキャン/更新する必要があるアルゴリズムを含む `正確なガベージコレクション <../../GarbageCollection.html>`_ を完全にサポートしていることに注意してください。
+-  **例外処理サポート** - LLVMは他の言語でコンパイルされたコードと相互運用する `ゼロコスト例外 <../../ExceptionHandling.html>`_ の生成をサポートしています。すべての関数が暗黙的にエラー値を返し、それをチェックするようにコードを生成することもできます。また、setjmp/longjmpを明示的に使用することもできます。ここには多くの異なるアプローチがあります。
+-  **オブジェクト指向、ジェネリクス、データベースアクセス、複素数、幾何プログラミング等** - 本当に、言語に追加できるクレイジーな機能に終わりはありません。
+-  **特殊なドメイン** - 私たちは多くの人が興味を持つドメイン、つまり特定の言語のコンパイラーの構築にLLVMを適用することについて話してきました。しかし、通常は考慮されないコンパイラー技術を使用できる他の多くのドメインがあります。例えば、LLVMはOpenGLグラフィックスアクセラレーションの実装、C++コードのActionScriptへの変換、その他多くの可愛らしく巧妙なことに使用されてきました。おそらくあなたがLLVMで正規表現インタープリターをネイティブコードにJITコンパイルする最初の人になるかもしれません？
 
-Have fun - try doing something crazy and unusual. Building a language
-like everyone else always has, is much less fun than trying something a
-little crazy or off the wall and seeing how it turns out. If you get
-stuck or want to talk about it, please post on the `LLVM forums 
-<https://discourse.llvm.org>`_: it has lots of people who are interested
-in languages and are often willing to help out.
+楽しんでください - 何かクレイジーで異常なことを試してみてください。誰もが常に行っているような言語を構築することは、少しクレイジーだったり型にはまらないことを試して結果がどうなるかを見ることよりも、ずっと楽しくありません。行き詰まったり話し合いたい場合は、`LLVMフォーラム <https://discourse.llvm.org>`_ に投稿してください: 言語に興味がある多くの人がいて、しばしば喜んで手助けしてくれます。
 
-Before we end this tutorial, I want to talk about some "tips and tricks"
-for generating LLVM IR. These are some of the more subtle things that
-may not be obvious, but are very useful if you want to take advantage of
-LLVM's capabilities.
+このチュートリアルを終了する前に、LLVM IRを生成するための「コツと技」について話したいと思います。これらは明らかでない微妙なもののいくつかですが、LLVMの機能を活用したい場合には非常に有用です。
 
-Properties of the LLVM IR
-=========================
+LLVM IRの性質
+==============
 
-We have a couple of common questions about code in the LLVM IR form -
-let's just get these out of the way right now, shall we?
+LLVM IR形式のコードについていくつかの共通する質問があります。今すぐそれらを片付けてしまいましょうね？
 
-Target Independence
--------------------
+ターゲット独立性
+===============
 
-Kaleidoscope is an example of a "portable language": any program written
-in Kaleidoscope will work the same way on any target that it runs on.
-Many other languages have this property, e.g. lisp, java, haskell,
-javascript, python, etc (note that while these languages are portable,
-not all their libraries are).
+KaleidoscopeはプログラムがKaleidoscopeで書かれた場合、それが動作するあらゆるターゲット上で同じように動作する「ポータブル言語」の例です。他の多くの言語にもこの性質があります。例: lisp、java、haskell、javascript、pythonなど (これらの言語はポータブルですが、すべてのライブラリがそうではないことに注意してください)。
 
-One nice aspect of LLVM is that it is often capable of preserving target
-independence in the IR: you can take the LLVM IR for a
-Kaleidoscope-compiled program and run it on any target that LLVM
-supports, even emitting C code and compiling that on targets that LLVM
-doesn't support natively. You can trivially tell that the Kaleidoscope
-compiler generates target-independent code because it never queries for
-any target-specific information when generating code.
+LLVMの素晴らしい側面の1つは、IRでターゲット独立性を保持できることが多いことです: KaleidoscopeでコンパイルされたプログラムのLLVM IRを取得して、LLVMがサポートするあらゆるターゲットで実行できます。LLVMがネイティブサポートしないターゲットでCコードを生成してコンパイルすることさえ可能です。Kaleidoscopeコンパイラーがターゲット独立コードを生成することは自明に分かります。なぜなら、コード生成時にターゲット固有の情報について決してクエリを行わないからです。
 
-The fact that LLVM provides a compact, target-independent,
-representation for code gets a lot of people excited. Unfortunately,
-these people are usually thinking about C or a language from the C
-family when they are asking questions about language portability. I say
-"unfortunately", because there is really no way to make (fully general)
-C code portable, other than shipping the source code around (and of
-course, C source code is not actually portable in general either - ever
-port a really old application from 32- to 64-bits?).
+LLVMがコードのコンパクトなターゲット独立表現を提供するという事実は、多くの人を興奮させます。残念ながら、これらの人々は通常、言語の移植性に関する質問をするときC またはCファミリーの言語について考えています。これを「残念」と言うのは、 (完全に一般的な) Cコードをポータブルにする方法が、ソースコードを周りに持ち運ぶ以外に実際にはないからです (もちろん、Cのソースコードも一般的には実際にはポータブルではありません - 本当に古いアプリケーションを32ビットから64ビットに移植したことはありますか？)。
 
-The problem with C (again, in its full generality) is that it is heavily
-laden with target-specific assumptions. As one simple example, the
-preprocessor often destructively removes target-independence from the
-code when it processes the input text:
+Cの問題 (再び、完全な一般性において) は、ターゲット固有の前提に重くのしかかっていることです。1つのシンプルな例として、プリプロセッサーが入力テキストを処理する際に、コードからターゲット独立性を破壊的に除去することがよくあります:
 
 .. code-block:: c
 
@@ -141,112 +53,44 @@ code when it processes the input text:
       int X = 42;
     #endif
 
-While it is possible to engineer more and more complex solutions to
-problems like this, it cannot be solved in full generality in a way that
-is better than shipping the actual source code.
+このような問題により複雑な解決策を工夫することは可能ですが、実際のソースコードを持ち運ぶよりも良い方法で完全な一般性において解決することはできません。
 
-That said, there are interesting subsets of C that can be made portable.
-If you are willing to fix primitive types to a fixed size (say int =
-32-bits, and long = 64-bits), don't care about ABI compatibility with
-existing binaries, and are willing to give up some other minor features,
-you can have portable code. This can make sense for specialized domains
-such as an in-kernel language.
+とは言え、ポータブルにできるCの興味深いサブセットがあります。プリミティブ型を固定サイズに固定し (int = 32ビット、long = 64ビットなど)、既存のバイナリとのABI互換性を気にせず、その他のいくつかのマイナーな機能を諦めることをいとわないのであれば、ポータブルなコードを持つことができます。これは、カーネル内言語などの特殊なドメインには意味があります。
 
-Safety Guarantees
------------------
+安全性保証
+---------
 
-Many of the languages above are also "safe" languages: it is impossible
-for a program written in Java to corrupt its address space and crash the
-process (assuming the JVM has no bugs). Safety is an interesting
-property that requires a combination of language design, runtime
-support, and often operating system support.
+上記の言語の多くは「安全な」言語でもあります: Javaで書かれたプログラムがそのアドレス空間を破損させてプロセスをクラッシュさせることは不可能です (JVMにバグがないと仮定して)。安全性は、言語設計、ランタイムサポート、そしてしばしばオペレーティングシステムサポートの組み合わせを必要とする興味深い性質です。
 
-It is certainly possible to implement a safe language in LLVM, but LLVM
-IR does not itself guarantee safety. The LLVM IR allows unsafe pointer
-casts, use after free bugs, buffer over-runs, and a variety of other
-problems. Safety needs to be implemented as a layer on top of LLVM and,
-conveniently, several groups have investigated this. Ask on the `LLVM
-forums <https://discourse.llvm.org>`_ if you are interested in more details.
+LLVMで安全な言語を実装することは確実に可能ですが、LLVM IR自体は安全性を保証しません。LLVM IRは危険なポインターキャスト、解放後使用のバグ、バッファオーバーラン、その他様々な問題を許可します。安全性はLLVMの上のレイヤーとして実装される必要があり、都合よく、いくつかのグループがこれを調査しています。詳細に興味がある場合は、 `LLVMフォーラム <https://discourse.llvm.org>`_ で質問してください。
 
-Language-Specific Optimizations
--------------------------------
-
-One thing about LLVM that turns off many people is that it does not
-solve all the world's problems in one system.  One specific
-complaint is that people perceive LLVM as being incapable of performing
-high-level language-specific optimization: LLVM "loses too much
-information".  Here are a few observations about this:
-
-First, you're right that LLVM does lose information. For example, as of
-this writing, there is no way to distinguish in the LLVM IR whether an
-SSA-value came from a C "int" or a C "long" on an ILP32 machine (other
-than debug info). Both get compiled down to an 'i32' value and the
-information about what it came from is lost. The more general issue
-here, is that the LLVM type system uses "structural equivalence" instead
-of "name equivalence". Another place this surprises people is if you
-have two types in a high-level language that have the same structure
-(e.g. two different structs that have a single int field): these types
-will compile down into a single LLVM type and it will be impossible to
-tell what it came from.
-
-Second, while LLVM does lose information, LLVM is not a fixed target: we
-continue to enhance and improve it in many different ways. In addition
-to adding new features (LLVM did not always support exceptions or debug
-info), we also extend the IR to capture important information for
-optimization (e.g. whether an argument is sign or zero extended,
-information about pointers aliasing, etc). Many of the enhancements are
-user-driven: people want LLVM to include some specific feature, so they
-go ahead and extend it.
-
-Third, it is *possible and easy* to add language-specific optimizations,
-and you have a number of choices in how to do it. As one trivial
-example, it is easy to add language-specific optimization passes that
-"know" things about code compiled for a language. In the case of the C
-family, there is an optimization pass that "knows" about the standard C
-library functions. If you call "exit(0)" in main(), it knows that it is
-safe to optimize that into "return 0;" because C specifies what the
-'exit' function does.
-
-In addition to simple library knowledge, it is possible to embed a
-variety of other language-specific information into the LLVM IR. If you
-have a specific need and run into a wall, please bring the topic up on
-the llvm-dev list. At the very worst, you can always treat LLVM as if it
-were a "dumb code generator" and implement the high-level optimizations
-you desire in your front-end, on the language-specific AST.
-
-Tips and Tricks
+言語固有の最適化
 ===============
 
-There is a variety of useful tips and tricks that you come to know after
-working on/with LLVM that aren't obvious at first glance. Instead of
-letting everyone rediscover them, this section talks about some of these
-issues.
+LLVMについて多くの人を失望させることの1つは、1つのシステムで世界のすべての問題を解決しないということです。1つの具体的な苦情は、人々がLLVMを高レベル言語固有の最適化を実行できないと認識していることです: LLVMは「あまりにも多くの情報を失う」のです。これについてのいくつかの観察があります:
 
-Implementing portable offsetof/sizeof
--------------------------------------
+第一に、LLVMが情報を失うということは正しいです。例えば、この記事を書いている時点では、LLVM IRでSSA値がILP32マシン上のC「int」から来たのかC「long」から来たのかを区別する方法はありません (デバッグ情報以外)。両方とも「i32」値にコンパイルダウンされ、それがどこから来たかに関する情報は失われます。ここでのより一般的な問題は、LLVM型システムが「名前同等性」ではなく「構造同等性」を使用することです。これが人々を驚かせるもう1つの場所は、高レベル言語で同じ構造を持つ2つの型がある場合です (例: 単一のintフィールドを持つ2つの異なる構造体): これらの型は単一のLLVM型にコンパイルダウンされ、それがどこから来たかを判断することが不可能になります。
 
-One interesting thing that comes up, if you are trying to keep the code
-generated by your compiler "target independent", is that you often need
-to know the size of some LLVM type or the offset of some field in an
-llvm structure. For example, you might need to pass the size of a type
-into a function that allocates memory.
+第二に、LLVMは情報を失う一方で、LLVMは固定的なターゲットではありません: 私たちは多くの異なる方法で継続的に拡張・改善しています。新機能の追加に加えて (LLVMは常に例外やデバッグ情報をサポートしていたわけではありません)、最適化のための重要な情報を捕捉するためにIRを拡張もします (例: 引数が符号拡張かゼロ拡張かどうか、ポインターのエイリアシング情報など)。拡張の多くはユーザー主導です: 人々がLLVMに特定の機能を含めることを望むため、先に進んで拡張します。
 
-Unfortunately, this can vary widely across targets: for example the
-width of a pointer is trivially target-specific. However, there is a
-`clever way to use the getelementptr
-instruction <http://nondot.org/sabre/LLVMNotes/SizeOf-OffsetOf-VariableSizedStructs.txt>`_
-that allows you to compute this in a portable way.
+第三に、言語固有の最適化を追加することは*可能で簡単*であり、それを行う方法について多くの選択肢があります。1つの自明な例として、言語用にコンパイルされたコードについて物事を「知っている」言語固有の最適化パスを追加することは簡単です。Cファミリーの場合、標準Cライブラリ関数について「知っている」最適化パスがあります。main()で「exit(0)」を呼び出すと、Cが「exit」関数の動作を指定しているため、それを「return 0;」に最適化することが安全であることを認識します。
 
-Garbage Collected Stack Frames
+シンプルなライブラリ知識に加えて、他の様々な言語固有情報をLLVM IRに埋め込むことが可能です。特定の必要性があり、壁にぶつかった場合は、llvm-devリストでそのトピックを提起してください。最悪の場合でも、LLVMを「愚かなコードジェネレーター」として扱い、言語固有のASTでフロントエンドで望む高レベル最適化を実装することが常に可能です。
+
+コツと技
+========
+
+LLVMに取り組んだり、LLVMと一緒に作業をした後に知ることになる有用なコツと技の数々があり、それらは一見しただけでは明らかではありません。皆がそれらを再発見するのを待つのではなく、このセクションではこれらの問題のいくつかについて説明します。
+
+ポータブルなoffsetof/sizeofの実装
 ------------------------------
 
-Some languages want to explicitly manage their stack frames, often so
-that they are garbage collected or to allow easy implementation of
-closures. There are often better ways to implement these features than
-explicit stack frames, but `LLVM does support
-them, <http://nondot.org/sabre/LLVMNotes/ExplicitlyManagedStackFrames.txt>`_
-if you want. It requires your front-end to convert the code into
-`Continuation Passing
-Style <http://en.wikipedia.org/wiki/Continuation-passing_style>`_ and
-the use of tail calls (which LLVM also supports).
+コンパイラーが生成するコードを「ターゲット独立」に保とうとする場合に出てくる興味深いことの1つは、LLVM型のサイズやllvm構造体のあるフィールドのオフセットを知る必要があることが多いということです。例えば、メモリを割り当てる関数に型のサイズを渡す必要があるかもしれません。
+
+残念ながら、これはターゲット間で大きく異なる可能性があります: 例えば、ポインターの幅は自明にターゲット固有です。しかし、これをポータブルな方法で計算することを可能にする `getelementptr命令の巧妙な使用方法 <http://nondot.org/sabre/LLVMNotes/SizeOf-OffsetOf-VariableSizedStructs.txt>`_ があります。
+
+ガベージコレクトされるスタックフレーム
+--------------------------------------
+
+一部の言語は、ガベージコレクトされるように、またはクロージャの簡単な実装を可能にするために、スタックフレームを明示的に管理したいと考えます。明示的なスタックフレームよりもこれらの機能を実装するより良い方法がしばしばありますが、希望するなら、 `LLVMはそれらをサポートします <http://nondot.org/sabre/LLVMNotes/ExplicitlyManagedStackFrames.txt>`_。これにはフロントエンドがコードを `継続渡しスタイル <http://en.wikipedia.org/wiki/Continuation-passing_style>`_ と末尾呼び出しの使用 (LLVMもサポートしています) に変換することが必要です。
 

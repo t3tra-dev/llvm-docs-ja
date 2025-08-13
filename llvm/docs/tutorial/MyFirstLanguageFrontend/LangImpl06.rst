@@ -1,54 +1,27 @@
 ============================================================
-Kaleidoscope: Extending the Language: User-defined Operators
+Kaleidoscope: 言語の拡張: ユーザー定義演算子
 ============================================================
 
 .. contents::
    :local:
 
-Chapter 6 Introduction
+第6章 はじめに
 ======================
 
-Welcome to Chapter 6 of the "`Implementing a language with
-LLVM <index.html>`_" tutorial. At this point in our tutorial, we now
-have a fully functional language that is fairly minimal, but also
-useful. There is still one big problem with it, however. Our language
-doesn't have many useful operators (like division, logical negation, or
-even any comparisons besides less-than).
+「 `LLVMを使った言語実装 <index.html>`_」チュートリアルの第6章へようこそ。チュートリアルのこの時点で、かなり最小限でありながらも有用で、完全に機能する言語を持つようになりました。しかし、まだ1つの大きな問題があります。私たちの言語には多くの有用な演算子がありません (除算、論理否定、または小なり以外の比較すらありません)。
 
-This chapter of the tutorial takes a wild digression into adding
-user-defined operators to the simple and beautiful Kaleidoscope
-language. This digression now gives us a simple and ugly language in
-some ways, but also a powerful one at the same time. One of the great
-things about creating your own language is that you get to decide what
-is good or bad. In this tutorial we'll assume that it is okay to use
-this as a way to show some interesting parsing techniques.
+チュートリアルのこの章では、シンプルで美しいKaleidoscope言語にユーザー定義演算子を追加するという大胆な逸脱を行います。この逸脱により、ある意味ではシンプルで醜い言語になりますが、同時に強力な言語にもなります。独自の言語を作成することの素晴らしい点の1つは、何が良いか悪いかを決めることができることです。このチュートリアルでは、興味深い解析技法を示す方法としてこれを使用することが適切であると仮定します。
 
-At the end of this tutorial, we'll run through an example Kaleidoscope
-application that `renders the Mandelbrot set <#kicking-the-tires>`_. This gives an
-example of what you can build with Kaleidoscope and its feature set.
+このチュートリアルの最後に、 `マンデルブロート集合をレンダリング <#kicking-the-tires>`_ するKaleidoscopeアプリケーションの例を実行します。これは、Kaleidoscopeとその機能セットで何を構築できるかの例を示しています。
 
-User-defined Operators: the Idea
+ユーザー定義演算子: アイデア
 ================================
 
-The "operator overloading" that we will add to Kaleidoscope is more
-general than in languages like C++. In C++, you are only allowed to
-redefine existing operators: you can't programmatically change the
-grammar, introduce new operators, change precedence levels, etc. In this
-chapter, we will add this capability to Kaleidoscope, which will let the
-user round out the set of operators that are supported.
+Kaleidoscopeに追加する「演算子オーバーロード」は、C++のような言語よりも一般的です。C++では、既存の演算子を再定義することしか許可されていません: 文法をプログラマティックに変更したり、新しい演算子を導入したり、優先順位レベルを変更したりすることはできません。この章では、この機能をKaleidoscopeに追加し、ユーザーがサポートされている演算子のセットを完成させることができるようにします。
 
-The point of going into user-defined operators in a tutorial like this
-is to show the power and flexibility of using a hand-written parser.
-Thus far, the parser we have been implementing uses recursive descent
-for most parts of the grammar and operator precedence parsing for the
-expressions. See `Chapter 2 <LangImpl02.html>`_ for details. By
-using operator precedence parsing, it is very easy to allow
-the programmer to introduce new operators into the grammar: the grammar
-is dynamically extensible as the JIT runs.
+このようなチュートリアルでユーザー定義演算子を取り上げる目的は、手書きparserを使用することの力と柔軟性を示すことです。これまで実装してきたparserは、文法のほとんどの部分に再帰下降を使用し、式には演算子優先順位解析を使用しています。詳細は `第2章 <LangImpl02.html>`_ を参照してください。演算子優先順位解析を使用することで、プログラマーが文法に新しい演算子を導入することを許可するのは非常に簡単です: 文法はJITの実行に伴って動的に拡張可能です。
 
-The two specific features we'll add are programmable unary operators
-(right now, Kaleidoscope has no unary operators at all) as well as
-binary operators. An example of this is:
+追加する2つの具体的な機能は、プログラム可能な単項演算子 (現在、Kaleidoscopeには単項演算子がまったくありません) と二項演算子です。その例は次の通りです:
 
 ::
 
@@ -76,20 +49,14 @@ binary operators. An example of this is:
     def binary= 9 (LHS RHS)
       !(LHS < RHS | LHS > RHS);
 
-Many languages aspire to being able to implement their standard runtime
-library in the language itself. In Kaleidoscope, we can implement
-significant parts of the language in the library!
+多くの言語は、標準ランタイムライブラリを言語自体で実装できることを目指しています。Kaleidoscopeでは、言語の重要な部分をライブラリで実装できます！
 
-We will break down implementation of these features into two parts:
-implementing support for user-defined binary operators and adding unary
-operators.
+これらの機能の実装を2つの部分に分けます: ユーザー定義二項演算子のサポートの実装と単項演算子の追加です。
 
-User-defined Binary Operators
+ユーザー定義二項演算子
 =============================
 
-Adding support for user-defined binary operators is pretty simple with
-our current framework. We'll first add support for the unary/binary
-keywords:
+現在のフレームワークでは、ユーザー定義二項演算子のサポートを追加するのは非常に簡単です。まず、unary/binaryキーワードのサポートを追加します: 
 
 .. code-block:: c++
 
@@ -112,20 +79,9 @@ keywords:
           return tok_unary;
         return tok_identifier;
 
-This just adds lexer support for the unary and binary keywords, like we
-did in `previous chapters <LangImpl05.html#lexer-extensions-for-if-then-else>`_. One nice thing
-about our current AST, is that we represent binary operators with full
-generalisation by using their ASCII code as the opcode. For our extended
-operators, we'll use this same representation, so we don't need any new
-AST or parser support.
+これは、 `前の章 <LangImpl05.html#lexer-extensions-for-if-then-else>`_ で行ったように、unaryとbinaryキーワードのlexerサポートを追加するだけです。現在のASTの優れた点の1つは、二項演算子をASCIIコードをオペコードとして使用することで完全に汎用化して表現していることです。拡張された演算子についても、この同じ表現を使用するため、新しいASTやparserのサポートは必要ありません。
 
-On the other hand, we have to be able to represent the definitions of
-these new operators, in the "def binary\| 5" part of the function
-definition. In our grammar so far, the "name" for the function
-definition is parsed as the "prototype" production and into the
-``PrototypeAST`` AST node. To represent our new user-defined operators
-as prototypes, we have to extend the ``PrototypeAST`` AST node like
-this:
+一方、関数定義の「def binary\| 5」部分で、これらの新しい演算子の定義を表現できる必要があります。これまでの文法では、関数定義の「名前」は「prototype」プロダクションとして解析され、 ``PrototypeAST`` ASTノードに入ります。新しいユーザー定義演算子をプロトタイプとして表現するには、 ``PrototypeAST`` ASTノードを次のように拡張する必要があります:
 
 .. code-block:: c++
 
@@ -157,12 +113,7 @@ this:
       unsigned getBinaryPrecedence() const { return Precedence; }
     };
 
-Basically, in addition to knowing a name for the prototype, we now keep
-track of whether it was an operator, and if it was, what precedence
-level the operator is at. The precedence is only used for binary
-operators (as you'll see below, it just doesn't apply for unary
-operators). Now that we have a way to represent the prototype for a
-user-defined operator, we need to parse it:
+基本的に、プロトタイプの名前を知ることに加えて、それが演算子であったかどうか、もしそうなら、演算子がどの優先順位レベルにあるかを追跡します。優先順位は二項演算子にのみ使用されます (以下で見るように、単項演算子には適用されません)。ユーザー定義演算子のプロトタイプを表現する方法ができたので、それを解析する必要があります:
 
 .. code-block:: c++
 
@@ -222,17 +173,9 @@ user-defined operator, we need to parse it:
                                              BinaryPrecedence);
     }
 
-This is all fairly straightforward parsing code, and we have already
-seen a lot of similar code in the past. One interesting part about the
-code above is the couple lines that set up ``FnName`` for binary
-operators. This builds names like "binary@" for a newly defined "@"
-operator. It then takes advantage of the fact that symbol names in the
-LLVM symbol table are allowed to have any character in them, including
-embedded nul characters.
+これはすべて非常に分かりやすい解析コードであり、過去に多くの類似コードをすでに見てきました。上記のコードの興味深い部分の1つは、二項演算子用の ``FnName`` を設定するいくつかの行です。これは、新しく定義された「@」演算子用に「binary@」のような名前を構築します。そして、LLVMシンボルテーブル内のシンボル名には、埋め込まれたnul文字を含む任意の文字を含めることができるという事実を利用しています。
 
-The next interesting thing to add, is codegen support for these binary
-operators. Given our current structure, this is a simple addition of a
-default case for our existing binary operator node:
+次に追加する興味深いものは、これらの二項演算子のcodegenサポートです。現在の構造を考えると、これは既存の二項演算子ノード用のdefaultケースの単純な追加です: 
 
 .. code-block:: c++
 
@@ -267,13 +210,9 @@ default case for our existing binary operator node:
       return Builder->CreateCall(F, Ops, "binop");
     }
 
-As you can see above, the new code is actually really simple. It just
-does a lookup for the appropriate operator in the symbol table and
-generates a function call to it. Since user-defined operators are just
-built as normal functions (because the "prototype" boils down to a
-function with the right name) everything falls into place.
+上記で見ることができるように、新しいコードは実際に非常にシンプルです。シンボルテーブルで適切な演算子を検索し、それに対する関数呼び出しを生成するだけです。ユーザー定義演算子は通常の関数として構築されるだけなので (「prototype」は適切な名前を持つ関数に要約されるため) 、すべてが適切に配置されます。
 
-The final piece of code we are missing, is a bit of top-level magic:
+私たちが見落としているコードの最後の部分は、少しのトップレベルの魔法です: 
 
 .. code-block:: c++
 
@@ -294,24 +233,14 @@ The final piece of code we are missing, is a bit of top-level magic:
       BasicBlock *BB = BasicBlock::Create(*TheContext, "entry", TheFunction);
       ...
 
-Basically, before codegening a function, if it is a user-defined
-operator, we register it in the precedence table. This allows the binary
-operator parsing logic we already have in place to handle it. Since we
-are working on a fully-general operator precedence parser, this is all
-we need to do to "extend the grammar".
+基本的に、関数をコード生成する前に、それがユーザー定義演算子である場合、優先順位テーブルに登録します。これにより、すでに配置されている二項演算子解析ロジックがそれを処理できるようになります。完全に一般的な演算子優先順位parserを扱っているため、これは「文法を拡張する」ために必要なすべてです。
 
-Now we have useful user-defined binary operators. This builds a lot on
-the previous framework we built for other operators. Adding unary
-operators is a bit more challenging, because we don't have any framework
-for it yet - let's see what it takes.
+これで、有用なユーザー定義二項演算子ができました。これは、他の演算子用に構築した以前のフレームワークを大いに活用しています。単項演算子の追加は、まだそのフレームワークがないため、少し挑戦的です。何が必要かを見てみましょう。
 
-User-defined Unary Operators
+ユーザー定義単項演算子
 ============================
 
-Since we don't currently support unary operators in the Kaleidoscope
-language, we'll need to add everything to support them. Above, we added
-simple support for the 'unary' keyword to the lexer. In addition to
-that, we need an AST node:
+現在Kaleidoscope言語では単項演算子をサポートしていないため、それらをサポートするためのすべてを追加する必要があります。上記で、lexerに'unary'キーワードの単純なサポートを追加しました。それに加えて、ASTノードが必要です: 
 
 .. code-block:: c++
 
@@ -327,10 +256,7 @@ that, we need an AST node:
       Value *codegen() override;
     };
 
-This AST node is very simple and obvious by now. It directly mirrors the
-binary operator AST node, except that it only has one child. With this,
-we need to add the parsing logic. Parsing a unary operator is pretty
-simple: we'll add a new function to do it:
+このASTノードは、現在では非常にシンプルで明白です。二項演算子ASTノードを直接反映しており、子が1つしかないことを除いて同じです。これで、解析ロジックを追加する必要があります。単項演算子の解析はかなり簡単です: それを行うための新しい関数を追加します: 
 
 .. code-block:: c++
 
@@ -350,16 +276,9 @@ simple: we'll add a new function to do it:
       return nullptr;
     }
 
-The grammar we add is pretty straightforward here. If we see a unary
-operator when parsing a primary operator, we eat the operator as a
-prefix and parse the remaining piece as another unary operator. This
-allows us to handle multiple unary operators (e.g. "!!x"). Note that
-unary operators can't have ambiguous parses like binary operators can,
-so there is no need for precedence information.
+ここで追加する文法は非常に分かりやすいです。プライマリ演算子を解析する際に単項演算子を見つけた場合、演算子をプレフィックスとして消費し、残りの部分を別の単項演算子として解析します。これにより、複数の単項演算子 (例: 「!!x」) を処理できます。単項演算子は二項演算子のような曖昧な解析を持つことができないため、優先順位情報は必要ないことに注意してください。
 
-The problem with this function, is that we need to call ParseUnary from
-somewhere. To do this, we change previous callers of ParsePrimary to
-call ParseUnary instead:
+この関数の問題は、どこかからParseUnaryを呼び出す必要があることです。これを行うために、ParsePrimaryの以前の呼び出し元を、代わりにParseUnaryを呼び出すように変更します: 
 
 .. code-block:: c++
 
@@ -385,10 +304,7 @@ call ParseUnary instead:
       return ParseBinOpRHS(0, std::move(LHS));
     }
 
-With these two simple changes, we are now able to parse unary operators
-and build the AST for them. Next up, we need to add parser support for
-prototypes, to parse the unary operator prototype. We extend the binary
-operator code above with:
+これら2つの簡単な変更により、単項演算子を解析し、それらのASTを構築できるようになりました。次に、単項演算子プロトタイプを解析するためのプロトタイプのparserサポートを追加する必要があります。上記の二項演算子コードを次のように拡張します: 
 
 .. code-block:: c++
 
@@ -422,10 +338,7 @@ operator code above with:
       case tok_binary:
         ...
 
-As with binary operators, we name unary operators with a name that
-includes the operator character. This assists us at code generation
-time. Speaking of, the final piece we need to add is codegen support for
-unary operators. It looks like this:
+二項演算子と同様に、単項演算子には演算子文字を含む名前を付けます。これはコード生成時に役立ちます。そういえば、追加する必要がある最後の部分は、単項演算子のcodegenサポートです。これは次のようになります: 
 
 .. code-block:: c++
 
@@ -441,19 +354,12 @@ unary operators. It looks like this:
       return Builder->CreateCall(F, OperandV, "unop");
     }
 
-This code is similar to, but simpler than, the code for binary
-operators. It is simpler primarily because it doesn't need to handle any
-predefined operators.
+このコードは、二項演算子のコードと似ていますが、より簡単です。主に事前定義された演算子を処理する必要がないため、より簡単です。
 
-Kicking the Tires
+動作確認
 =================
 
-It is somewhat hard to believe, but with a few simple extensions we've
-covered in the last chapters, we have grown a real-ish language. With
-this, we can do a lot of interesting things, including I/O, math, and a
-bunch of other things. For example, we can now add a nice sequencing
-operator (printd is defined to print out the specified value and a
-newline):
+いくらか信じがたいことですが、最後の数章で扱ったいくつかの簡単な拡張により、実際に近い言語を成長させました。これにより、I/O、数学、その他多くのことを含む多くの興味深いことができます。たとえば、素晴らしい順次演算子を追加できるようになりました (printdは指定された値と改行を印刷するように定義されています) : 
 
 ::
 
@@ -469,7 +375,7 @@ newline):
     789.000000
     Evaluated to 0.000000
 
-We can also define a bunch of other "primitive" operations, such as:
+他にも多くの「プリミティブ」操作を定義できます。例えば: 
 
 ::
 
@@ -512,10 +418,7 @@ We can also define a bunch of other "primitive" operations, such as:
     # and just returns the RHS.
     def binary : 1 (x y) y;
 
-Given the previous if/then/else support, we can also define interesting
-functions for I/O. For example, the following prints out a character
-whose "density" reflects the value passed in: the lower the value, the
-denser the character:
+以前のif/then/elseサポートを考慮すると、I/O用の興味深い関数も定義できます。たとえば、次のものは渡された値を反映した「密度」の文字を印刷します: 値が低いほど、文字はより密になります: 
 
 ::
 
@@ -537,10 +440,7 @@ denser the character:
     **++.
     Evaluated to 0.000000
 
-Based on these simple primitive operations, we can start to define more
-interesting things. For example, here's a little function that determines
-the number of iterations it takes for a certain function in the complex
-plane to diverge:
+これらのシンプルなプリミティブ操作に基づいて、より興味深いものを定義し始めることができます。たとえば、複素平面内の特定の関数が発散するまでに必要な反復数を決定する小さな関数があります: 
 
 ::
 
@@ -558,15 +458,7 @@ plane to diverge:
     def mandelconverge(real imag)
       mandelconverger(real, imag, 0, real, imag);
 
-This "``z = z2 + c``" function is a beautiful little creature that is
-the basis for computation of the `Mandelbrot
-Set <http://en.wikipedia.org/wiki/Mandelbrot_set>`_. Our
-``mandelconverge`` function returns the number of iterations that it
-takes for a complex orbit to escape, saturating to 255. This is not a
-very useful function by itself, but if you plot its value over a
-two-dimensional plane, you can see the Mandelbrot set. Given that we are
-limited to using putchard here, our amazing graphical output is limited,
-but we can whip together something using the density plotter above:
+この「 ``z = z^2 + c``」関数は、 `マンデルブロート集合 <http://en.wikipedia.org/wiki/Mandelbrot_set>`_ の計算の基礎となる美しい小さな生き物です。私たちの ``mandelconverge`` 関数は、複素軌道が脱出するのに必要な反復数を返し、255に飽和します。これは単体では非常に有用な関数ではありませんが、その値を2次元平面上にプロットすると、マンデルブロート集合を見ることができます。ここではputchardの使用に制限されているため、私たちの素晴らしいグラフィカル出力は制限されていますが、上記の密度プロッターを使って何かをまとめることができます:
 
 ::
 
@@ -585,7 +477,7 @@ but we can whip together something using the density plotter above:
       mandelhelp(realstart, realstart+realmag*78, realmag,
                  imagstart, imagstart+imagmag*40, imagmag);
 
-Given this, we can try plotting out the mandelbrot set! Lets try it out:
+これで、マンデルブロート集合をプロットしてみることができます！試してみましょう: 
 
 ::
 
@@ -720,29 +612,16 @@ Given this, we can try plotting out the mandelbrot set! Lets try it out:
     Evaluated to 0.000000
     ready> ^D
 
-At this point, you may be starting to realize that Kaleidoscope is a
-real and powerful language. It may not be self-similar :), but it can be
-used to plot things that are!
+この時点で、Kaleidoscopeが実際の強力な言語であることを理解し始めているかもしれません。自己相似ではないかもしれませんが :) 、自己相似なものをプロットするために使用できます！
 
-With this, we conclude the "adding user-defined operators" chapter of
-the tutorial. We have successfully augmented our language, adding the
-ability to extend the language in the library, and we have shown how
-this can be used to build a simple but interesting end-user application
-in Kaleidoscope. At this point, Kaleidoscope can build a variety of
-applications that are functional and can call functions with
-side-effects, but it can't actually define and mutate a variable itself.
+これで、チュートリアルの「ユーザー定義演算子の追加」章を終了します。私たちは言語を拡張することに成功し、ライブラリで言語を拡張する能力を追加し、これをどのようにしてKaleidoscopeでシンプルだが興味深いエンドユーザーアプリケーションを構築するために使用できるかを示しました。この時点で、Kaleidoscopeは機能的でありながら副作用のある関数を呼び出すことができるさまざまなアプリケーションを構築できますが、実際に変数自体を定義して変更することはできません。
 
-Strikingly, variable mutation is an important feature of some languages,
-and it is not at all obvious how to `add support for mutable
-variables <LangImpl07.html>`_ without having to add an "SSA construction"
-phase to your front-end. In the next chapter, we will describe how you
-can add variable mutation without building SSA in your front-end.
+驚くことに、変数変更は一部の言語の重要な機能であり、フロントエンドに「SSA構築」フェーズを追加することなく `可変変数のサポートを追加 <LangImpl07.html>`_ する方法は全く明白ではありません。次の章では、フロントエンドでSSAを構築することなく変数変更を追加する方法について説明します。
 
-Full Code Listing
+全コードリスト
 =================
 
-Here is the complete code listing for our running example, enhanced with
-the support for user-defined operators. To build this example, use:
+これは実行中の例の完全なコードリストで、ユーザー定義演算子のサポートで強化されています。この例をビルドするには、次を使用してください: 
 
 .. code-block:: bash
 
@@ -751,18 +630,12 @@ the support for user-defined operators. To build this example, use:
     # Run
     ./toy
 
-On some platforms, you will need to specify -rdynamic or
--Wl,--export-dynamic when linking. This ensures that symbols defined in
-the main executable are exported to the dynamic linker and so are
-available for symbol resolution at run time. This is not needed if you
-compile your support code into a shared library, although doing that
-will cause problems on Windows.
+一部のプラットフォームでは、リンク時に-rdynamicまたは-Wl,--export-dynamicを指定する必要があります。これにより、メイン実行ファイルで定義されたシンボルが動的リンカーにエクスポートされ、実行時のシンボル解決で利用できるようになります。サポートコードを共有ライブラリにコンパイルする場合はこれは必要ありませんが、そうするとWindowsで問題が発生します。
 
-Here is the code:
+コードはこちらです: 
 
 .. literalinclude:: ../../../examples/Kaleidoscope/Chapter6/toy.cpp
    :language: c++
 
-`Next: Extending the language: mutable variables / SSA
-construction <LangImpl07.html>`_
+`次: 言語の拡張: 可変変数 / SSA構築 <LangImpl07.html>`_
 

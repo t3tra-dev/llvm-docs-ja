@@ -1,6 +1,6 @@
-=============================================
-My First Language Frontend with LLVM Tutorial
-=============================================
+==========================================
+LLVMを使った初めての言語フロントエンドチュートリアル
+==========================================
 
 .. toctree::
    :hidden:
@@ -16,83 +16,37 @@ My First Language Frontend with LLVM Tutorial
    LangImpl09
    LangImpl10
 
-**Requirements:** This tutorial assumes you know C++, but no previous
-compiler experience is necessary.
+**要件:** このチュートリアルはC++の知識があることを前提としていますが、コンパイラの経験は必要ありません。
 
-Welcome to the "My First Language Frontend with LLVM" tutorial. Here we
-run through the implementation of a simple language, showing
-how fun and easy it can be.  This tutorial will get you up and running
-fast and show a concrete example of something that uses LLVM to generate
-code.
+「LLVMを使った初めての言語フロントエンド」チュートリアルへようこそ。ここでは簡単な言語の実装を実行し、それがいかに楽しく簡単かを示します。このチュートリアルは素早く始められるようになっており、LLVMを使用してコードを生成する具体的な例を示します。
 
-This tutorial introduces the simple "Kaleidoscope" language, building it
-iteratively over the course of several chapters, showing how it is built
-over time. This lets us cover a range of language design and LLVM-specific
-ideas, showing and explaining the code for it all along the way,
-and reduces the overwhelming amount of details up front.  We strongly
-encourage that you *work with this code* - make a copy and hack it up and
-experiment.
+このチュートリアルでは、シンプルな「Kaleidoscope」言語を紹介し、複数の章にわたって反復的に構築し、時間をかけてどのように構築されるかを示します。これにより、言語設計とLLVM固有のアイデアの範囲をカバーし、その過程でコードを示して説明し、最初から圧倒的な量の詳細を減らします。
+*このコードを使って作業する* ことを強く推奨します - コピーを作成してハックアップし、実験してください。
 
-**Warning**: In order to focus on teaching compiler techniques and LLVM
-specifically,
-this tutorial does *not* show best practices in software engineering
-principles.  For example, the code uses global variables
-pervasively, doesn't use
-`visitors <http://en.wikipedia.org/wiki/Visitor_pattern>`_, etc... but
-instead keeps things simple and focuses on the topics at hand.
+**警告**: コンパイル技術とLLVM固有の教育に焦点を当てるため、このチュートリアルはソフトウェア工学の原則におけるベストプラクティスを示して*いません*。たとえば、コードはグローバル変数を広範囲に使用し、`visitor <http://en.wikipedia.org/wiki/Visitor_pattern>`_ を使用しないなど...しかし、代わりに物事をシンプルに保ち、手元のトピックに焦点を当てています。
 
-This tutorial is structured into chapters covering individual topics,
-allowing you to skip ahead as you wish:
+このチュートリアルは個々のトピックをカバーする章に構成されており、希望に応じて先に進むことができます: 
 
--  `Chapter #1: Kaleidoscope language and Lexer <LangImpl01.html>`_ -
-   This shows where we are
-   going and the basic functionality that we want to build.  A lexer
-   is also the first part of building a parser for a language, and we
-   use a simple C++ lexer which is easy to understand.
--  `Chapter #2: Implementing a Parser and AST <LangImpl02.html>`_ -
-   With the lexer in place, we can talk about parsing techniques and
-   basic AST construction. This tutorial describes recursive descent
-   parsing and operator precedence parsing.
--  `Chapter #3: Code generation to LLVM IR <LangImpl03.html>`_ - with
-   the AST ready, we show how easy it is to generate LLVM IR, and show
-   a simple way to incorporate LLVM into your project.
--  `Chapter #4: Adding JIT and Optimizer Support <LangImpl04.html>`_ -
-   One great thing about LLVM is its support for JIT compilation, so
-   we'll dive right into it and show you the 3 lines it takes to add JIT
-   support. Later chapters show how to generate .o files.
--  `Chapter #5: Extending the Language: Control Flow <LangImpl05.html>`_ - With
-   the basic language up and running, we show how to extend
-   it with control flow operations ('if' statement and a 'for' loop). This
-   gives us a chance to talk about SSA construction and control
-   flow.
--  `Chapter #6: Extending the Language: User-defined Operators
-   <LangImpl06.html>`_ - This chapter extends the language to let
-   users define arbitrary unary and binary operators - with assignable
-   precedence!  This allows us to build a significant piece of the
-   "language" as library routines.
--  `Chapter #7: Extending the Language: Mutable Variables
-   <LangImpl07.html>`_ - This chapter talks about adding user-defined local
-   variables along with an assignment operator. This shows how easy it is
-   to construct SSA form in LLVM: LLVM does *not* require your front-end
-   to construct SSA form in order to use it!
--  `Chapter #8: Compiling to Object Files <LangImpl08.html>`_ - This
-   chapter explains how to take LLVM IR and compile it down to object
-   files, like a static compiler does.
--  `Chapter #9: Debug Information <LangImpl09.html>`_ - A real language
-   needs to support debuggers, so we
-   add debug information that allows setting breakpoints in Kaleidoscope
-   functions, print out argument variables, and call functions!
--  `Chapter #10: Conclusion and other tidbits <LangImpl10.html>`_ - This
-   chapter wraps up the series by discussing ways to extend the language
-   and includes pointers to info on "special topics" like adding garbage
-   collection support, exceptions, debugging, support for "spaghetti
-   stacks", etc.
+-  `第1章: Kaleidoscope言語とLexer <LangImpl01.html>`_ -
+   どこを目指しているか、および構築したい基本機能を示します。
+   lexerは言語用のparserを構築する最初の部分でもあり、理解しやすい単純なC++ lexerを使用します。
+-  `第2章: ParserとASTの実装 <LangImpl02.html>`_ -
+   lexerが配置されているので、解析技術と基本的なAST構築について話すことができます。このチュートリアルでは、再帰下降解析と演算子優先順位解析について説明します。
+-  `第3章: LLVM IRへのコード生成 <LangImpl03.html>`_ - 
+   ASTの準備ができたら、LLVM IRの生成がいかに簡単かを示し、プロジェクトにLLVMを組み込む簡単な方法を示します。
+-  `第4章: JITとオプティマイザーサポートの追加 <LangImpl04.html>`_ -
+   LLVMの素晴らしい点の1つはJITコンパイルのサポートであり、すぐにそれに飛び込んでJITサポートを追加するための3行のコードをお見せします。後の章では.oファイルを生成する方法を示します。
+-  `第5章: 言語の拡張: 制御フロー <LangImpl05.html>`_ - 
+   基本言語が動作したら、制御フロー操作 ('if'文と'for'ループ) でそれを拡張する方法を示します。これにSSA構築と制御フローについて話す機会を与えます。
+-  `第6章: 言語の拡張: ユーザー定義演算子 <LangImpl06.html>`_ - 
+   この章では、ユーザーが任意の単項および二項演算子を定義できるように言語を拡張します - 割り当て可能な優先順位で！これにより、"言語"の重要な部分をライブラリルーチンとして構築できます。
+-  `第7章: 言語の拡張: 可変変数 <LangImpl07.html>`_ - 
+   この章では、代入演算子とともにユーザー定義のローカル変数の追加について説明します。LLVMでSSA形式を構築するのがいかに簡単かを示します: LLVMはフロントエンドが使用するためにSSA形式を構築することを必要とし*ません*！
+-  `第8章: オブジェクトファイルへのコンパイル <LangImpl08.html>`_ - 
+   この章では、静的コンパイラーのようにLLVM IRを取得してオブジェクトファイルにコンパイルする方法を説明します。
+-  `第9章: デバッグ情報 <LangImpl09.html>`_ - 
+   実際の言語にはデバッガーのサポートが必要なので、Kaleidoscope関数でブレークポイントを設定し、引数変数を出力し、関数を呼び出すことを可能にするデバッグ情報を追加します！
+-  `第10章: 結論とその他の要素 <LangImpl10.html>`_ - 
+   この章では、言語を拡張する方法について議論し、ガベージコレクションサポート、例外、デバッグ、「スパゲッティスタック」のサポートなどの「特別なトピック」に関する情報への参照を含めて、シリーズをまとめます。
 
-By the end of the tutorial, we'll have written a bit less than 1000 lines
-of (non-comment, non-blank) lines of code. With this small amount of
-code, we'll have built up a nice little compiler for a non-trivial
-language including a hand-written lexer, parser, AST, as well as code
-generation support - both static and JIT!  The breadth of this is a great
-testament to the strengths of LLVM and shows why it is such a popular
-target for language designers and others who need high performance code
-generation.
+チュートリアルの終わりまでに、1000行弱の (コメントなし、空行なし) コード行を書くことになります。この少量のコードで、手書きのlexer、parser、ASTだけでなく、静的とJITの両方のコード生成サポートを含む、非自明な言語用の素晴らしい小さなコンパイラーを構築することができます！これの幅広さはLLVMの強みの素晴らしい証拠であり、言語デザイナーや高性能コード生成を必要とするその他の人々にとってLLVMがなぜそのような人気のターゲットなのかを示しています。

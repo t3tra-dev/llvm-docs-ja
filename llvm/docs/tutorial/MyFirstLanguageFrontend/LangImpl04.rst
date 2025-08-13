@@ -1,45 +1,36 @@
 ==============================================
-Kaleidoscope: Adding JIT and Optimizer Support
+Kaleidoscope: JITとオプティマイザーサポートの追加
 ==============================================
 
 .. contents::
    :local:
 
-Chapter 4 Introduction
-======================
+第4章 はじめに
+==============
 
-Welcome to Chapter 4 of the "`Implementing a language with
-LLVM <index.html>`_" tutorial. Chapters 1-3 described the implementation
-of a simple language and added support for generating LLVM IR. This
-chapter describes two new techniques: adding optimizer support to your
-language, and adding JIT compiler support. These additions will
-demonstrate how to get nice, efficient code for the Kaleidoscope
-language.
+「 `LLVMを使った言語実装 <index.html>`_」チュートリアルの第4章へようこそ。第1-3章ではシンプルな言語の実装とLLVM IRの生成サポートの追加について説明しました。この章では2つの新しい技法について説明します: 言語へのオプティマイザーサポートの追加とJITコンパイラーサポートの追加です。これらの追加により、Kaleidoscope言語で優雅で効率的なコードを得る方法を示します。
 
-Trivial Constant Folding
-========================
+簡単な定数畳み込み
+=================
 
-Our demonstration for Chapter 3 is elegant and easy to extend.
-Unfortunately, it does not produce wonderful code. The IRBuilder,
-however, does give us obvious optimizations when compiling simple code:
+第3章のデモンストレーションは優雅で拡張しやすいものでした。残念ながら、素晴らしいコードを生成しません。しかし、IRBuilderは、シンプルなコードをコンパイルするときに明らかな最適化を提供してくれます: 
 
 ::
 
     ready> def test(x) 1+2+x;
-    Read function definition:
+    関数定義を読み取り:
     define double @test(double %x) {
     entry:
             %addtmp = fadd double 3.000000e+00, %x
             ret double %addtmp
     }
 
-This code is not a literal transcription of the AST built by parsing the
-input. That would be:
+このコードは、入力を解析して構築されたASTの文字通りの転写ではありません。それはこうなります: 
 
 ::
 
     ready> def test(x) 1+2+x;
-    Read function definition:
+    関数定義を読み取り:
     define double @test(double %x) {
     entry:
             %addtmp = fadd double 2.000000e+00, 1.000000e+00
@@ -47,31 +38,18 @@ input. That would be:
             ret double %addtmp1
     }
 
-Constant folding, as seen above, in particular, is a very common and
-very important optimization: so much so that many language implementors
-implement constant folding support in their AST representation.
+上記のような定数畳み込みは、特に非常に一般的で非常に重要な最適化です: 多くの言語実装者がAST表現に定数畳み込みサポートを実装するほどです。
 
-With LLVM, you don't need this support in the AST. Since all calls to
-build LLVM IR go through the LLVM IR builder, the builder itself checked
-to see if there was a constant folding opportunity when you call it. If
-so, it just does the constant fold and return the constant instead of
-creating an instruction.
+LLVMでは、ASTにこのサポートを含める必要はありません。LLVM IRを構築するすべての呼び出しはLLVM IRビルダーを通過するため、ビルダー自体が呼び出し時に定数畳み込みの機会があるかどうかをチェックします。もしあれば、命令を作成する代わりに定数畳み込みを実行し、定数を返します。
 
-Well, that was easy :). In practice, we recommend always using
-``IRBuilder`` when generating code like this. It has no "syntactic
-overhead" for its use (you don't have to uglify your compiler with
-constant checks everywhere) and it can dramatically reduce the amount of
-LLVM IR that is generated in some cases (particular for languages with a
-macro preprocessor or that use a lot of constants).
+あ、簡単でした :) 。実際には、このようなコードを生成するときは常に ``IRBuilder`` を使用することを推奨します。使用に際して「構文オーバーヘッド」がなく (どこでも定数チェックでコンパイラーを醇くする必要がない) 、いくつかのケースで生成されるLLVM IRの量を劇的に減らすことができます (特にマクロプリプロセッサーを持つ言語や定数を多用する言語に対して) 。
 
-On the other hand, the ``IRBuilder`` is limited by the fact that it does
-all of its analysis inline with the code as it is built. If you take a
-slightly more complex example:
+一方、 ``IRBuilder`` は、コードが構築されるときにすべての分析をインラインで行うという事実によって制約されています。もう少し複雑な例を取ってみると: 
 
 ::
 
     ready> def test(x) (1+2+x)*(x+(1+2));
-    ready> Read function definition:
+    ready> 関数定義を読み取り:
     define double @test(double %x) {
     entry:
             %addtmp = fadd double 3.000000e+00, %x
@@ -80,57 +58,22 @@ slightly more complex example:
             ret double %multmp
     }
 
-In this case, the LHS and RHS of the multiplication are the same value.
-We'd really like to see this generate "``tmp = x+3; result = tmp*tmp;``"
-instead of computing "``x+3``" twice.
+この場合、乗算のLHSとRHSは同じ値です。「 ``x+3``」を二度計算する代わりに「 ``tmp = x+3; result = tmp*tmp;``」を生成してくれることを望んでいます。
 
-Unfortunately, no amount of local analysis will be able to detect and
-correct this. This requires two transformations: reassociation of
-expressions (to make the adds lexically identical) and Common
-Subexpression Elimination (CSE) to delete the redundant add instruction.
-Fortunately, LLVM provides a broad range of optimizations that you can
-use, in the form of "passes".
+残念ながら、どんなにローカル分析を行っても、これを検出して修正することはできません。これには2つの変換が必要です: 式の再結合 (加算を辞書的に同一にするため) と共通部分式除去 (CSE) で冗長な加算命令を削除することです。幸いなことに、LLVMは「パス」の形で使用できる幅広い最適化を提供しています。
 
-LLVM Optimization Passes
-========================
+LLVM最適化パス
+================
 
-LLVM provides many optimization passes, which do many different sorts of
-things and have different tradeoffs. Unlike other systems, LLVM doesn't
-hold to the mistaken notion that one set of optimizations is right for
-all languages and for all situations. LLVM allows a compiler implementor
-to make complete decisions about what optimizations to use, in which
-order, and in what situation.
+LLVMは多くの最適化パスを提供しており、さまざまな種類のことを行い、異なるトレードオフを持っています。他のシステムとは異なり、LLVMはすべての言語とすべての状況に対して1組の最適化が正しいという誤った概念を持ちません。LLVMはコンパイラー実装者が、どの最適化を使用し、どの順序で、どのような状況で使用するかについて完全な決定を下すことを可能にしています。
 
-As a concrete example, LLVM supports both "whole module" passes, which
-look across as large of body of code as they can (often a whole file,
-but if run at link time, this can be a substantial portion of the whole
-program). It also supports and includes "per-function" passes which just
-operate on a single function at a time, without looking at other
-functions. For more information on passes and how they are run, see the
-`How to Write a Pass <../../WritingAnLLVMPass.html>`_ document and the
-`List of LLVM Passes <../../Passes.html>`_.
+具体例として、LLVMは「モジュール全体」パスをサポートしており、これらは可能な限り大きなコード本体を横断的に見ます (多くの場合ファイル全体ですが、リンク時に実行された場合、プログラム全体のかなりの部分になることがあります)。また、他の関数を見ることなく一度に単一の関数でのみ動作する「関数ごと」パスもサポートしており、含んでいます。パスとその実行方法の詳細については、 `How to Write a Pass <../../WritingAnLLVMPass.html>`_ ドキュメントと `List of LLVM Passes <../../Passes.html>`_ を参照してください。
 
-For Kaleidoscope, we are currently generating functions on the fly, one
-at a time, as the user types them in. We aren't shooting for the
-ultimate optimization experience in this setting, but we also want to
-catch the easy and quick stuff where possible. As such, we will choose
-to run a few per-function optimizations as the user types the function
-in. If we wanted to make a "static Kaleidoscope compiler", we would use
-exactly the code we have now, except that we would defer running the
-optimizer until the entire file has been parsed.
+Kaleidoscopeでは、現在、ユーザーが入力するたびに関数を一つずつオンザフライで生成しています。この設定では究極の最適化体験を目指してはいませんが、可能な場合は簡単で迅速なものを捉えたいと思います。そのため、ユーザーが関数を入力する際にいくつかの関数ごとの最適化を実行することを選択します。「静的なKaleidoscopeコンパイラー」を作成したい場合は、ファイル全体が解析されるまで最適化の実行を延期する以外は、現在持っているコードとまったく同じものを使用するでしょう。
 
-In addition to the distinction between function and module passes, passes can be
-divided into transform and analysis passes. Transform passes mutate the IR, and
-analysis passes compute information that other passes can use. In order to add
-a transform pass, all analysis passes it depends upon must be registered in
-advance.
+関数パスとモジュールパスの区別に加えて、パスは変換パスと解析パスに分けることができます。変換パスはIRを変更し、解析パスは他のパスが使用できる情報を計算します。変換パスを追加するために、それが依存するすべての解析パスを事前に登録する必要があります。
 
-In order to get per-function optimizations going, we need to set up a
-`FunctionPassManager <../../WritingAnLLVMPass.html#what-passmanager-doesr>`_ to hold
-and organize the LLVM optimizations that we want to run. Once we have
-that, we can add a set of optimizations to run. We'll need a new
-FunctionPassManager for each module that we want to optimize, so we'll
-add to a function created in the previous chapter (``InitializeModule()``):
+関数ごとの最適化を実行するために、実行したいLLVM最適化を保持し、組織化するための `FunctionPassManager <../../WritingAnLLVMPass.html#what-passmanager-doesr>`_ を設定する必要があります。それができたら、実行する最適化のセットを追加できます。最適化したい各モジュールに新しいFunctionPassManagerが必要なので、前の章で作成した関数 (``InitializeModule()``) に追加します:
 
 .. code-block:: c++
 
@@ -155,15 +98,9 @@ add to a function created in the previous chapter (``InitializeModule()``):
       TheSI->registerCallbacks(*ThePIC, TheMAM.get());
       ...
 
-After initializing the global module ``TheModule`` and the FunctionPassManager,
-we need to initialize other parts of the framework. The four AnalysisManagers
-allow us to add analysis passes that run across the four levels of the IR
-hierarchy. PassInstrumentationCallbacks and StandardInstrumentations are
-required for the pass instrumentation framework, which allows developers to
-customize what happens between passes.
+グローバルモジュール ``TheModule`` とFunctionPassManagerを初期化した後、フレームワークの他の部分を初期化する必要があります。4つのAnalysisManagerは、IR階層の4つのレベル全体で実行される解析パスを追加することを可能にします。PassInstrumentationCallbacksとStandardInstrumentationsは、開発者がパス間で何が起こるかをカスタマイズできるようにするパス計装フレームワークに必要です。
 
-Once these managers are set up, we use a series of "addPass" calls to add a
-bunch of LLVM transform passes:
+これらのマネージャーが設定されたら、一連の"addPass"呼び出しを使用して多くのLLVM変換パスを追加します: 
 
 .. code-block:: c++
 
@@ -177,12 +114,9 @@ bunch of LLVM transform passes:
       // Simplify the control flow graph (deleting unreachable blocks, etc).
       TheFPM->addPass(SimplifyCFGPass());
 
-In this case, we choose to add four optimization passes.
-The passes we choose here are a pretty standard set
-of "cleanup" optimizations that are useful for a wide variety of code. I won't
-delve into what they do but, believe me, they are a good starting place :).
+この場合、4つの最適化パスを追加することを選択します。ここで選択するパスは、幅広い種類のコードに有用な「クリーンアップ」最適化のかなり標準的なセットです。それらが何をするかについては深く立ち入りませんが、間違いなく良い出発点です :)。
 
-Next, we register the analysis passes used by the transform passes.
+次に、変換パスで使用される解析パスを登録します。
 
 .. code-block:: c++
 
@@ -193,9 +127,7 @@ Next, we register the analysis passes used by the transform passes.
       PB.crossRegisterProxies(*TheLAM, *TheFAM, *TheCGAM, *TheMAM);
     }
 
-Once the PassManager is set up, we need to make use of it. We do this by
-running it after our newly created function is constructed (in
-``FunctionAST::codegen()``), but before it is returned to the client:
+PassManagerが設定されたら、それを使用する必要があります。これは、新しく作成された関数が構築された後 (``FunctionAST::codegen()`` 内で) に、しかしクライアントに返される前に実行することで行います: 
 
 .. code-block:: c++
 
@@ -212,10 +144,7 @@ running it after our newly created function is constructed (in
         return TheFunction;
       }
 
-As you can see, this is pretty straightforward. The
-``FunctionPassManager`` optimizes and updates the LLVM Function\* in
-place, improving (hopefully) its body. With this in place, we can try
-our test above again:
+ご覧のように、これはかなり単純明快です。 ``FunctionPassManager`` はLLVM Function\* をその場で最適化および更新し、 (うまくいけば) その本体を改善します。これが配置されたことで、上記のテストを再び試すことができます: 
 
 ::
 
@@ -228,42 +157,20 @@ our test above again:
             ret double %multmp
     }
 
-As expected, we now get our nicely optimized code, saving a floating
-point add instruction from every execution of this function.
+期待通り、この関数の実行ごとに浮動小数点加算命令を節約して、素晴らしく最適化されたコードが得られるようになりました。
 
-LLVM provides a wide variety of optimizations that can be used in
-certain circumstances. Some `documentation about the various
-passes <../../Passes.html>`_ is available, but it isn't very complete.
-Another good source of ideas can come from looking at the passes that
-``Clang`` runs to get started. The "``opt``" tool allows you to
-experiment with passes from the command line, so you can see if they do
-anything.
+LLVMは特定の状況で使用できる多種多様な最適化を提供しています。 `様々なパスに関するドキュメント <../../Passes.html>`_ が利用可能ですが、あまり完全ではありません。アイデアのもう一つの良い情報源は、 ``Clang`` が実行するパスを見ることから得られます。"``opt``" ツールを使用すると、コマンドラインからパスを実験できるため、それらが何かを行うかどうかを確認できます。
 
-Now that we have reasonable code coming out of our front-end, let's talk
-about executing it!
+フロントエンドから妥当なコードが出力されるようになったので、それを実行することについて説明しましょう！
 
-Adding a JIT Compiler
+JITコンパイラーを追加する
 =====================
 
-Code that is available in LLVM IR can have a wide variety of tools
-applied to it. For example, you can run optimizations on it (as we did
-above), you can dump it out in textual or binary forms, you can compile
-the code to an assembly file (.s) for some target, or you can JIT
-compile it. The nice thing about the LLVM IR representation is that it
-is the "common currency" between many different parts of the compiler.
+LLVM IRで利用可能なコードには、様々なツールを適用できます。たとえば、 (上記で行ったように) 最適化を実行したり、テキストまたはバイナリ形式でダンプしたり、何らかのターゲットに対してアセンブリファイル (.s) にコンパイルしたり、JITコンパイルしたりできます。LLVM IR表現の良い点は、コンパイラーの多くの異なる部分間で「共通通貨」であることです。
 
-In this section, we'll add JIT compiler support to our interpreter. The
-basic idea that we want for Kaleidoscope is to have the user enter
-function bodies as they do now, but immediately evaluate the top-level
-expressions they type in. For example, if they type in "1 + 2;", we
-should evaluate and print out 3. If they define a function, they should
-be able to call it from the command line.
+このセクションでは、インタープリターにJITコンパイラーサポートを追加します。Kaleidoscopeで望んでいる基本的なアイデアは、ユーザーが現在のように関数本体を入力しつつ、入力したトップレベル式を即座に評価することです。たとえば、"1 + 2;" と入力した場合、3を評価して印刷するべきです。関数を定義した場合、コマンドラインからそれを呼び出すことができるべきです。
 
-In order to do this, we first prepare the environment to create code for
-the current native target and declare and initialize the JIT. This is
-done by calling some ``InitializeNativeTarget\*`` functions and
-adding a global variable ``TheJIT``, and initializing it in
-``main``:
+これを行うために、まず現在のネイティブターゲット用のコードを作成するための環境を準備し、JITを宣言および初期化します。これは、いくつかの ``InitializeNativeTarget\*`` 関数を呼び出し、グローバル変数 ``TheJIT`` を追加し、 ``main`` で初期化することで行われます: 
 
 .. code-block:: c++
 
@@ -293,7 +200,7 @@ adding a global variable ``TheJIT``, and initializing it in
       return 0;
     }
 
-We also need to setup the data layout for the JIT:
+また、JIT用のデータレイアウトも設定する必要があります: 
 
 .. code-block:: c++
 
@@ -310,18 +217,9 @@ We also need to setup the data layout for the JIT:
       TheFPM = std::make_unique<legacy::FunctionPassManager>(TheModule.get());
       ...
 
-The KaleidoscopeJIT class is a simple JIT built specifically for these
-tutorials, available inside the LLVM source code
-at `llvm-src/examples/Kaleidoscope/include/KaleidoscopeJIT.h
-<https://github.com/llvm/llvm-project/blob/main/llvm/examples/Kaleidoscope/include/KaleidoscopeJIT.h>`_.
-In later chapters we will look at how it works and extend it with
-new features, but for now we will take it as given. Its API is very simple:
-``addModule`` adds an LLVM IR module to the JIT, making its functions
-available for execution (with its memory managed by a ``ResourceTracker``); and
-``lookup`` allows us to look up pointers to the compiled code.
+KaleidoscopeJITクラスは、これらのチュートリアル専用に構築されたシンプルなJITで、LLVMソースコード内の `llvm-src/examples/Kaleidoscope/include/KaleidoscopeJIT.h <https://github.com/llvm/llvm-project/blob/main/llvm/examples/Kaleidoscope/include/KaleidoscopeJIT.h>`_ で利用可能です。後の章では、それがどのように動作するかを見て、新機能で拡張しますが、今のところは既存のものとして受け取ります。そのAPIは非常にシンプルです: ``addModule`` はLLVM IRモジュールをJITに追加し、その関数を実行可能にします (メモリは ``ResourceTracker`` によって管理される) ；また ``lookup`` はコンパイルされたコードへのポインターを検索することを可能にします。
 
-We can take this simple API and change our code that parses top-level expressions to
-look like this:
+このシンプルなAPIを使用して、トップレベル式を解析するコードを次のように変更できます: 
 
 .. code-block:: c++
 
@@ -352,34 +250,15 @@ look like this:
           ExitOnErr(RT->remove());
         }
 
-If parsing and codegen succeed, the next step is to add the module containing
-the top-level expression to the JIT. We do this by calling addModule, which
-triggers code generation for all the functions in the module, and accepts a
-``ResourceTracker`` which can be used to remove the module from the JIT later. Once the module
-has been added to the JIT it can no longer be modified, so we also open a new
-module to hold subsequent code by calling ``InitializeModuleAndPassManager()``.
+解析とコード生成が成功した場合、次のステップはトップレベル式を含むモジュールをJITに追加することです。これは、モジュール内のすべての関数のコード生成をトリガーし、後でJITからモジュールを削除するために使用できる ``ResourceTracker`` を受け取るaddModuleを呼び出すことで行います。モジュールがJITに追加されると、それ以上変更することはできないため、 ``InitializeModuleAndPassManager()`` を呼び出して後続のコードを保持する新しいモジュールも開きます。
 
-Once we've added the module to the JIT we need to get a pointer to the final
-generated code. We do this by calling the JIT's ``lookup`` method, and passing
-the name of the top-level expression function: ``__anon_expr``. Since we just
-added this function, we assert that ``lookup`` returned a result.
+モジュールをJITに追加したら、最終生成されたコードへのポインターを取得する必要があります。これは、JITの ``lookup`` メソッドを呼び出し、トップレベル式関数の名前: ``__anon_expr`` を渡すことで行います。この関数を追加したばかりなので、``lookup`` が結果を返すことをアサートします。
 
-Next, we get the in-memory address of the ``__anon_expr`` function by calling
-``getAddress()`` on the symbol. Recall that we compile top-level expressions
-into a self-contained LLVM function that takes no arguments and returns the
-computed double. Because the LLVM JIT compiler matches the native platform ABI,
-this means that you can just cast the result pointer to a function pointer of
-that type and call it directly. This means, there is no difference between JIT
-compiled code and native machine code that is statically linked into your
-application.
+次に、シンボル上で ``getAddress()`` を呼び出すことで、 ``__anon_expr`` 関数のインメモリアドレスを取得します。トップレベル式を、引数を取らず、計算されたdoubleを返す独立したLLVM関数にコンパイルすることを思い出してください。LLVM JITコンパイラーはネイティブプラットフォームABIと一致するため、結果ポインターをその型の関数ポインターにキャストして直接呼び出すことができます。つまり、JITコンパイルされたコードとアプリケーションに静的にリンクされたネイティブマシンコードの間に違いはありません。
 
-Finally, since we don't support re-evaluation of top-level expressions, we
-remove the module from the JIT when we're done to free the associated memory.
-Recall, however, that the module we created a few lines earlier (via
-``InitializeModuleAndPassManager``) is still open and waiting for new code to be
-added.
+最後に、トップレベル式の再評価をサポートしていないため、完了時にJITからモジュールを削除して、関連するメモリを解放します。ただし、数行前に作成したモジュール (``InitializeModuleAndPassManager`` 経由) はまだ開いており、新しいコードが追加されるのを待っていることを思い出してください。
 
-With just these two changes, let's see how Kaleidoscope works now!
+これらのたった2つの変更で、Kaleidoscopeが今どのように動作するかを見てみましょう！
 
 ::
 
@@ -392,10 +271,7 @@ With just these two changes, let's see how Kaleidoscope works now!
 
     Evaluated to 9.000000
 
-Well this looks like it is basically working. The dump of the function
-shows the "no argument function that always returns double" that we
-synthesize for each top-level expression that is typed in. This
-demonstrates very basic functionality, but can we do more?
+これは基本的に動作しているように見えます。関数のダンプは、入力される各トップレベル式に対して合成する「常にdoubleを返す引数なし関数」を示しています。これは非常に基本的な機能を実証していますが、もっと多くのことができるでしょうか？
 
 ::
 
@@ -422,27 +298,11 @@ demonstrates very basic functionality, but can we do more?
     ready> LLVM ERROR: Program used external function 'testfunc' which could not be resolved!
 
 
-Function definitions and calls also work, but something went very wrong on that
-last line. The call looks valid, so what happened? As you may have guessed from
-the API a Module is a unit of allocation for the JIT, and testfunc was part
-of the same module that contained anonymous expression. When we removed that
-module from the JIT to free the memory for the anonymous expression, we deleted
-the definition of ``testfunc`` along with it. Then, when we tried to call
-testfunc a second time, the JIT could no longer find it.
+関数定義と呼び出しも動作しますが、最後の行で何か非常に間違ったことが起きました。呼び出しは有効に見えるので、何が起きたのでしょうか？APIから推測されるかもしれませんが、ModuleはJITの割り当て単位であり、testfuncは匿名式を含む同じモジュールの一部でした。匿名式のメモリを解放するためにそのモジュールをJITから削除したとき、 ``testfunc`` の定義も一緒に削除しました。その後、testfuncを二度目に呼び出そうとしたとき、JITはもうそれを見つけることができませんでした。
 
-The easiest way to fix this is to put the anonymous expression in a separate
-module from the rest of the function definitions. The JIT will happily resolve
-function calls across module boundaries, as long as each of the functions called
-has a prototype, and is added to the JIT before it is called. By putting the
-anonymous expression in a different module we can delete it without affecting
-the rest of the functions.
+これを修正する最も簡単な方法は、匿名式を他の関数定義とは別のモジュールに置くことです。JITは、呼び出される関数のそれぞれがプロトタイプを持ち、呼び出される前にJITに追加されている限り、モジュール境界を跨いだ関数呼び出しを幸いにも解決します。匿名式を別のモジュールに置くことで、他の関数に影響を与えることなくそれを削除できます。
 
-In fact, we're going to go a step further and put every function in its own
-module. Doing so allows us to exploit a useful property of the KaleidoscopeJIT
-that will make our environment more REPL-like: Functions can be added to the
-JIT more than once (unlike a module where every function must have a unique
-definition). When you look up a symbol in KaleidoscopeJIT it will always return
-the most recent definition:
+実際には、さらに一歩進んで、すべての関数をそれぞれ独自のモジュールに置くつもりです。こうすることで、環境をよりREPL風にするKaleidoscopeJITの有用な特性を利用できます: 関数はJITに複数回追加できます (すべての関数が一意な定義を持たなければならないモジュールとは異なり) 。KaleidoscopeJITでシンボルを検索すると、常に最新の定義が返されます: 
 
 ::
 
@@ -468,8 +328,7 @@ the most recent definition:
     Evaluated to 4.000000
 
 
-To allow each function to live in its own module we'll need a way to
-re-generate previous function declarations into each new module we open:
+各関数が独自のモジュールに生存できるようにするためには、開く各新しいモジュールに以前の関数宣言を再生成する方法が必要です: 
 
 .. code-block:: c++
 
@@ -510,18 +369,9 @@ re-generate previous function declarations into each new module we open:
         return nullptr;
 
 
-To enable this, we'll start by adding a new global, ``FunctionProtos``, that
-holds the most recent prototype for each function. We'll also add a convenience
-method, ``getFunction()``, to replace calls to ``TheModule->getFunction()``.
-Our convenience method searches ``TheModule`` for an existing function
-declaration, falling back to generating a new declaration from FunctionProtos if
-it doesn't find one. In ``CallExprAST::codegen()`` we just need to replace the
-call to ``TheModule->getFunction()``. In ``FunctionAST::codegen()`` we need to
-update the FunctionProtos map first, then call ``getFunction()``. With this
-done, we can always obtain a function declaration in the current module for any
-previously declared function.
+これを有効にするために、まず各関数の最新のプロトタイプを保持する新しいグローバル ``FunctionProtos`` を追加します。また、 ``TheModule->getFunction()`` への呼び出しを置き換える便利メソッド ``getFunction()`` も追加します。私たちの便利メソッドは ``TheModule`` で既存の関数宣言を検索し、見つからない場合はFunctionProtosから新しい宣言を生成することにフォールバックします。 ``CallExprAST::codegen()`` では、 ``TheModule->getFunction()`` への呼び出しを置き換えるだけです。 ``FunctionAST::codegen()`` では、まずPunctionProtosマップを更新し、それから ``getFunction()`` を呼び出す必要があります。これで、以前に宣言された任意の関数について、現在のモジュール内で常に関数宣言を取得できるようになりました。
 
-We also need to update HandleDefinition and HandleExtern:
+HandleDefinitionとHandleExternも更新する必要があります: 
 
 .. code-block:: c++
 
@@ -555,17 +405,14 @@ We also need to update HandleDefinition and HandleExtern:
       }
     }
 
-In HandleDefinition, we add two lines to transfer the newly defined function to
-the JIT and open a new module. In HandleExtern, we just need to add one line to
-add the prototype to FunctionProtos.
+HandleDefinitionでは、新しく定義された関数をJITに転送し、新しいモジュールを開くために2行を追加します。HandleExternでは、プロトタイプをFunctionProtosに追加するために1行だけ追加する必要があります。
 
 .. warning::
-    Duplication of symbols in separate modules is not allowed since LLVM-9. That means you can not redefine function in your Kaleidoscope as its shown below. Just skip this part.
+    LLVM-9以降、別々のモジュール内でのシンボルの重複は許可されていません。これは、以下で示されるようにKaleidoscopeで関数を再定義できないことを意味します。この部分はスキップしてください。
 
-    The reason is that the newer OrcV2 JIT APIs are trying to stay very close to the static and dynamic linker rules, including rejecting duplicate symbols. Requiring symbol names to be unique allows us to support concurrent compilation for symbols using the (unique) symbol names as keys for tracking.
+    理由は、新しいOrcV2 JIT APIが静的および動的リンカーのルールに可能な限り近づこうとしており、重複シンボルの拒否も含まれているためです。シンボル名を一意にすることを要求することにより、 (一意の) シンボル名を追跡のキーとして使用して、シンボルの並行コンパイルをサポートできるようになります。
 
-With these changes made, let's try our REPL again (I removed the dump of the
-anonymous functions this time, you should get the idea by now :) :
+これらの変更を行ったら、再びREPLを試してみましょう (今回は匿名関数のダンプを削除しました。もうアイデアは分かっているはずです :) ) : 
 
 ::
 
@@ -577,10 +424,9 @@ anonymous functions this time, you should get the idea by now :) :
     ready> foo(2);
     Evaluated to 4.000000
 
-It works!
+動作します！
 
-Even with this simple code, we get some surprisingly powerful capabilities -
-check this out:
+このシンプルなコードでも、驚くほど強力な機能が得られます - これをチェックしてください: 
 
 ::
 
@@ -623,27 +469,11 @@ check this out:
 
     Evaluated to 1.000000
 
-Whoa, how does the JIT know about sin and cos? The answer is surprisingly
-simple: The KaleidoscopeJIT has a straightforward symbol resolution rule that
-it uses to find symbols that aren't available in any given module: First
-it searches all the modules that have already been added to the JIT, from the
-most recent to the oldest, to find the newest definition. If no definition is
-found inside the JIT, it falls back to calling "``dlsym("sin")``" on the
-Kaleidoscope process itself. Since "``sin``" is defined within the JIT's
-address space, it simply patches up calls in the module to call the libm
-version of ``sin`` directly. But in some cases this even goes further:
-as sin and cos are names of standard math functions, the constant folder
-will directly evaluate the function calls to the correct result when called
-with constants like in the "``sin(1.0)``" above.
+おっと、JITはsinやcosについてどのように知っているのでしょうか？答えは驚くほどシンプルです: KaleidoscopeJITは、特定のモジュールで利用できないシンボルを見つけるために使用する単純なシンボル解決ルールを持っています: まず、最新から最古まで、JITにすでに追加されたすべてのモジュールを検索して、最新の定義を見つけます。JIT内で定義が見つからない場合、Kaleidoscopeプロセス自体で"``dlsym("sin")``"を呼び出すことにフォールバックします。"``sin``"がJITのアドレス空間内で定義されているため、モジュール内の呼び出しをlibm版の ``sin`` を直接呼び出すように単純にパッチします。しかし、いくつかのケースではこれはさらに進みます: sinやcosは標準数学関数の名前であるため、上記の"``sin(1.0)``"のように定数で呼び出されたとき、定数畳み込み器が関数呼び出しを正しい結果に直接評価します。
 
-In the future we'll see how tweaking this symbol resolution rule can be used to
-enable all sorts of useful features, from security (restricting the set of
-symbols available to JIT'd code), to dynamic code generation based on symbol
-names, and even lazy compilation.
+将来的には、このシンボル解決ルールを調整することで、セキュリティ (JITされたコードで利用可能なシンボルのセットを制限) から、シンボル名に基づいた動的コード生成、さらには遅延コンパイルまで、あらゆる種類の有用な機能を有効にするためにどのように使用できるかを見ていきます。
 
-One immediate benefit of the symbol resolution rule is that we can now extend
-the language by writing arbitrary C++ code to implement operations. For example,
-if we add:
+シンボル解決ルールの即座の利点の一つは、操作を実装するために任意のC++コードを書くことで言語を拡張できることです。たとえば、以下を追加する場合:
 
 .. code-block:: c++
 
@@ -659,27 +489,15 @@ if we add:
       return 0;
     }
 
-Note, that for Windows we need to actually export the functions because
-the dynamic symbol loader will use ``GetProcAddress`` to find the symbols.
+注意: Windowsでは、動的シンボルローダーが ``GetProcAddress`` を使用してシンボルを見つけるため、実際に関数をエクスポートする必要があります。
+これで、「 ``extern putchard(x); putchard(120);``」のようなものを使用してコンソールにシンプルな出力を生成できます。これはコンソールに小文字の'x'を印刷します (120は'x'のASCIIコードです) 。同様のコードを使用して、Kaleidoscopeでファイル I/O、コンソール入力、その他多くの機能を実装できます。
+これでKaleidoscopeチュートリアルのJITおよびオプティマイザーの章が完了しました。この時点で、チューリング非完全なプログラミング言語をコンパイルし、ユーザー主導で最適化およびJITコンパイルできます。
+次は `制御フロー構成で言語を拡張 <LangImpl05.html>`_ し、その道筋で興味深いLLVM IRの問題に取り組んでいきます。
 
-Now we can produce simple output to the console by using things like:
-"``extern putchard(x); putchard(120);``", which prints a lowercase 'x'
-on the console (120 is the ASCII code for 'x'). Similar code could be
-used to implement file I/O, console input, and many other capabilities
-in Kaleidoscope.
-
-This completes the JIT and optimizer chapter of the Kaleidoscope
-tutorial. At this point, we can compile a non-Turing-complete
-programming language, optimize and JIT compile it in a user-driven way.
-Next up we'll look into `extending the language with control flow
-constructs <LangImpl05.html>`_, tackling some interesting LLVM IR issues
-along the way.
-
-Full Code Listing
+完全なコードリスト
 =================
 
-Here is the complete code listing for our running example, enhanced with
-the LLVM JIT and optimizer. To build this example, use:
+これはLLVM JITとオプティマイザーで拡張された実行中の例の完全なコードリストです。この例をビルドするには、以下を使用してください: 
 
 .. code-block:: bash
 
@@ -688,14 +506,12 @@ the LLVM JIT and optimizer. To build this example, use:
     # Run
     ./toy
 
-If you are compiling this on Linux, make sure to add the "-rdynamic"
-option as well. This makes sure that the external functions are resolved
-properly at runtime.
+Linuxでコンパイルしている場合は、"-rdynamic"オプションも必ず追加してください。これにより、外部関数が実行時に正しく解決されることが保証されます。
 
-Here is the code:
+コードはこちらです: 
 
 .. literalinclude:: ../../../examples/Kaleidoscope/Chapter4/toy.cpp
    :language: c++
 
-`Next: Extending the language: control flow <LangImpl05.html>`_
+`次: 言語の拡張: 制御フロー <LangImpl05.html>`_
 

@@ -1,40 +1,23 @@
 =======================================================
-Kaleidoscope: Extending the Language: Mutable Variables
+Kaleidoscope: 言語の拡張: 可変変数
 =======================================================
 
 .. contents::
    :local:
 
-Chapter 7 Introduction
-======================
+第7章 はじめに
+==============
 
-Welcome to Chapter 7 of the "`Implementing a language with
-LLVM <index.html>`_" tutorial. In chapters 1 through 6, we've built a
-very respectable, albeit simple, `functional programming
-language <http://en.wikipedia.org/wiki/Functional_programming>`_. In our
-journey, we learned some parsing techniques, how to build and represent
-an AST, how to build LLVM IR, and how to optimize the resultant code as
-well as JIT compile it.
+「 `LLVMを使った言語実装 <index.html>`_」チュートリアルの第7章へようこそ。第1-6章では、シンプルながらも非常に立派な `関数型プログラミング言語 <http://en.wikipedia.org/wiki/Functional_programming>`_ を構築してきました。その過程で、解析技法、ASTの構築と表現方法、LLVM IRの構築、結果として生じるコードの最適化とJITコンパイルの方法を学びました。
 
-While Kaleidoscope is interesting as a functional language, the fact
-that it is functional makes it "too easy" to generate LLVM IR for it. In
-particular, a functional language makes it very easy to build LLVM IR
-directly in `SSA
-form <http://en.wikipedia.org/wiki/Static_single_assignment_form>`_.
-Since LLVM requires that the input code be in SSA form, this is a very
-nice property and it is often unclear to newcomers how to generate code
-for an imperative language with mutable variables.
+Kaleidoscopeは関数型言語として興味深いものの、関数型であるという事実により、それに対するLLVM IRの生成が「過度に簡単」になっています。特に、関数型言語では、LLVM IRを直接 `SSA形式 <http://en.wikipedia.org/wiki/Static_single_assignment_form>`_ で構築することが非常に簡単です。LLVMでは入力コードがSSA形式であることが必要であるため、これは非常に良い性質ですが、可変変数を持つ命令型言語のコードを生成する方法は、初心者にとっては不明確なことがよくあります。
 
-The short (and happy) summary of this chapter is that there is no need
-for your front-end to build SSA form: LLVM provides highly tuned and
-well tested support for this, though the way it works is a bit
-unexpected for some.
+この章の短い (そして嬉しい) 要約は、フロントエンドがSSA形式を構築する必要はないということです: LLVMは、これに対して高度に調整されよくテストされたサポートを提供していますが、その動作方法は一部の人にとっては少し予期しないものです。
 
-Why is this a hard problem?
-===========================
+なぜこれは困難な問題なのか？
+=============================
 
-To understand why mutable variables cause complexities in SSA
-construction, consider this extremely simple C example:
+可変変数がSSA構築で複雑性を引き起こす理由を理解するため、この極めてシンプルなC言語の例を考えてみましょう: 
 
 .. code-block:: c
 
@@ -48,15 +31,12 @@ construction, consider this extremely simple C example:
       return X;
     }
 
-In this case, we have the variable "X", whose value depends on the path
-executed in the program. Because there are two different possible values
-for X before the return instruction, a PHI node is inserted to merge the
-two values. The LLVM IR that we want for this example looks like this:
+この場合、変数「X」の値は、プログラムで実行されるパスに依存します。return命令の前にXには2つの異なる可能な値があるため、PHIノードが2つの値をマージするために挿入されます。この例で求めるLLVM IRは次のようになります: 
 
 .. code-block:: llvm
 
-    @G = weak global i32 0   ; type of @G is i32*
-    @H = weak global i32 0   ; type of @H is i32*
+    @G = weak global i32 0   ; @Gの型はi32*
+    @H = weak global i32 0   ; @Hの型はi32*
 
     define i32 @test(i1 %Condition) {
     entry:
@@ -75,110 +55,65 @@ two values. The LLVM IR that we want for this example looks like this:
       ret i32 %X.2
     }
 
-In this example, the loads from the G and H global variables are
-explicit in the LLVM IR, and they live in the then/else branches of the
-if statement (cond\_true/cond\_false). In order to merge the incoming
-values, the X.2 phi node in the cond\_next block selects the right value
-to use based on where control flow is coming from: if control flow comes
-from the cond\_false block, X.2 gets the value of X.1. Alternatively, if
-control flow comes from cond\_true, it gets the value of X.0. The intent
-of this chapter is not to explain the details of SSA form. For more
-information, see one of the many `online
-references <http://en.wikipedia.org/wiki/Static_single_assignment_form>`_.
+この例では、GとHのグローバル変数からのロードはLLVM IR内で明示的であり、if文のthen/else分岐 (cond\_true/cond\_false) に存在します。入ってくる値をマージするため、cond\_nextブロック内のX.2 phiノードは、制御フローがどこから来るかに基づいて使用する正しい値を選択します: 制御フローがcond\_falseブロックから来る場合、X.2はX.1の値を取得します。一方、制御フローがcond\_trueから来る場合、X.0の値を取得します。この章の目的はSSA形式の詳細を説明することではありません。より詳しい情報については、多くの `オンライン参照 <http://en.wikipedia.org/wiki/Static_single_assignment_form>`_ の1つを参照してください。
 
-The question for this article is "who places the phi nodes when lowering
-assignments to mutable variables?". The issue here is that LLVM
-*requires* that its IR be in SSA form: there is no "non-ssa" mode for
-it. However, SSA construction requires non-trivial algorithms and data
-structures, so it is inconvenient and wasteful for every front-end to
-have to reproduce this logic.
+この記事の疑問は「可変変数への代入を低レベル化する際に誰がphiノードを配置するのか？」ということです。ここでの問題は、LLVMはそのIRがSSA形式であることを*必須*としていることです: 「非ssa」モードは存在しません。しかし、SSA構築には自明でないアルゴリズムとデータ構造が必要であるため、すべてのフロントエンドがこのロジックを再実装しなければならないのは不便で無駄です。
 
-Memory in LLVM
-==============
+LLVMにおけるメモリ
+=================
 
-The 'trick' here is that while LLVM does require all register values to
-be in SSA form, it does not require (or permit) memory objects to be in
-SSA form. In the example above, note that the loads from G and H are
-direct accesses to G and H: they are not renamed or versioned. This
-differs from some other compiler systems, which do try to version memory
-objects. In LLVM, instead of encoding dataflow analysis of memory into
-the LLVM IR, it is handled with `Analysis
-Passes <../../WritingAnLLVMPass.html>`_ which are computed on demand.
+ここでの「トリック」は、LLVMがすべてのレジスタ値にSSA形式であることを要求する一方で、メモリオブジェクトにSSA形式であることを要求しない (または許可しない) ことです。上記の例で、GとHからのロードがGとHへの直接アクセスであることに注目してください: それらはリネームされたりバージョン管理されたりしていません。これは、メモリオブジェクトのバージョン管理を試行する他の一部のコンパイラシステムとは異なります。LLVMでは、メモリのデータフロー解析をLLVM IRにエンコードする代わりに、オンデマンドで計算される `解析パス <../../WritingAnLLVMPass.html>`_ で処理されます。
 
-With this in mind, the high-level idea is that we want to make a stack
-variable (which lives in memory, because it is on the stack) for each
-mutable object in a function. To take advantage of this trick, we need
-to talk about how LLVM represents stack variables.
+これを踏まえて、高レベルのアイデアは、関数内の各可変オブジェクトに対してスタック変数 (スタック上にあるため、メモリ内に存在する) を作成したいということです。このトリックを活用するために、LLVMがスタック変数をどのように表現するかについて説明する必要があります。
 
-In LLVM, all memory accesses are explicit with load/store instructions,
-and it is carefully designed not to have (or need) an "address-of"
-operator. Notice how the type of the @G/@H global variables is actually
-"i32\*" even though the variable is defined as "i32". What this means is
-that @G defines *space* for an i32 in the global data area, but its
-*name* actually refers to the address for that space. Stack variables
-work the same way, except that instead of being declared with global
-variable definitions, they are declared with the `LLVM alloca
-instruction <../../LangRef.html#alloca-instruction>`_:
+LLVMでは、すべてのメモリアクセスがload/store命令で明示的であり、「address-of」演算子を持たない (または必要としない) ように慎重に設計されています。@G/@Hグローバル変数の型が、変数が「i32」として定義されているにもかかわらず、実際には「i32\*」であることに注目してください。これが意味するのは、@Gがグローバルデータ領域内でi32用の*スペース*を定義しているが、その*名前*は実際にはそのスペースのアドレスを参照しているということです。スタック変数も同じように動作しますが、グローバル変数定義で宣言される代わりに、 `LLVM alloca命令 <../../LangRef.html#alloca-instruction>`_ で宣言されます:
 
 .. code-block:: llvm
 
     define i32 @example() {
     entry:
-      %X = alloca i32           ; type of %X is i32*.
+      %X = alloca i32           ; %Xの型はi32*
       ...
-      %tmp = load i32, i32* %X  ; load the stack value %X from the stack.
-      %tmp2 = add i32 %tmp, 1   ; increment it
-      store i32 %tmp2, i32* %X  ; store it back
+      %tmp = load i32, i32* %X  ; スタックから%Xのスタック値をロード
+      %tmp2 = add i32 %tmp, 1   ; インクリメント
+      store i32 %tmp2, i32* %X  ; スタックに戻してストア
       ...
 
-This code shows an example of how you can declare and manipulate a stack
-variable in the LLVM IR. Stack memory allocated with the alloca
-instruction is fully general: you can pass the address of the stack slot
-to functions, you can store it in other variables, etc. In our example
-above, we could rewrite the example to use the alloca technique to avoid
-using a PHI node:
+このコードは、LLVM IR内でスタック変数を宣言および操作する方法の例を示しています。alloca命令で割り当てられたスタックメモリは完全に汎用的です: スタックスロットのアドレスを関数に渡すことができ、他の変数に格納することなどもできます。上記の例では、allocaテクニックを使用してPHIノードの使用を避けるように例を書き換えることができます: 
 
 .. code-block:: llvm
 
-    @G = weak global i32 0   ; type of @G is i32*
-    @H = weak global i32 0   ; type of @H is i32*
+    @G = weak global i32 0   ; @Gの型はi32*
+    @H = weak global i32 0   ; @Hの型はi32*
 
     define i32 @test(i1 %Condition) {
     entry:
-      %X = alloca i32           ; type of %X is i32*.
+      %X = alloca i32           ; %Xの型はi32*
       br i1 %Condition, label %cond_true, label %cond_false
 
     cond_true:
       %X.0 = load i32, i32* @G
-      store i32 %X.0, i32* %X   ; Update X
+      store i32 %X.0, i32* %X   ; Xを更新
       br label %cond_next
 
     cond_false:
       %X.1 = load i32, i32* @H
-      store i32 %X.1, i32* %X   ; Update X
+      store i32 %X.1, i32* %X   ; Xを更新
       br label %cond_next
 
     cond_next:
-      %X.2 = load i32, i32* %X  ; Read X
+      %X.2 = load i32, i32* %X  ; Xを読み取り
       ret i32 %X.2
     }
 
-With this, we have discovered a way to handle arbitrary mutable
-variables without the need to create Phi nodes at all:
+これにより、Phiノードを全く作成する必要なく、任意の可変変数を処理する方法を発見しました: 
 
-#. Each mutable variable becomes a stack allocation.
-#. Each read of the variable becomes a load from the stack.
-#. Each update of the variable becomes a store to the stack.
-#. Taking the address of a variable just uses the stack address
-   directly.
+#. 各可変変数はスタック割り当てになります。
+#. 変数の各読み取りは、スタックからのロードになります。
+#. 変数の各更新は、スタックへのストアになります。
+#. 変数のアドレスを取ることは、単にスタックアドレスを直接使用します。
 
-While this solution has solved our immediate problem, it introduced
-another one: we have now apparently introduced a lot of stack traffic
-for very simple and common operations, a major performance problem.
-Fortunately for us, the LLVM optimizer has a highly-tuned optimization
-pass named "mem2reg" that handles this case, promoting allocas like this
-into SSA registers, inserting Phi nodes as appropriate. If you run this
-example through the pass, for example, you'll get:
+この解決策により直面していた問題は解決しましたが、別の問題を導入しました: 非常にシンプルで一般的な操作に対して、明らかに多くのスタックトラフィックを導入したことで、これは主要なパフォーマンス問題です。幸いなことに、LLVMオプティマイザーには「mem2reg」という高度に調整された最適化パスがあり、このケースを処理し、このようなallocaをSSAレジスタに昇格し、適切にPhiノードを挿入します。たとえば、この例をパスを通すと、次のようになります: 
 
 .. code-block:: bash
 
@@ -203,88 +138,45 @@ example through the pass, for example, you'll get:
       ret i32 %X.01
     }
 
-The mem2reg pass implements the standard "iterated dominance frontier"
-algorithm for constructing SSA form and has a number of optimizations
-that speed up (very common) degenerate cases. The mem2reg optimization
-pass is the answer to dealing with mutable variables, and we highly
-recommend that you depend on it. Note that mem2reg only works on
-variables in certain circumstances:
+mem2regパスは、SSA形式を構築するための標準的な「反復支配境界」アルゴリズムを実装し、 (非常に一般的な) 退化したケースを高速化する多くの最適化を持っています。mem2reg最適化パスは可変変数を扱う答えであり、これに依存することを強く推奨します。mem2regは特定の状況下でのみ変数に対して動作することに注意してください: 
 
-#. mem2reg is alloca-driven: it looks for allocas and if it can handle
-   them, it promotes them. It does not apply to global variables or heap
-   allocations.
-#. mem2reg only looks for alloca instructions in the entry block of the
-   function. Being in the entry block guarantees that the alloca is only
-   executed once, which makes analysis simpler.
-#. mem2reg only promotes allocas whose uses are direct loads and stores.
-   If the address of the stack object is passed to a function, or if any
-   funny pointer arithmetic is involved, the alloca will not be
-   promoted.
-#. mem2reg only works on allocas of `first
-   class <../../LangRef.html#first-class-types>`_ values (such as pointers,
-   scalars and vectors), and only if the array size of the allocation is
-   1 (or missing in the .ll file). mem2reg is not capable of promoting
-   structs or arrays to registers. Note that the "sroa" pass is
-   more powerful and can promote structs, "unions", and arrays in many
-   cases.
+#. mem2regはalloca主導です: allocaを探し、処理できる場合は昇格させます。グローバル変数やヒープ割り当てには適用されません。
+#. mem2regは関数のエントリーブロック内のalloca命令のみを探します。エントリーブロック内にあることは、allocaが一度だけ実行されることを保証し、解析をより簡単にします。
+#. mem2regは、直接的なロードとストアを使用するallocaのみを昇格させます。スタックオブジェクトのアドレスが関数に渡される場合、または何らかの奇妙なポインター演算が関与する場合、allocaは昇格されません。
+#. mem2regは `第一級 <../../LangRef.html#first-class-types>`_ 値 (ポインター、スカラー、ベクトルなど) のallocaでのみ動作し、割り当ての配列サイズが1の場合 (または.llファイルで欠如している場合) のみです。mem2regは構造体や配列をレジスタに昇格させることはできません。「sroa」パスはより強力で、多くの場合に構造体、「共用体」、配列を昇格させることができることに注意してください。
 
-All of these properties are easy to satisfy for most imperative
-languages, and we'll illustrate it below with Kaleidoscope. The final
-question you may be asking is: should I bother with this nonsense for my
-front-end? Wouldn't it be better if I just did SSA construction
-directly, avoiding use of the mem2reg optimization pass? In short, we
-strongly recommend that you use this technique for building SSA form,
-unless there is an extremely good reason not to. Using this technique
-is:
+これらの性質はすべて、ほとんどの命令型言語で満たすのが簡単で、以下でKaleidoscopeを使って説明します。最後に質問されるかもしれないのは: 私のフロントエンドでこのような無駄なことを気にする必要があるのでしょうか？mem2reg最適化パスの使用を避けて、直接SSA構築を行った方が良いのでは？簡潔に言うと、極めて良い理由がない限り、SSA形式を構築するためにこの技術を使用することを強く推奨します。この技術を使用することは:
 
--  Proven and well tested: clang uses this technique
-   for local mutable variables. As such, the most common clients of LLVM
-   are using this to handle a bulk of their variables. You can be sure
-   that bugs are found fast and fixed early.
--  Extremely Fast: mem2reg has a number of special cases that make it
-   fast in common cases as well as fully general. For example, it has
-   fast-paths for variables that are only used in a single block,
-   variables that only have one assignment point, good heuristics to
-   avoid insertion of unneeded phi nodes, etc.
--  Needed for debug info generation: `Debug information in
-   LLVM <../../SourceLevelDebugging.html>`_ relies on having the address of
-   the variable exposed so that debug info can be attached to it. This
-   technique dovetails very naturally with this style of debug info.
+- 実証済みでよくテストされている: clangはローカル可変変数に対してこの技術を使用します。そのため、LLVMの最も一般的なクライアントが変数の大部分を処理するためにこれを使用しています。バグが高速に発見され、早期に修正されることを確信できます。
+- 極めて高速: mem2regには、一般的なケースで高速化し、完全に汎用的な多くの特殊ケースがあります。たとえば、単一ブロック内でのみ使用される変数、単一の代入ポイントのみを持つ変数、不要なphiノードの挿入を回避する良いヒューリスティックなどの高速パスがあります。
+- デバッグ情報生成に必要: `LLVMのデバッグ情報 <../../SourceLevelDebugging.html>`_ は、デバッグ情報を添付できるように変数のアドレスが公開されることに依存しています。この技術は、このスタイルのデバッグ情報と非常に自然に調和します。
 
-If nothing else, this makes it much easier to get your front-end up and
-running, and is very simple to implement. Let's extend Kaleidoscope with
-mutable variables now!
+何よりも、これによりフロントエンドの立ち上げと実行がはるかに簡単になり、実装が非常にシンプルです。それでは、Kaleidoscopeを可変変数で拡張しましょう！
 
-Mutable Variables in Kaleidoscope
-=================================
+Kaleidoscopeにおける可変変数
+============================
 
-Now that we know the sort of problem we want to tackle, let's see what
-this looks like in the context of our little Kaleidoscope language.
-We're going to add two features:
+取り組みたい問題の種類が分かったので、小さなKaleidoscope言語のコンテキストでこれがどのように見えるかを見てみましょう。2つの機能を追加する予定です: 
 
-#. The ability to mutate variables with the '=' operator.
-#. The ability to define new variables.
+#. '='演算子で変数を変更する能力。
+#. 新しい変数を定義する能力。
 
-While the first item is really what this is about, we only have
-variables for incoming arguments as well as for induction variables, and
-redefining those only goes so far :). Also, the ability to define new
-variables is a useful thing regardless of whether you will be mutating
-them. Here's a motivating example that shows how we could use these:
+最初の項目が本当にこれについて重要なことですが、現在変数は入力引数と帰納変数にのみ存在し、それらを再定義するだけではあまり意味がありません :) 。また、新しい変数を定義する能力は、それらを変更するかどうかに関係なく有用なものです。これらをどのように使用できるかを示す動機の例があります: 
 
 ::
 
-    # Define ':' for sequencing: as a low-precedence operator that ignores operands
-    # and just returns the RHS.
+    # シーケンス用の':'を定義: オペランドを無視して
+    # 単にRHSを返す低優先順位の演算子として。
     def binary : 1 (x y) y;
 
-    # Recursive fib, we could do this before.
+    # 再帰フィボナッチ、以前からできた。
     def fib(x)
       if (x < 3) then
         1
       else
         fib(x-1)+fib(x-2);
 
-    # Iterative fib.
+    # 反復フィボナッチ。
     def fibi(x)
       var a = 1, b = 1, c in
       (for i = 3, i < x in
@@ -293,48 +185,30 @@ them. Here's a motivating example that shows how we could use these:
          b = c) :
       b;
 
-    # Call it.
+    # 呼び出し。
     fibi(10);
 
-In order to mutate variables, we have to change our existing variables
-to use the "alloca trick". Once we have that, we'll add our new
-operator, then extend Kaleidoscope to support new variable definitions.
+変数を変更するには、既存の変数を「allocaトリック」を使用するように変更しなければなりません。それができたら、新しい演算子を追加し、その後Kaleidoscopeを拡張して新しい変数定義をサポートします。
 
-Adjusting Existing Variables for Mutation
-=========================================
+変更のための既存変数の調整
+========================
 
-The symbol table in Kaleidoscope is managed at code generation time by
-the '``NamedValues``' map. This map currently keeps track of the LLVM
-"Value\*" that holds the double value for the named variable. In order
-to support mutation, we need to change this slightly, so that
-``NamedValues`` holds the *memory location* of the variable in question.
-Note that this change is a refactoring: it changes the structure of the
-code, but does not (by itself) change the behavior of the compiler. All
-of these changes are isolated in the Kaleidoscope code generator.
+Kaleidoscopeのシンボルテーブルは、コード生成時に '``NamedValues``' マップによって管理されます。このマップは現在、名前付き変数のdouble値を保持するLLVM「Value\*」を追跡しています。変更をサポートするには、 ``NamedValues`` が問題の変数の*メモリ位置*を保持するように、これを少し変更する必要があります。この変更はリファクタリングであることに注意してください: コードの構造を変更しますが、 (それ自体では) コンパイラーの動作を変更しません。これらの変更はすべて、Kaleidoscopeコードジェネレーターに分離されています。
 
-At this point in Kaleidoscope's development, it only supports variables
-for two things: incoming arguments to functions and the induction
-variable of 'for' loops. For consistency, we'll allow mutation of these
-variables in addition to other user-defined variables. This means that
-these will both need memory locations.
+Kaleidoscopeの開発のこの時点では、2つのことについてのみ変数をサポートしています: 関数への入力引数と'for'ループの帰納変数。一貫性のために、他のユーザー定義変数に加えて、これらの変数の変更を許可します。これは、これらの両方がメモリ位置を必要とすることを意味します。
 
-To start our transformation of Kaleidoscope, we'll change the
-``NamedValues`` map so that it maps to AllocaInst\* instead of Value\*. Once
-we do this, the C++ compiler will tell us what parts of the code we need
-to update:
+Kaleidoscopeの変換を開始するために、 ``NamedValues`` マップをValue\*の代わりにAllocaInst\*にマップするように変更します。これを行うと、C++コンパイラーがコードのどの部分を更新する必要があるかを教えてくれます:
 
 .. code-block:: c++
 
     static std::map<std::string, AllocaInst*> NamedValues;
 
-Also, since we will need to create these allocas, we'll use a helper
-function that ensures that the allocas are created in the entry block of
-the function:
+また、これらのallocaを作成する必要があるため、allocaが関数のエントリーブロック内で作成されることを保証するヘルパー関数を使用します: 
 
 .. code-block:: c++
 
-    /// CreateEntryBlockAlloca - Create an alloca instruction in the entry block of
-    /// the function.  This is used for mutable variables etc.
+    /// CreateEntryBlockAlloca - 関数のエントリーブロック内でalloca命令を作成する。
+    /// これは可変変数などに使用される。
     static AllocaInst *CreateEntryBlockAlloca(Function *TheFunction,
                                               StringRef VarName) {
       IRBuilder<> TmpB(&TheFunction->getEntryBlock(),
@@ -343,69 +217,56 @@ the function:
                                VarName);
     }
 
-This funny looking code creates an IRBuilder object that is pointing at
-the first instruction (.begin()) of the entry block. It then creates an
-alloca with the expected name and returns it. Because all values in
-Kaleidoscope are doubles, there is no need to pass in a type to use.
+この奇妙に見えるコードは、エントリーブロックの最初の命令(.begin())を指すIRBuilderオブジェクトを作成します。次に、期待される名前でallocaを作成し、それを返します。Kaleidoscopeのすべての値はdoubleであるため、使用する型を渡す必要はありません。
 
-With this in place, the first functionality change we want to make belongs to
-variable references. In our new scheme, variables live on the stack, so
-code generating a reference to them actually needs to produce a load
-from the stack slot:
+これが配置されたことで、最初に行いたい機能変更は変数参照に属します。新しいスキームでは、変数はスタック上に存在するため、それらへの参照を生成するコードは実際にはスタックスロットからのロードを生成する必要があります:
 
 .. code-block:: c++
 
     Value *VariableExprAST::codegen() {
-      // Look this variable up in the function.
+      // 関数内でこの変数を検索する。
       AllocaInst *A = NamedValues[Name];
       if (!A)
         return LogErrorV("Unknown variable name");
 
-      // Load the value.
+      // 値をロードする。
       return Builder->CreateLoad(A->getAllocatedType(), A, Name.c_str());
     }
 
-As you can see, this is pretty straightforward. Now we need to update
-the things that define the variables to set up the alloca. We'll start
-with ``ForExprAST::codegen()`` (see the `full code listing <#id1>`_ for
-the unabridged code):
+ご覧のとおり、これはかなり分かりやすいです。次に、変数を定義するものを更新してallocaを設定する必要があります。 ``ForExprAST::codegen()`` から始めます (省略されていないコードについては `完全なコードリスト <#id1>`_ を参照してください) :
 
 .. code-block:: c++
 
       Function *TheFunction = Builder->GetInsertBlock()->getParent();
 
-      // Create an alloca for the variable in the entry block.
+      // エントリーブロックで変数用のallocaを作成。
       AllocaInst *Alloca = CreateEntryBlockAlloca(TheFunction, VarName);
 
-      // Emit the start code first, without 'variable' in scope.
+      // まず'variable'をスコープに入れずに開始コードを生成。
       Value *StartVal = Start->codegen();
       if (!StartVal)
         return nullptr;
 
-      // Store the value into the alloca.
+      // allocaに値をストア。
       Builder->CreateStore(StartVal, Alloca);
       ...
 
-      // Compute the end condition.
+      // 終了条件を計算。
       Value *EndCond = End->codegen();
       if (!EndCond)
         return nullptr;
 
-      // Reload, increment, and restore the alloca.  This handles the case where
-      // the body of the loop mutates the variable.
+      // allocaを再ロード、インクリメント、復元する。これはループの本体が
+      // 変数を変更するケースを処理する。
       Value *CurVar = Builder->CreateLoad(Alloca->getAllocatedType(), Alloca,
                                           VarName.c_str());
       Value *NextVar = Builder->CreateFAdd(CurVar, StepVal, "nextvar");
       Builder->CreateStore(NextVar, Alloca);
       ...
 
-This code is virtually identical to the code `before we allowed mutable
-variables <LangImpl05.html#code-generation-for-the-for-loop>`_. The big difference is that we
-no longer have to construct a PHI node, and we use load/store to access
-the variable as needed.
+このコードは、 `可変変数を許可する前のコード <LangImpl05.html#code-generation-for-the-for-loop>`_ とほぼ同一です。大きな違いは、もうPHIノードを構築する必要がなく、必要に応じてload/storeを使用して変数にアクセスすることです。
 
-To support mutable argument variables, we need to also make allocas for
-them. The code for this is also pretty simple:
+可変引数変数をサポートするには、それらに対してもallocaを作成する必要があります。これに対するコードもかなりシンプルです: 
 
 .. code-block:: c++
 
@@ -413,43 +274,37 @@ them. The code for this is also pretty simple:
       ...
       Builder->SetInsertPoint(BB);
 
-      // Record the function arguments in the NamedValues map.
+      // NamedValuesマップに関数引数を記録する。
       NamedValues.clear();
       for (auto &Arg : TheFunction->args()) {
-        // Create an alloca for this variable.
+        // この変数用のallocaを作成する。
         AllocaInst *Alloca = CreateEntryBlockAlloca(TheFunction, Arg.getName());
 
-        // Store the initial value into the alloca.
+        // 初期値をallocaにストアする。
         Builder->CreateStore(&Arg, Alloca);
 
-        // Add arguments to variable symbol table.
+        // 変数シンボルテーブルに引数を追加する。
         NamedValues[std::string(Arg.getName())] = Alloca;
       }
 
       if (Value *RetVal = Body->codegen()) {
         ...
 
-For each argument, we make an alloca, store the input value to the
-function into the alloca, and register the alloca as the memory location
-for the argument. This method gets invoked by ``FunctionAST::codegen()``
-right after it sets up the entry block for the function.
+各引数について、allocaを作成し、関数への入力値をallocaにストアし、引数のメモリ位置としてallocaを登録します。このメソッドは、関数のエントリーブロックを設定した直後に ``FunctionAST::codegen()`` によって呼び出されます。
 
-The final missing piece is adding the mem2reg pass, which allows us to
-get good codegen once again:
+最後に欠けている部分は、mem2regパスを追加することで、再び良いコードジェンを取得できるようにします: 
 
 .. code-block:: c++
 
-        // Promote allocas to registers.
+        // allocaをレジスタに昇格する。
         TheFPM->addPass(PromotePass());
-        // Do simple "peephole" optimizations and bit-twiddling optzns.
+        // シンプルな「peephole」最適化とビット演算最適化を行う。
         TheFPM->addPass(InstCombinePass());
-        // Reassociate expressions.
+        // 式を再結合する。
         TheFPM->addPass(ReassociatePass());
         ...
 
-It is interesting to see what the code looks like before and after the
-mem2reg optimization runs. For example, this is the before/after code
-for our recursive fib function. Before the optimization:
+mem2reg最適化が実行される前後でコードがどのように見えるかを見ることは興味深いです。たとえば、これは再帰フィボナッチ関数の最適化前/最適化後のコードです。最適化前: 
 
 .. code-block:: llvm
 
@@ -481,16 +336,9 @@ for our recursive fib function. Before the optimization:
       ret double %iftmp
     }
 
-Here there is only one variable (x, the input argument) but you can
-still see the extremely simple-minded code generation strategy we are
-using. In the entry block, an alloca is created, and the initial input
-value is stored into it. Each reference to the variable does a reload
-from the stack. Also, note that we didn't modify the if/then/else
-expression, so it still inserts a PHI node. While we could make an
-alloca for it, it is actually easier to create a PHI node for it, so we
-still just make the PHI.
+ここには1つの変数 (入力引数のx) のみがありますが、使用している極めて単純なコード生成戦略を依然として見ることができます。エントリーブロックでは、allocaが作成され、初期入力値がその中にストアされます。変数への各参照はスタックからのリロードを行います。また、if/then/else式を変更しなかったため、依然としてPHIノードを挿入することに注意してください。それに対してallocaを作成することも可能ですが、実際にはPHIノードを作成する方が簡単なので、依然としてPHIを作成するだけです。
 
-Here is the code after the mem2reg pass runs:
+これがmem2regパス実行後のコードです: 
 
 .. code-block:: llvm
 
@@ -517,11 +365,9 @@ Here is the code after the mem2reg pass runs:
       ret double %iftmp
     }
 
-This is a trivial case for mem2reg, since there are no redefinitions of
-the variable. The point of showing this is to calm your tension about
-inserting such blatant inefficiencies :).
+これは変数の再定義がないため、mem2regにとっては自明なケースです。これを示すポイントは、このような露骨な非効率性を挿入することについての懸念を和らげることです :) 。
 
-After the rest of the optimizers run, we get:
+残りのオプティマイザーが実行された後、次のようになります: 
 
 .. code-block:: llvm
 
@@ -544,62 +390,49 @@ After the rest of the optimizers run, we get:
       ret double 1.000000e+00
     }
 
-Here we see that the simplifycfg pass decided to clone the return
-instruction into the end of the 'else' block. This allowed it to
-eliminate some branches and the PHI node.
+ここで、simplifycfgパスが'else'ブロックの終わりにreturn命令を複製することを決定したことが分かります。これにより、いくつかの分岐とPHIノードを削除することができました。
 
-Now that all symbol table references are updated to use stack variables,
-we'll add the assignment operator.
+すべてのシンボルテーブル参照がスタック変数を使用するように更新されたので、代入演算子を追加します。
 
-New Assignment Operator
-=======================
+新しい代入演算子
+===============
 
-With our current framework, adding a new assignment operator is really
-simple. We will parse it just like any other binary operator, but handle
-it internally (instead of allowing the user to define it). The first
-step is to set a precedence:
+現在のフレームワークでは、新しい代入演算子を追加することは非常にシンプルです。他の二項演算子と同じように解析しますが、 (ユーザーが定義することを許可する代わりに) 内部で処理します。最初のステップは優先順位を設定することです: 
 
 .. code-block:: c++
 
      int main() {
-       // Install standard binary operators.
-       // 1 is lowest precedence.
+       // 標準的な二項演算子をインストール。
+       // 1が最低優先順位。
        BinopPrecedence['='] = 2;
        BinopPrecedence['<'] = 10;
        BinopPrecedence['+'] = 20;
        BinopPrecedence['-'] = 20;
 
-Now that the parser knows the precedence of the binary operator, it
-takes care of all the parsing and AST generation. We just need to
-implement codegen for the assignment operator. This looks like:
+parserが二項演算子の優先順位を知ったので、すべての解析とAST生成を処理します。代入演算子のcodegenを実装するだけです。これは次のようになります: 
 
 .. code-block:: c++
 
     Value *BinaryExprAST::codegen() {
-      // Special case '=' because we don't want to emit the LHS as an expression.
+      // LHSを式として生成したくないので'='を特別ケースとして処理
       if (Op == '=') {
-        // This assume we're building without RTTI because LLVM builds that way by
-        // default. If you build LLVM with RTTI this can be changed to a
-        // dynamic_cast for automatic error checking.
+        // LLVMがデフォルトでRTTIなしでビルドされるため、RTTIなしでビルドすることを仮定。
+        // RTTIでLLVMをビルドする場合、これは自動エラーチェック用の
+        // dynamic_castに変更できる。
         VariableExprAST *LHSE = static_cast<VariableExprAST*>(LHS.get());
         if (!LHSE)
           return LogErrorV("destination of '=' must be a variable");
 
-Unlike the rest of the binary operators, our assignment operator doesn't
-follow the "emit LHS, emit RHS, do computation" model. As such, it is
-handled as a special case before the other binary operators are handled.
-The other strange thing is that it requires the LHS to be a variable. It
-is invalid to have "(x+1) = expr" - only things like "x = expr" are
-allowed.
+他の二項演算子と異なり、代入演算子は「LHS生成、RHS生成、計算実行」モデルに従いません。そのため、他の二項演算子が処理される前に特別ケースとして処理されます。もう1つの奇妙な点は、LHSが変数である必要があることです。「(x+1) = expr」は無効です - 「x = expr」のようなもののみが許可されます。
 
 .. code-block:: c++
 
-        // Codegen the RHS.
+        // RHSをcodegen。
         Value *Val = RHS->codegen();
         if (!Val)
           return nullptr;
 
-        // Look up the name.
+        // 名前を検索。
         Value *Variable = NamedValues[LHSE->getName()];
         if (!Variable)
           return LogErrorV("Unknown variable name");
@@ -609,21 +442,17 @@ allowed.
       }
       ...
 
-Once we have the variable, codegen'ing the assignment is
-straightforward: we emit the RHS of the assignment, create a store, and
-return the computed value. Returning a value allows for chained
-assignments like "X = (Y = Z)".
+変数を取得したら、代入のcodegenは分かりやすいです: 代入のRHSを生成し、ストアを作成し、計算された値を返します。値を返すことで「X = (Y = Z)」のような連鎖代入が可能になります。
 
-Now that we have an assignment operator, we can mutate loop variables
-and arguments. For example, we can now run code like this:
+代入演算子ができたので、ループ変数と引数を変更できます。たとえば、次のようなコードを実行できるようになりました: 
 
 ::
 
-    # Function to print a double.
+    # doubleを印刷する関数。
     extern printd(x);
 
-    # Define ':' for sequencing: as a low-precedence operator that ignores operands
-    # and just returns the RHS.
+    # シーケンス用の':'を定義: オペランドを無視して
+    # 単にRHSを返す低優先順位の演算子として。
     def binary : 1 (x y) y;
 
     def test(x)
@@ -633,20 +462,12 @@ and arguments. For example, we can now run code like this:
 
     test(123);
 
-When run, this example prints "123" and then "4", showing that we did
-actually mutate the value! Okay, we have now officially implemented our
-goal: getting this to work requires SSA construction in the general
-case. However, to be really useful, we want the ability to define our
-own local variables, let's add this next!
+実行すると、この例は「123」と「4」を印刷し、実際に値を変更したことを示しています！よし、目標を正式に実装しました: これを動作させるには一般的なケースでSSA構築が必要です。しかし、本当に有用にするには、独自のローカル変数を定義する能力が欲しいので、次にこれを追加しましょう！
 
-User-defined Local Variables
-============================
+ユーザー定義ローカル変数
+======================
 
-Adding var/in is just like any other extension we made to
-Kaleidoscope: we extend the lexer, the parser, the AST and the code
-generator. The first step for adding our new 'var/in' construct is to
-extend the lexer. As before, this is pretty trivial, the code looks like
-this:
+var/inの追加は、Kaleidoscopeに対して行った他の拡張と同じです: lexer、parser、AST、コードジェネレータを拡張します。新しい'var/in'構造を追加する最初のステップは、lexerを拡張することです。以前と同じように、これはかなり自明で、コードは次のようになります: 
 
 .. code-block:: c++
 
@@ -670,12 +491,11 @@ this:
         return tok_identifier;
     ...
 
-The next step is to define the AST node that we will construct. For
-var/in, it looks like this:
+次のステップは、構築するASTノードを定義することです。var/inについては、次のようになります: 
 
 .. code-block:: c++
 
-    /// VarExprAST - Expression class for var/in
+    /// VarExprAST - var/in用の式クラス
     class VarExprAST : public ExprAST {
       std::vector<std::pair<std::string, std::unique_ptr<ExprAST>>> VarNames;
       std::unique_ptr<ExprAST> Body;
@@ -688,13 +508,9 @@ var/in, it looks like this:
       Value *codegen() override;
     };
 
-var/in allows a list of names to be defined all at once, and each name
-can optionally have an initializer value. As such, we capture this
-information in the VarNames vector. Also, var/in has a body, this body
-is allowed to access the variables defined by the var/in.
+var/inは名前のリストを一度に定義することを許可し、各名前はオプションで初期化値を持つことができます。そのため、この情報をVarNamesベクターに取り込みます。また、var/inは本体を持ち、この本体はvar/inによって定義された変数にアクセスすることが許可されています。
 
-With this in place, we can define the parser pieces. The first thing we
-do is add it as a primary expression:
+これが配置されたことで、parser部分を定義できます。最初に行うのは、プライマリ式として追加することです: 
 
 .. code-block:: c++
 
@@ -724,34 +540,33 @@ do is add it as a primary expression:
       }
     }
 
-Next we define ParseVarExpr:
+次に ParseVarExpr を定義します: 
 
 .. code-block:: c++
 
     /// varexpr ::= 'var' identifier ('=' expression)?
     //                    (',' identifier ('=' expression)?)* 'in' expression
     static std::unique_ptr<ExprAST> ParseVarExpr() {
-      getNextToken();  // eat the var.
+      getNextToken();  // varを消費。
 
       std::vector<std::pair<std::string, std::unique_ptr<ExprAST>>> VarNames;
 
-      // At least one variable name is required.
+      // 少なくとも1つの変数名が必要。
       if (CurTok != tok_identifier)
         return LogError("expected identifier after var");
 
-The first part of this code parses the list of identifier/expr pairs
-into the local ``VarNames`` vector.
+このコードの最初の部分は、identifier/exprペアのリストをローカルの ``VarNames`` ベクターに解析します。
 
 .. code-block:: c++
 
       while (true) {
         std::string Name = IdentifierStr;
-        getNextToken();  // eat identifier.
+        getNextToken();  // identifierを消費。
 
-        // Read the optional initializer.
+        // オプションの初期化子を読み取り。
         std::unique_ptr<ExprAST> Init;
         if (CurTok == '=') {
-          getNextToken(); // eat the '='.
+          getNextToken(); // '='を消費。
 
           Init = ParseExpression();
           if (!Init) return nullptr;
@@ -759,23 +574,22 @@ into the local ``VarNames`` vector.
 
         VarNames.push_back(std::make_pair(Name, std::move(Init)));
 
-        // End of var list, exit loop.
+        // varリストの終わり、ループを終了。
         if (CurTok != ',') break;
-        getNextToken(); // eat the ','.
+        getNextToken(); // ','を消費。
 
         if (CurTok != tok_identifier)
           return LogError("expected identifier list after var");
       }
 
-Once all the variables are parsed, we then parse the body and create the
-AST node:
+すべての変数が解析されたら、本体を解析してASTノードを作成します: 
 
 .. code-block:: c++
 
-      // At this point, we have to have 'in'.
+      // この時点で、'in'がなければならない。
       if (CurTok != tok_in)
         return LogError("expected 'in' keyword after 'var'");
-      getNextToken();  // eat 'in'.
+      getNextToken();  // 'in'を消費。
 
       auto Body = ParseExpression();
       if (!Body)
@@ -785,8 +599,7 @@ AST node:
                                            std::move(Body));
     }
 
-Now that we can parse and represent the code, we need to support
-emission of LLVM IR for it. This code starts out with:
+コードを解析して表現できるようになったので、それに対するLLVM IRの生成をサポートする必要があります。このコードは次のように始まります: 
 
 .. code-block:: c++
 
@@ -795,92 +608,81 @@ emission of LLVM IR for it. This code starts out with:
 
       Function *TheFunction = Builder->GetInsertBlock()->getParent();
 
-      // Register all variables and emit their initializer.
+      // すべての変数を登録し、その初期化子を生成。
       for (unsigned i = 0, e = VarNames.size(); i != e; ++i) {
         const std::string &VarName = VarNames[i].first;
         ExprAST *Init = VarNames[i].second.get();
 
-Basically it loops over all the variables, installing them one at a
-time. For each variable we put into the symbol table, we remember the
-previous value that we replace in OldBindings.
+基本的に、すべての変数をループし、一度に1つずつインストールします。シンボルテーブルに入れる各変数について、OldBindingsで置き換える以前の値を記憶します。
 
 .. code-block:: c++
 
-        // Emit the initializer before adding the variable to scope, this prevents
-        // the initializer from referencing the variable itself, and permits stuff
-        // like this:
+        // 変数をスコープに追加する前に初期化子を生成、これにより
+        // 初期化子が変数自身を参照することを防ぎ、次のような
+        // ことを許可する: 
         //  var a = 1 in
-        //    var a = a in ...   # refers to outer 'a'.
+        //    var a = a in ...   # 外側の'a'を参照
         Value *InitVal;
         if (Init) {
           InitVal = Init->codegen();
           if (!InitVal)
             return nullptr;
-        } else { // If not specified, use 0.0.
+        } else { // 指定されない場合は0.0を使用。
           InitVal = ConstantFP::get(*TheContext, APFloat(0.0));
         }
 
         AllocaInst *Alloca = CreateEntryBlockAlloca(TheFunction, VarName);
         Builder->CreateStore(InitVal, Alloca);
 
-        // Remember the old variable binding so that we can restore the binding when
-        // we unrecurse.
+        // 再帰から戻るときにバインディングを復元できるように
+        // 古い変数バインディングを記憶。
         OldBindings.push_back(NamedValues[VarName]);
 
-        // Remember this binding.
+        // このバインディングを記憶。
         NamedValues[VarName] = Alloca;
       }
 
-There are more comments here than code. The basic idea is that we emit
-the initializer, create the alloca, then update the symbol table to
-point to it. Once all the variables are installed in the symbol table,
-we evaluate the body of the var/in expression:
+ここにはコードよりもコメントが多くあります。基本的なアイデアは、初期化子を生成し、allocaを作成し、それを指すようにシンボルテーブルを更新することです。すべての変数がシンボルテーブルにインストールされたら、var/in式の本体を評価します: 
 
 .. code-block:: c++
 
-      // Codegen the body, now that all vars are in scope.
+      // すべての変数がスコープ内になったので、本体をcodegen。
       Value *BodyVal = Body->codegen();
       if (!BodyVal)
         return nullptr;
 
-Finally, before returning, we restore the previous variable bindings:
+最後に、戻る前に、以前の変数バインディングを復元します: 
 
 .. code-block:: c++
 
-      // Pop all our variables from scope.
+      // スコープからすべての変数をポップ。
       for (unsigned i = 0, e = VarNames.size(); i != e; ++i)
         NamedValues[VarNames[i].first] = OldBindings[i];
 
-      // Return the body computation.
+      // 本体の計算を返す。
       return BodyVal;
     }
 
-The end result of all of this is that we get properly scoped variable
-definitions, and we even (trivially) allow mutation of them :).
+すべてのこれの最終結果は、適切にスコープされた変数定義を取得し、さらに (自明に) それらの変更を許可することです :) 。
 
-With this, we completed what we set out to do. Our nice iterative fib
-example from the intro compiles and runs just fine. The mem2reg pass
-optimizes all of our stack variables into SSA registers, inserting PHI
-nodes where needed, and our front-end remains simple: no "iterated
-dominance frontier" computation anywhere in sight.
+これで、設定した目標を達成しました。導入部からの素晴らしい反復fib例はコンパイルされ、うまく実行されます。mem2regパスは、すべてのスタック変数をSSAレジスタに最適化し、必要に応じてPHIノードを挿入し、フロントエンドはシンプルのまま: 「反復支配境界」計算はどこにも見当たりません。
 
-Full Code Listing
-=================
+完全なコードリスト
+================
 
-Here is the complete code listing for our running example, enhanced with
-mutable variables and var/in support. To build this example, use:
+可変変数とvar/inサポートで強化されたランニング例の完全なコードリストです。この例をビルドするには、次を使用してください: 
 
 .. code-block:: bash
 
-    # Compile
+    # コンパイル
     clang++ -g toy.cpp `llvm-config --cxxflags --ldflags --system-libs --libs core orcjit native` -O3 -o toy
-    # Run
+    # 実行
     ./toy
 
-Here is the code:
+コードはこちらです: 
 
 .. literalinclude:: ../../../examples/Kaleidoscope/Chapter7/toy.cpp
    :language: c++
 
-`Next: Compiling to Object Code <LangImpl08.html>`_
+`次: オブジェクトコードへのコンパイル <LangImpl08.html>`_
 

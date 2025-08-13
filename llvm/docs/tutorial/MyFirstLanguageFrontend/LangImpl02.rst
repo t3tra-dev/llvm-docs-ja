@@ -1,47 +1,31 @@
-===========================================
-Kaleidoscope: Implementing a Parser and AST
-===========================================
+========================================
+Kaleidoscope: ParserとASTの実装
+========================================
 
 .. contents::
    :local:
 
-Chapter 2 Introduction
-======================
+第2章 はじめに
+===============
 
-Welcome to Chapter 2 of the "`Implementing a language with
-LLVM <index.html>`_" tutorial. This chapter shows you how to use the
-lexer, built in `Chapter 1 <LangImpl01.html>`_, to build a full
-`parser <http://en.wikipedia.org/wiki/Parsing>`_ for our Kaleidoscope
-language. Once we have a parser, we'll define and build an `Abstract
-Syntax Tree <http://en.wikipedia.org/wiki/Abstract_syntax_tree>`_ (AST).
+「 `LLVMを使った言語実装 <index.html>`_」チュートリアルの第2章へようこそ。この章では、 `第1章 <LangImpl01.html>`_ で構築したlexerを使用して、Kaleidoscope言語用の完全な `parser <http://en.wikipedia.org/wiki/Parsing>`_ を構築する方法を示します。parserができたら、 `抽象構文木 <http://en.wikipedia.org/wiki/Abstract_syntax_tree>`_ (AST) を定義して構築します。
 
-The parser we will build uses a combination of `Recursive Descent
-Parsing <http://en.wikipedia.org/wiki/Recursive_descent_parser>`_ and
-`Operator-Precedence
-Parsing <http://en.wikipedia.org/wiki/Operator-precedence_parser>`_ to
-parse the Kaleidoscope language (the latter for binary expressions and
-the former for everything else). Before we get to parsing though, let's
-talk about the output of the parser: the Abstract Syntax Tree.
+これから構築するparserは、 `再帰下降解析 <http://en.wikipedia.org/wiki/Recursive_descent_parser>`_ と `演算子優先順位解析 <http://en.wikipedia.org/wiki/Operator-precedence_parser>`_ の組み合わせを使用してKaleidoscope言語を解析します (後者は二項式用、前者はそれ以外のすべて用) 。ただし、解析に入る前に、parserの出力である抽象構文木についてお話ししましょう。
 
-The Abstract Syntax Tree (AST)
-==============================
+抽象構文木 (AST) 
+================
 
-The AST for a program captures its behavior in such a way that it is
-easy for later stages of the compiler (e.g. code generation) to
-interpret. We basically want one object for each construct in the
-language, and the AST should closely model the language. In
-Kaleidoscope, we have expressions, a prototype, and a function object.
-We'll start with expressions first:
+プログラムのASTは、コンパイラーの後の段階 (コード生成など) が解釈しやすい方法でその動作を捉えます。基本的に、言語内の各構造に対して1つのオブジェクトが欲しく、ASTは言語を密接にモデル化する必要があります。Kaleidoscopeでは、式、プロトタイプ、関数オブジェクトがあります。まず式から始めましょう: 
 
 .. code-block:: c++
 
-    /// ExprAST - Base class for all expression nodes.
+    /// ExprAST - すべての式ノードのベースクラス
     class ExprAST {
     public:
       virtual ~ExprAST() = default;
     };
 
-    /// NumberExprAST - Expression class for numeric literals like "1.0".
+    /// NumberExprAST - "1.0"のような数値リテラル用の式クラス
     class NumberExprAST : public ExprAST {
       double Val;
 
@@ -49,21 +33,13 @@ We'll start with expressions first:
       NumberExprAST(double Val) : Val(Val) {}
     };
 
-The code above shows the definition of the base ExprAST class and one
-subclass which we use for numeric literals. The important thing to note
-about this code is that the NumberExprAST class captures the numeric
-value of the literal as an instance variable. This allows later phases
-of the compiler to know what the stored numeric value is.
+上記のコードは、基本ExprASTクラスと、数値リテラルに使用する1つのサブクラスの定義を示しています。このコードで重要な点は、NumberExprASTクラスがリテラルの数値をインスタンス変数として取得することです。これにより、コンパイラーの後の段階で格納された数値が何であるかを知ることができます。
 
-Right now we only create the AST, so there are no useful accessor
-methods on them. It would be very easy to add a virtual method to pretty
-print the code, for example. Here are the other expression AST node
-definitions that we'll use in the basic form of the Kaleidoscope
-language:
+現在はASTを作成するだけなので、有用なアクセサーメソッドはありません。例えば、コードをきれいに印刷する仮想メソッドを追加するのは非常に簡単でしょう。基本的な形のKaleidoscope言語で使用するその他の式ASTノード定義は次のとおりです: 
 
 .. code-block:: c++
 
-    /// VariableExprAST - Expression class for referencing a variable, like "a".
+    /// VariableExprAST - "a"のような変数参照用の式クラス
     class VariableExprAST : public ExprAST {
       std::string Name;
 
@@ -71,7 +47,7 @@ language:
       VariableExprAST(const std::string &Name) : Name(Name) {}
     };
 
-    /// BinaryExprAST - Expression class for a binary operator.
+    /// BinaryExprAST - 二項演算子用の式クラス
     class BinaryExprAST : public ExprAST {
       char Op;
       std::unique_ptr<ExprAST> LHS, RHS;
@@ -82,7 +58,7 @@ language:
         : Op(Op), LHS(std::move(LHS)), RHS(std::move(RHS)) {}
     };
 
-    /// CallExprAST - Expression class for function calls.
+    /// CallExprAST - 関数呼び出し用の式クラス
     class CallExprAST : public ExprAST {
       std::string Callee;
       std::vector<std::unique_ptr<ExprAST>> Args;
@@ -93,25 +69,14 @@ language:
         : Callee(Callee), Args(std::move(Args)) {}
     };
 
-This is all (intentionally) rather straight-forward: variables capture
-the variable name, binary operators capture their opcode (e.g. '+'), and
-calls capture a function name as well as a list of any argument
-expressions. One thing that is nice about our AST is that it captures
-the language features without talking about the syntax of the language.
-Note that there is no discussion about precedence of binary operators,
-lexical structure, etc.
+これはすべて (意図的に) 非常に分かりやすくなっています: 変数は変数名を取得し、二項演算子は演算コード (「+」など) を取得し、呼び出しは関数名と任意の引数式のリストを取得します。私たちのASTの良い点の1つは、言語の構文について話すことなく言語機能を捉えることです。二項演算子の優先順位、字句構造などについての議論がないことに注意してください。
 
-For our basic language, these are all of the expression nodes we'll
-define. Because it doesn't have conditional control flow, it isn't
-Turing-complete; we'll fix that in a later installment. The two things
-we need next are a way to talk about the interface to a function, and a
-way to talk about functions themselves:
+基本言語の場合、これらが定義するすべての式ノードです。条件制御フローがないため、チューリング完全ではありません。これは後の回で修正します。次に必要なのは、関数へのインターフェースについて話す方法と、関数自体について話す方法です: 
 
 .. code-block:: c++
 
-    /// PrototypeAST - This class represents the "prototype" for a function,
-    /// which captures its name, and its argument names (thus implicitly the number
-    /// of arguments the function takes).
+    /// PrototypeAST - 関数の「プロトタイプ」を表すクラス
+    /// 関数の名前と引数名を捉える (つまり暗黙的に関数が取る引数の数) 
     class PrototypeAST {
       std::string Name;
       std::vector<std::string> Args;
@@ -123,7 +88,7 @@ way to talk about functions themselves:
       const std::string &getName() const { return Name; }
     };
 
-    /// FunctionAST - This class represents a function definition itself.
+    /// FunctionAST - 関数定義自体を表すクラス
     class FunctionAST {
       std::unique_ptr<PrototypeAST> Proto;
       std::unique_ptr<ExprAST> Body;
@@ -134,22 +99,14 @@ way to talk about functions themselves:
         : Proto(std::move(Proto)), Body(std::move(Body)) {}
     };
 
-In Kaleidoscope, functions are typed with just a count of their
-arguments. Since all values are double precision floating point, the
-type of each argument doesn't need to be stored anywhere. In a more
-aggressive and realistic language, the "ExprAST" class would probably
-have a type field.
+Kaleidoscopeでは、関数は引数の数だけで型付けされます。すべての値が倍精度浮動小数点であるため、各引数の型をどこかに格納する必要はありません。より積極的で現実的な言語では、「ExprAST」クラスにはおそらく型フィールドがあるでしょう。
 
-With this scaffolding, we can now talk about parsing expressions and
-function bodies in Kaleidoscope.
+この足場があれば、Kaleidoscopeでの式と関数本体の解析について話すことができます。
 
-Parser Basics
+Parserの基本
 =============
 
-Now that we have an AST to build, we need to define the parser code to
-build it. The idea here is that we want to parse something like "x+y"
-(which is returned as three tokens by the lexer) into an AST that could
-be generated with calls like this:
+構築するASTができたので、それを構築するparserコードを定義する必要があります。ここでのアイデアは、「x+y」のようなもの (lexerによって3つのトークンとして返される) を、次のような呼び出しで生成できるASTに解析することです: 
 
 .. code-block:: c++
 
@@ -158,27 +115,24 @@ be generated with calls like this:
       auto Result = std::make_unique<BinaryExprAST>('+', std::move(LHS),
                                                     std::move(RHS));
 
-In order to do this, we'll start by defining some basic helper routines:
+これを行うために、いくつかの基本的なヘルパールーチンを定義することから始めます: 
 
 .. code-block:: c++
 
-    /// CurTok/getNextToken - Provide a simple token buffer.  CurTok is the current
-    /// token the parser is looking at.  getNextToken reads another token from the
-    /// lexer and updates CurTok with its results.
+    /// CurTok/getNextToken - 簡単なトークンバッファーを提供。CurTokは
+    /// parserが見ている現在のトークン。getNextTokenはlexerから別のトークンを
+    /// 読み取り、その結果でCurTokを更新する
     static int CurTok;
     static int getNextToken() {
       return CurTok = gettok();
     }
 
-This implements a simple token buffer around the lexer. This allows us
-to look one token ahead at what the lexer is returning. Every function
-in our parser will assume that CurTok is the current token that needs to
-be parsed.
+これは、lexerの周りに単純なトークンバッファーを実装します。これにより、lexerが返すものを1トークン先読みできます。parserのすべての関数は、CurTokが解析する必要がある現在のトークンであると想定します。
 
 .. code-block:: c++
 
 
-    /// LogError* - These are little helper functions for error handling.
+    /// LogError* - エラー処理用の小さなヘルパー関数
     std::unique_ptr<ExprAST> LogError(const char *Str) {
       fprintf(stderr, "Error: %s\n", Str);
       return nullptr;
@@ -188,42 +142,27 @@ be parsed.
       return nullptr;
     }
 
-The ``LogError`` routines are simple helper routines that our parser will
-use to handle errors. The error recovery in our parser will not be the
-best and is not particular user-friendly, but it will be enough for our
-tutorial. These routines make it easier to handle errors in routines
-that have various return types: they always return null.
+``LogError`` ルーチンは、parserがエラーを処理するために使用する単純なヘルパールーチンです。parserのエラー回復は最良ではなく、特にユーザーフレンドリーではありませんが、このチュートリアルには十分です。これらのルーチンは、さまざまな戻り値の型を持つルーチンでエラーを処理しやすくします: 常にnullを返します。
 
-With these basic helper functions, we can implement the first piece of
-our grammar: numeric literals.
+これらの基本ヘルパー関数があれば、文法の最初の部分である数値リテラルを実装できます。
 
-Basic Expression Parsing
-========================
+基本式解析
+==========
 
-We start with numeric literals, because they are the simplest to
-process. For each production in our grammar, we'll define a function
-which parses that production. For numeric literals, we have:
+最も処理が簡単なので、数値リテラルから始めます。文法の各生成規則について、その生成規則を解析する関数を定義します。数値リテラルの場合: 
 
 .. code-block:: c++
 
     /// numberexpr ::= number
     static std::unique_ptr<ExprAST> ParseNumberExpr() {
       auto Result = std::make_unique<NumberExprAST>(NumVal);
-      getNextToken(); // consume the number
+      getNextToken(); // 数値を消費
       return std::move(Result);
     }
 
-This routine is very simple: it expects to be called when the current
-token is a ``tok_number`` token. It takes the current number value,
-creates a ``NumberExprAST`` node, advances the lexer to the next token,
-and finally returns.
+このルーチンは非常にシンプルです: 現在のトークンが ``tok_number`` トークンの場合に呼び出されることを期待しています。現在の数値を取得し、``NumberExprAST`` ノードを作成し、lexerを次のトークンに進め、最後に返します。
 
-There are some interesting aspects to this. The most important one is
-that this routine eats all of the tokens that correspond to the
-production and returns the lexer buffer with the next token (which is
-not part of the grammar production) ready to go. This is a fairly
-standard way to go for recursive descent parsers. For a better example,
-the parenthesis operator is defined like this:
+これにはいくつかの興味深い側面があります。最も重要なのは、このルーチンが生成規則に対応するすべてのトークンを消費し、次のトークン (文法生成規則の一部ではない) を準備してlexerバッファーを返すことです。これは再帰下降parserの非常に標準的な方法です。より良い例として、括弧演算子は次のように定義されます: 
 
 .. code-block:: c++
 
@@ -240,28 +179,13 @@ the parenthesis operator is defined like this:
       return V;
     }
 
-This function illustrates a number of interesting things about the
-parser:
+この関数は、parserについて多くの興味深いことを示しています: 
 
-1) It shows how we use the LogError routines. When called, this function
-expects that the current token is a '(' token, but after parsing the
-subexpression, it is possible that there is no ')' waiting. For example,
-if the user types in "(4 x" instead of "(4)", the parser should emit an
-error. Because errors can occur, the parser needs a way to indicate that
-they happened: in our parser, we return null on an error.
+1) LogErrorルーチンの使用方法を示しています。呼び出されたとき、この関数は現在のトークンが'('トークンであることを期待していますが、部分式を解析した後、')'が待っていない可能性があります。例えば、ユーザーが"(4)"の代わりに"(4 x"と入力した場合、parserはエラーを発生させるべきです。エラーが発生する可能性があるため、parserはそれが起こったことを示す方法が必要です: 私たちのparserでは、エラー時にnullを返します。
 
-2) Another interesting aspect of this function is that it uses recursion
-by calling ``ParseExpression`` (we will soon see that
-``ParseExpression`` can call ``ParseParenExpr``). This is powerful
-because it allows us to handle recursive grammars, and keeps each
-production very simple. Note that parentheses do not cause construction
-of AST nodes themselves. While we could do it this way, the most
-important role of parentheses are to guide the parser and provide
-grouping. Once the parser constructs the AST, parentheses are not
-needed.
+2) この関数のもう1つの興味深い側面は、``ParseExpression`` を呼び出すことで再帰を使用することです (``ParseExpression`` が ``ParseParenExpr`` を呼び出すことができることをすぐに見るでしょう) 。これは強力で、再帰文法を処理でき、各生成規則を非常にシンプルに保てます。括弧自体はASTノードの構築を引き起こさないことに注意してください。このように行うこともできますが、括弧の最も重要な役割はparserをガイドしてグループ化を提供することです。parserがASTを構築すると、括弧は不要になります。
 
-The next simple production is for handling variable references and
-function calls:
+次の簡単な生成規則は、変数参照と関数呼び出しを処理するためのものです: 
 
 .. code-block:: c++
 
@@ -301,21 +225,9 @@ function calls:
       return std::make_unique<CallExprAST>(IdName, std::move(Args));
     }
 
-This routine follows the same style as the other routines. (It expects
-to be called if the current token is a ``tok_identifier`` token). It
-also has recursion and error handling. One interesting aspect of this is
-that it uses *look-ahead* to determine if the current identifier is a
-stand alone variable reference or if it is a function call expression.
-It handles this by checking to see if the token after the identifier is
-a '(' token, constructing either a ``VariableExprAST`` or
-``CallExprAST`` node as appropriate.
+このルーチンは他のルーチンと同じスタイルに従っています (現在のトークンが ``tok_identifier`` トークンの場合に呼び出されることを期待します) 。また、再帰とエラー処理も持っています。これの興味深い側面の1つは、 *先読み*を使用して、現在の識別子が独立した変数参照なのか、関数呼び出し式なのかを判断することです。識別子の後のトークンが'('トークンかどうかをチェックすることでこれを処理し、適切に ``VariableExprAST`` または ``CallExprAST`` ノードを構築します。
 
-Now that we have all of our simple expression-parsing logic in place, we
-can define a helper function to wrap it together into one entry point.
-We call this class of expressions "primary" expressions, for reasons
-that will become more clear `later in the
-tutorial <LangImpl06.html#user-defined-unary-operators>`_. In order to parse an arbitrary
-primary expression, we need to determine what sort of expression it is:
+すべての単純な式解析ロジックが揃ったので、それらを1つのエントリーポイントにまとめるヘルパー関数を定義できます。この種類の式を「primary」式と呼びますが、その理由は `チュートリアルの後の方 <LangImpl06.html#user-defined-unary-operators>`_ でより明確になります。任意のprimary式を解析するには、それがどのような式かを判断する必要があります: 
 
 .. code-block:: c++
 
@@ -336,78 +248,48 @@ primary expression, we need to determine what sort of expression it is:
       }
     }
 
-Now that you see the definition of this function, it is more obvious why
-we can assume the state of CurTok in the various functions. This uses
-look-ahead to determine which sort of expression is being inspected, and
-then parses it with a function call.
+この関数の定義を見れば、なぜ様々な関数でCurTokの状態を前提とできるかがより明白になります。これは先読みを使用してどの種類の式が検査されているかを判断し、関数呼び出しで解析します。
 
-Now that basic expressions are handled, we need to handle binary
-expressions. They are a bit more complex.
+基本的な式が処理できるようになったので、二項式を処理する必要があります。これらは少し複雑です。
 
-Binary Expression Parsing
-=========================
+二項式解析
+==========
 
-Binary expressions are significantly harder to parse because they are
-often ambiguous. For example, when given the string "x+y\*z", the parser
-can choose to parse it as either "(x+y)\*z" or "x+(y\*z)". With common
-definitions from mathematics, we expect the later parse, because "\*"
-(multiplication) has higher *precedence* than "+" (addition).
+二項式は曖昧な場合が多いため、解析が著しく困難です。例えば、文字列「x+y\*z」が与えられたとき、parserは「(x+y)\*z」または「x+(y\*z)」のいずれかとして解析することを選択できます。数学の一般的な定義により、「\*」 (乗算) は「+」 (加算) よりも高い*優先順位*を持つため、後者の解析を期待します。
 
-There are many ways to handle this, but an elegant and efficient way is
-to use `Operator-Precedence
-Parsing <http://en.wikipedia.org/wiki/Operator-precedence_parser>`_.
-This parsing technique uses the precedence of binary operators to guide
-recursion. To start with, we need a table of precedences:
+これを処理する方法はたくさんありますが、エレガントで効率的な方法は `演算子優先順位解析 <http://en.wikipedia.org/wiki/Operator-precedence_parser>`_ を使用することです。この解析手法は、二項演算子の優先順位を使用して再帰をガイドします。まずは、優先順位のテーブルが必要です: 
 
 .. code-block:: c++
 
-    /// BinopPrecedence - This holds the precedence for each binary operator that is
-    /// defined.
+    /// BinopPrecedence - 定義された各二項演算子の優先順位を保持する
     static std::map<char, int> BinopPrecedence;
 
-    /// GetTokPrecedence - Get the precedence of the pending binary operator token.
+    /// GetTokPrecedence - 保留中の二項演算子トークンの優先順位を取得
     static int GetTokPrecedence() {
       if (!isascii(CurTok))
         return -1;
 
-      // Make sure it's a declared binop.
+      // 宣言された二項演算子かどうか確認
       int TokPrec = BinopPrecedence[CurTok];
       if (TokPrec <= 0) return -1;
       return TokPrec;
     }
 
     int main() {
-      // Install standard binary operators.
-      // 1 is lowest precedence.
+      // 標準二項演算子をインストール
+      // 1が最低優先順位
       BinopPrecedence['<'] = 10;
       BinopPrecedence['+'] = 20;
       BinopPrecedence['-'] = 20;
-      BinopPrecedence['*'] = 40;  // highest.
+      BinopPrecedence['*'] = 40;  // 最高
       ...
     }
 
-For the basic form of Kaleidoscope, we will only support 4 binary
-operators (this can obviously be extended by you, our brave and intrepid
-reader). The ``GetTokPrecedence`` function returns the precedence for
-the current token, or -1 if the token is not a binary operator. Having a
-map makes it easy to add new operators and makes it clear that the
-algorithm doesn't depend on the specific operators involved, but it
-would be easy enough to eliminate the map and do the comparisons in the
-``GetTokPrecedence`` function. (Or just use a fixed-size array).
+Kaleidoscopeの基本形では、4つの二項演算子のみをサポートします (これは、勇敢で不屈の読者の皆さんによって明らかに拡張できます) 。 ``GetTokPrecedence`` 関数は、現在のトークンの優先順位を返し、トークンが二項演算子でない場合は-1を返します。マップを持つことで、新しい演算子を簡単に追加でき、アルゴリズムが関与する特定の演算子に依存しないことが明確になりますが、マップを除去して ``GetTokPrecedence`` 関数で比較を行うことも十分簡単です (または、固定サイズ配列を使用するだけでも) 。
 
-With the helper above defined, we can now start parsing binary
-expressions. The basic idea of operator precedence parsing is to break
-down an expression with potentially ambiguous binary operators into
-pieces. Consider, for example, the expression "a+b+(c+d)\*e\*f+g".
-Operator precedence parsing considers this as a stream of primary
-expressions separated by binary operators. As such, it will first parse
-the leading primary expression "a", then it will see the pairs [+, b]
-[+, (c+d)] [\*, e] [\*, f] and [+, g]. Note that because parentheses are
-primary expressions, the binary expression parser doesn't need to worry
-about nested subexpressions like (c+d) at all.
+上記のヘルパーが定義されたことで、二項式の解析を始めることができます。演算子優先順位解析の基本アイデアは、曖昧になりうる二項演算子を持つ式をピースに分解することです。例えば、式"a+b+(c+d)\*e\*f+g"を考えてみてください。演算子優先順位解析は、これを二項演算子で区切られたプライマリ式のストリームとして考えます。そのため、まず先頭のプライマリ式"a"を解析し、次にペア[+, b] [+, (c+d)] [\*, e] [\*, f] および [+, g]を見ることになります。括弧はプライマリ式であるため、二項式パーサーは(c+d)のようなネストした部分式をまったく心配する必要がありません。
 
-To start, an expression is a primary expression potentially followed by
-a sequence of [binop,primaryexpr] pairs:
+まず、式はプライマリ式であり、その後に[binop,primaryexpr]ペアのシーケンスが続く場合があります: 
 
 .. code-block:: c++
 
@@ -422,20 +304,9 @@ a sequence of [binop,primaryexpr] pairs:
       return ParseBinOpRHS(0, std::move(LHS));
     }
 
-``ParseBinOpRHS`` is the function that parses the sequence of pairs for
-us. It takes a precedence and a pointer to an expression for the part
-that has been parsed so far. Note that "x" is a perfectly valid
-expression: As such, "binoprhs" is allowed to be empty, in which case it
-returns the expression that is passed into it. In our example above, the
-code passes the expression for "a" into ``ParseBinOpRHS`` and the
-current token is "+".
+``ParseBinOpRHS`` は、私たちのためにペアのシーケンスを解析する関数です。これは優先順位と、これまでに解析された部分の式へのポインタを受け取ります。"x"は完全に有効な式であることに注意してください: そのため、"binoprhs"は空であることが許され、その場合には渡された式を返します。上記の例では、コードは"a"の式を ``ParseBinOpRHS`` に渡し、現在のトークンは"+"です。
 
-The precedence value passed into ``ParseBinOpRHS`` indicates the
-*minimal operator precedence* that the function is allowed to eat. For
-example, if the current pair stream is [+, x] and ``ParseBinOpRHS`` is
-passed in a precedence of 40, it will not consume any tokens (because
-the precedence of '+' is only 20). With this in mind, ``ParseBinOpRHS``
-starts with:
+``ParseBinOpRHS`` に渡される優先順位値は、関数が消費できる *最小演算子優先順位*を示します。例えば、現在のペアストリームが[+, x]で、 ``ParseBinOpRHS`` に優先順位40が渡された場合、トークンは消費されません (「+」の優先順位はわずか20だからです) 。これを念頭に置いて、``ParseBinOpRHS`` は次のように始まります: 
 
 .. code-block:: c++
 
@@ -443,129 +314,82 @@ starts with:
     ///   ::= ('+' primary)*
     static std::unique_ptr<ExprAST> ParseBinOpRHS(int ExprPrec,
                                                   std::unique_ptr<ExprAST> LHS) {
-      // If this is a binop, find its precedence.
+      // 二項演算子の場合、その優先順位を見つける
       while (true) {
         int TokPrec = GetTokPrecedence();
 
-        // If this is a binop that binds at least as tightly as the current binop,
-        // consume it, otherwise we are done.
+        // 現在の二項演算子と同じかそれ以上に強く結合する二項演算子の場合、消費する。
+        // そうでなければ完了
         if (TokPrec < ExprPrec)
           return LHS;
 
-This code gets the precedence of the current token and checks to see if
-if is too low. Because we defined invalid tokens to have a precedence of
--1, this check implicitly knows that the pair-stream ends when the token
-stream runs out of binary operators. If this check succeeds, we know
-that the token is a binary operator and that it will be included in this
-expression:
+このコードは現在のトークンの優先順位を取得し、それが低すぎるかどうかをチェックします。無効なトークンの優先順位を-1と定義したため、このチェックは、トークンストリームが二項演算子を使い果たしたときにペアストリームが終了することを暗黙的に知っています。このチェックが成功した場合、トークンが二項演算子であり、この式に含まれることがわかります: 
 
 .. code-block:: c++
 
-        // Okay, we know this is a binop.
+        // これが二項演算子であることがわかった
         int BinOp = CurTok;
-        getNextToken();  // eat binop
+        getNextToken();  // 二項演算子を消費
 
-        // Parse the primary expression after the binary operator.
+        // 二項演算子の後のプライマリ式を解析
         auto RHS = ParsePrimary();
         if (!RHS)
           return nullptr;
 
-As such, this code eats (and remembers) the binary operator and then
-parses the primary expression that follows. This builds up the whole
-pair, the first of which is [+, b] for the running example.
+このように、このコードは二項演算子を消費 (そして記憶) してから、それに続くプライマリ式を解析します。これによって全体のペアが構築され、実行例の最初のペアは[+, b]になります。
 
-Now that we parsed the left-hand side of an expression and one pair of
-the RHS sequence, we have to decide which way the expression associates.
-In particular, we could have "(a+b) binop unparsed" or "a + (b binop
-unparsed)". To determine this, we look ahead at "binop" to determine its
-precedence and compare it to BinOp's precedence (which is '+' in this
-case):
+式の左辺と右辺シーケンスの1つのペアを解析したので、式がどちらの方向に結合するかを決定しなければなりません。特に、「(a+b) binop unparsed」または「a + (b binop unparsed)」を持つことができます。これを決定するために、「binop」を先読みしてその優先順位を決定し、BinOpの優先順位 (この場合は「+」) と比較します: 
 
 .. code-block:: c++
 
-        // If BinOp binds less tightly with RHS than the operator after RHS, let
-        // the pending operator take RHS as its LHS.
+        // BinOpがRHS以降の演算子よりも弱く結合する場合、
+        // 保留中の演算子がRHSをそのLHSとして取るようにする
         int NextPrec = GetTokPrecedence();
         if (TokPrec < NextPrec) {
 
-If the precedence of the binop to the right of "RHS" is lower or equal
-to the precedence of our current operator, then we know that the
-parentheses associate as "(a+b) binop ...". In our example, the current
-operator is "+" and the next operator is "+", we know that they have the
-same precedence. In this case we'll create the AST node for "a+b", and
-then continue parsing:
+「RHS」の右側にある二項演算子の優先順位が現在の演算子の優先順位よりも低いか等しい場合、括弧は「(a+b) binop ...」として結合することがわかります。この例では、現在の演算子は「+」で次の演算子は「+」であり、それらは同じ優先順位を持つことがわかります。この場合、「a+b」のASTノードを作成し、解析を続行します: 
 
 .. code-block:: c++
 
-          ... if body omitted ...
+          ... if body省略 ...
         }
 
-        // Merge LHS/RHS.
+        // LHS/RHSをマージ
         LHS = std::make_unique<BinaryExprAST>(BinOp, std::move(LHS),
                                                std::move(RHS));
-      }  // loop around to the top of the while loop.
+      }  // whileループの先頭に戻る
     }
 
-In our example above, this will turn "a+b+" into "(a+b)" and execute the
-next iteration of the loop, with "+" as the current token. The code
-above will eat, remember, and parse "(c+d)" as the primary expression,
-which makes the current pair equal to [+, (c+d)]. It will then evaluate
-the 'if' conditional above with "\*" as the binop to the right of the
-primary. In this case, the precedence of "\*" is higher than the
-precedence of "+" so the if condition will be entered.
+上記の例では、これにより「a+b+」が「(a+b)」に変換され、「+」を現在のトークンとしてループの次の反復が実行されます。上記のコードは「(c+d)」をプライマリ式として食べ、記憶し、解析し、現在のペアを[+, (c+d)]と等しくします。次に、プライマリの右側の二項演算子として「*」を使用して、上記の'if'条件を評価します。この場合、「*」の優先順位は「+」の優先順位よりも高いため、if条件に入ります。
 
-The critical question left here is "how can the if condition parse the
-right hand side in full"? In particular, to build the AST correctly for
-our example, it needs to get all of "(c+d)\*e\*f" as the RHS expression
-variable. The code to do this is surprisingly simple (code from the
-above two blocks duplicated for context):
+ここで残された重要な質問は「if条件はどのように右側を完全に解析できるのか？」です。特に、この例でASTを正しく構築するには、「(c+d)*e*f」のすべてをRHS式変数として取得する必要があります。これを行うコードは驚くほどシンプルです (コンテキストのために上記の2つのブロックからのコードを複製) : 
 
 .. code-block:: c++
 
-        // If BinOp binds less tightly with RHS than the operator after RHS, let
-        // the pending operator take RHS as its LHS.
+        // BinOpがRHS以降の演算子よりも弱く結合する場合、
+        // 保留中の演算子がRHSをそのLHSとして取るようにする
         int NextPrec = GetTokPrecedence();
         if (TokPrec < NextPrec) {
           RHS = ParseBinOpRHS(TokPrec+1, std::move(RHS));
           if (!RHS)
             return nullptr;
         }
-        // Merge LHS/RHS.
+        // LHS/RHSをマージ
         LHS = std::make_unique<BinaryExprAST>(BinOp, std::move(LHS),
                                                std::move(RHS));
-      }  // loop around to the top of the while loop.
+      }  // whileループの先頭に戻る
     }
 
-At this point, we know that the binary operator to the RHS of our
-primary has higher precedence than the binop we are currently parsing.
-As such, we know that any sequence of pairs whose operators are all
-higher precedence than "+" should be parsed together and returned as
-"RHS". To do this, we recursively invoke the ``ParseBinOpRHS`` function
-specifying "TokPrec+1" as the minimum precedence required for it to
-continue. In our example above, this will cause it to return the AST
-node for "(c+d)\*e\*f" as RHS, which is then set as the RHS of the '+'
-expression.
+この時点で、プライマリのRHS側にある二項演算子が、現在解析中の二項演算子よりも高い優先順位を持つことがわかっています。そのため、演算子がすべて「+」よりも高い優先順位を持つペアのシーケンスは、一緒に解析され「RHS」として返されるべきであることがわかっています。これを行うために、 ``ParseBinOpRHS`` 関数を再帰的に呼び出し、継続するために必要な最小優先順位として「TokPrec+1」を指定します。上記の例では、これにより「(c+d)*e*f」のASTノードがRHSとして返され、それが'+'式のRHSとして設定されます。
 
-Finally, on the next iteration of the while loop, the "+g" piece is
-parsed and added to the AST. With this little bit of code (14
-non-trivial lines), we correctly handle fully general binary expression
-parsing in a very elegant way. This was a whirlwind tour of this code,
-and it is somewhat subtle. I recommend running through it with a few
-tough examples to see how it works.
+最後に、whileループの次の反復で「+g」の部分が解析され、ASTに追加されます。この少しのコード (非自明な14行) で、非常にエレガントな方法で完全に一般的な二項式の解析を正しく処理します。これはこのコードの駆け足ツアーであり、やや微妙です。どのように動作するかを理解するために、いくつかの困難な例で実行することをお勧めします。
 
-This wraps up handling of expressions. At this point, we can point the
-parser at an arbitrary token stream and build an expression from it,
-stopping at the first token that is not part of the expression. Next up
-we need to handle function definitions, etc.
+これで式の処理が完了しました。この時点で、parserを任意のトークンストリームに指向し、そこから式を構築し、式の一部ではない最初のトークンで停止することができます。次に、関数定義などを処理する必要があります。
 
-Parsing the Rest
-================
+残りの解析
+==========
 
-The next thing missing is handling of function prototypes. In
-Kaleidoscope, these are used both for 'extern' function declarations as
-well as function body definitions. The code to do this is
-straight-forward and not very interesting (once you've survived
-expressions):
+次に不足しているのは関数プロトタイプの処理です。Kaleidoscopeでは、これらは'extern'関数宣言と関数本体定義の両方で使用されます。これを行うコードは分かりやすく、あまり興味深くありません (式を乗り切った後では) : 
 
 .. code-block:: c++
 
@@ -581,27 +405,26 @@ expressions):
       if (CurTok != '(')
         return LogErrorP("Expected '(' in prototype");
 
-      // Read the list of argument names.
+      // 引数名のリストを読み取り
       std::vector<std::string> ArgNames;
       while (getNextToken() == tok_identifier)
         ArgNames.push_back(IdentifierStr);
       if (CurTok != ')')
         return LogErrorP("Expected ')' in prototype");
 
-      // success.
-      getNextToken();  // eat ')'.
+      // 成功
+      getNextToken();  // eat ')'
 
       return std::make_unique<PrototypeAST>(FnName, std::move(ArgNames));
     }
 
-Given this, a function definition is very simple, just a prototype plus
-an expression to implement the body:
+これがあることで、関数定義は非常にシンプルで、プロトタイプに本体を実装するための式を加えただけです: 
 
 .. code-block:: c++
 
     /// definition ::= 'def' prototype expression
     static std::unique_ptr<FunctionAST> ParseDefinition() {
-      getNextToken();  // eat def.
+      getNextToken();  // eat def
       auto Proto = ParsePrototype();
       if (!Proto) return nullptr;
 
@@ -610,44 +433,36 @@ an expression to implement the body:
       return nullptr;
     }
 
-In addition, we support 'extern' to declare functions like 'sin' and
-'cos' as well as to support forward declaration of user functions. These
-'extern's are just prototypes with no body:
+さらに、'sin'や'cos'のような関数を宣言し、ユーザー関数の前方宣言をサポートするために'extern'をサポートします。これらの'extern'は本体のないプロトタイプだけです: 
 
 .. code-block:: c++
 
     /// external ::= 'extern' prototype
     static std::unique_ptr<PrototypeAST> ParseExtern() {
-      getNextToken();  // eat extern.
+      getNextToken();  // eat extern
       return ParsePrototype();
     }
 
-Finally, we'll also let the user type in arbitrary top-level expressions
-and evaluate them on the fly. We will handle this by defining anonymous
-nullary (zero argument) functions for them:
+最後に、ユーザーが任意のトップレベル式を入力し、その場で評価できるようにします。これは、それらのために無名のnullary (引数ゼロ) 関数を定義することで処理します: 
 
 .. code-block:: c++
 
     /// toplevelexpr ::= expression
     static std::unique_ptr<FunctionAST> ParseTopLevelExpr() {
       if (auto E = ParseExpression()) {
-        // Make an anonymous proto.
+        // 無名プロトタイプを作成
         auto Proto = std::make_unique<PrototypeAST>("", std::vector<std::string>());
         return std::make_unique<FunctionAST>(std::move(Proto), std::move(E));
       }
       return nullptr;
     }
 
-Now that we have all the pieces, let's build a little driver that will
-let us actually *execute* this code we've built!
+すべての部品が揃ったところで、小さなドライバーを構築して実際にこの構築したコードを*実行*できるようにしましょう！
 
-The Driver
-==========
+ドライバー
+=======
 
-The driver for this simply invokes all of the parsing pieces with a
-top-level dispatch loop. There isn't much interesting here, so I'll just
-include the top-level loop. See `below <#full-code-listing>`_ for full code in the
-"Top-Level Parsing" section.
+このドライバーは、トップレベルのディスパッチループですべての解析ピースを単純に呼び出します。ここにはあまり興味深いものはないので、トップレベルループだけを含めます。「トップレベル解析」セクションの完全なコードについては `下記 <#full-code-listing>`_ を参照してください。
 
 .. code-block:: c++
 
@@ -658,7 +473,7 @@ include the top-level loop. See `below <#full-code-listing>`_ for full code in t
         switch (CurTok) {
         case tok_eof:
           return;
-        case ';': // ignore top-level semicolons.
+        case ';': // トップレベルのセミコロンを無視
           getNextToken();
           break;
         case tok_def:
@@ -674,61 +489,47 @@ include the top-level loop. See `below <#full-code-listing>`_ for full code in t
       }
     }
 
-The most interesting part of this is that we ignore top-level
-semicolons. Why is this, you ask? The basic reason is that if you type
-"4 + 5" at the command line, the parser doesn't know whether that is the
-end of what you will type or not. For example, on the next line you
-could type "def foo..." in which case 4+5 is the end of a top-level
-expression. Alternatively you could type "\* 6", which would continue
-the expression. Having top-level semicolons allows you to type "4+5;",
-and the parser will know you are done.
+ここで最も興味深い部分は、トップレベルのセミコロンを無視することです。なぜでしょうか？基本的な理由は、コマンドラインで「4 + 5」と入力したとき、parserはそれが入力する内容の終わりなのかどうかわからないからです。たとえば、次の行で「def foo...」と入力した場合、4+5はトップレベル式の終わりになります。あるいは「* 6」と入力して式を継続することもできます。トップレベルのセミコロンを持つことで、「4+5;」と入力でき、parserは完了したことを知ることができます。
 
-Conclusions
-===========
+結論
+====
 
-With just under 400 lines of commented code (240 lines of non-comment,
-non-blank code), we fully defined our minimal language, including a
-lexer, parser, and AST builder. With this done, the executable will
-validate Kaleidoscope code and tell us if it is grammatically invalid.
-For example, here is a sample interaction:
+400行未満のコメント付きコード (非コメント、非空白コード240行) で、lexer、parser、ASTビルダーを含むミニマル言語を完全に定義しました。これが完了したことで、実行ファイルはKaleidoscopeコードを検証し、文法的に無効な場合は教えてくれます。たとえば、こちらはサンプルのインタラクションです: 
 
 .. code-block:: bash
 
     $ ./a.out
     ready> def foo(x y) x+foo(y, 4.0);
-    Parsed a function definition.
+    関数定義を解析しました。
     ready> def foo(x y) x+y y;
-    Parsed a function definition.
-    Parsed a top-level expr
+    関数定義を解析しました。
+    トップレベル式を解析しました
     ready> def foo(x y) x+y );
-    Parsed a function definition.
-    Error: unknown token when expecting an expression
+    関数定義を解析しました。
+    エラー: 式を期待しているときの未知のトークン
     ready> extern sin(a);
-    ready> Parsed an extern
+    ready> externを解析しました
     ready> ^D
     $
 
-There is a lot of room for extension here. You can define new AST nodes,
-extend the language in many ways, etc. In the `next
-installment <LangImpl03.html>`_, we will describe how to generate LLVM
-Intermediate Representation (IR) from the AST.
+ここには拡張の余地がたくさんあります。新しいASTノードを定義したり、言語を様々な方法で拡張したりできます。 `次の回 <LangImpl03.html>`_ では、ASTからLLVM中間表現 (IR) を生成する方法について説明します。
 
-Full Code Listing
-=================
+全コードリスト
+==============
 
-Here is the complete code listing for our running example.
+こちらは実行中の例の完全なコードリストです。
 
 .. code-block:: bash
 
-    # Compile
+    # コンパイル
     clang++ -g -O3 toy.cpp
-    # Run
+    # 実行
     ./a.out
 
-Here is the code:
+コードはこちらです: 
 
 .. literalinclude:: ../../../examples/Kaleidoscope/Chapter2/toy.cpp
    :language: c++
 
-`Next: Implementing Code Generation to LLVM IR <LangImpl03.html>`_
+`次: LLVM IRへのコード生成の実装 <LangImpl03.html>`_
 

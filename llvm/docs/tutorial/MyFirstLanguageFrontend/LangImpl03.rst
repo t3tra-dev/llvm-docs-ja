@@ -1,44 +1,32 @@
-========================================
-Kaleidoscope: Code generation to LLVM IR
-========================================
+==============================
+Kaleidoscope: LLVM IRへのコード生成
+==============================
 
 .. contents::
    :local:
 
-Chapter 3 Introduction
-======================
+第3章 はじめに
+===============
 
-Welcome to Chapter 3 of the "`Implementing a language with
-LLVM <index.html>`_" tutorial. This chapter shows you how to transform
-the `Abstract Syntax Tree <LangImpl02.html>`_, built in Chapter 2, into
-LLVM IR. This will teach you a little bit about how LLVM does things, as
-well as demonstrate how easy it is to use. It's much more work to build
-a lexer and parser than it is to generate LLVM IR code. :)
+「 `LLVMを使った言語実装 <index.html>`_」チュートリアルの第3章へようこそ。この章では、第2章で構築した `抽象構文木 <LangImpl02.html>`_ をLLVM IRに変換する方法を示します。これにより、LLVMがどのように動作するかを少し学び、同時にそれがいかに使いやすいかを実証します。lexerとparserを構築するよりも、LLVM IRコードを生成する方がはるかに作業が少ないのです。:)
 
-**Please note**: the code in this chapter and later require LLVM 3.7 or
-later. LLVM 3.6 and before will not work with it. Also note that you
-need to use a version of this tutorial that matches your LLVM release:
-If you are using an official LLVM release, use the version of the
-documentation included with your release or on the `llvm.org releases
-page <https://llvm.org/releases/>`_.
+**注意してください**: この章以降のコードは、LLVM 3.7以降を必要とします。LLVM 3.6以前では動作しません。また、使用するLLVMリリースに一致するバージョンのチュートリアルを使用する必要があります: 公式のLLVMリリースを使用している場合は、リリースに含まれているバージョンのドキュメント、または `llvm.org releases page <https://llvm.org/releases/>`_ のバージョンを使用してください。
 
-Code Generation Setup
-=====================
+コード生成の設定
+=================
 
-In order to generate LLVM IR, we want some simple setup to get started.
-First we define virtual code generation (codegen) methods in each AST
-class:
+LLVM IRを生成するために、始めるための簡単な設定が必要です。まず、各ASTクラスに仮想コード生成 (codegen) メソッドを定義します: 
 
 .. code-block:: c++
 
-    /// ExprAST - Base class for all expression nodes.
+    /// ExprAST - すべての式ノードのベースクラス
     class ExprAST {
     public:
       virtual ~ExprAST() = default;
       virtual Value *codegen() = 0;
     };
 
-    /// NumberExprAST - Expression class for numeric literals like "1.0".
+    /// NumberExprAST - "1.0"のような数値リテラル用の式クラス
     class NumberExprAST : public ExprAST {
       double Val;
 
@@ -48,28 +36,11 @@ class:
     };
     ...
 
-The codegen() method says to emit IR for that AST node along with all
-the things it depends on, and they all return an LLVM Value object.
-"Value" is the class used to represent a "`Static Single Assignment
-(SSA) <http://en.wikipedia.org/wiki/Static_single_assignment_form>`_
-register" or "SSA value" in LLVM. The most distinct aspect of SSA values
-is that their value is computed as the related instruction executes, and
-it does not get a new value until (and if) the instruction re-executes.
-In other words, there is no way to "change" an SSA value. For more
-information, please read up on `Static Single
-Assignment <http://en.wikipedia.org/wiki/Static_single_assignment_form>`_
-- the concepts are really quite natural once you grok them.
+codegen()メソッドは、そのASTノードとそれが依存するすべてのものに対してIRを発行し、すべてがLLVM Valueオブジェクトを返すことを意味します。"Value"は、LLVMで"静的単一代入 (Static Single Assignment, `SSA <http://en.wikipedia.org/wiki/Static_single_assignment_form>`_) レジスタ"または"SSA値"を表すために使用されるクラスです。SSA値の最も特徴的な側面は、その値が関連する命令が実行されるときに計算され、命令が再実行されるまで (した場合) 新しい値を取得しないことです。言い換えると、SSA値を「変更」する方法はありません。詳細については、`静的単一代入 <http://en.wikipedia.org/wiki/Static_single_assignment_form>`_ について読んでください - 一度理解すると、概念は本当に非常に自然です。
 
-Note that instead of adding virtual methods to the ExprAST class
-hierarchy, it could also make sense to use a `visitor
-pattern <http://en.wikipedia.org/wiki/Visitor_pattern>`_ or some other
-way to model this. Again, this tutorial won't dwell on good software
-engineering practices: for our purposes, adding a virtual method is
-simplest.
+ExprASTクラス階層に仮想メソッドを追加する代わりに、`ビジターパターン <http://en.wikipedia.org/wiki/Visitor_pattern>`_ や他の方法でこれをモデル化することも理にかなっていることに注意してください。繰り返しますが、このチュートリアルでは優れたソフトウェアエンジニアリングプラクティスにはこだわりません: 私たちの目的のためには、仮想メソッドを追加するのが最も簡単です。
 
-The second thing we want is a "LogError" method like we used for the
-parser, which will be used to report errors found during code generation
-(for example, use of an undeclared parameter):
+次に必要なのは、parserで使用したような"LogError"メソッドで、これはコード生成中に発見されたエラー (例: 未宣言パラメータの使用) を報告するために使用されます: 
 
 .. code-block:: c++
 
@@ -83,41 +54,20 @@ parser, which will be used to report errors found during code generation
       return nullptr;
     }
 
-The static variables will be used during code generation. ``TheContext``
-is an opaque object that owns a lot of core LLVM data structures, such as
-the type and constant value tables. We don't need to understand it in
-detail, we just need a single instance to pass into APIs that require it.
+これらのstatic変数はコード生成中に使用されます。``TheContext`` は型テーブルや定数値テーブルなど、多くのコアLLVMデータ構造を所有する不透明なオブジェクトです。詳細を理解する必要はなく、これを必要とするAPIに渡す単一のインスタンスがあれば十分です。
 
-The ``Builder`` object is a helper object that makes it easy to generate
-LLVM instructions. Instances of the
-`IRBuilder <https://llvm.org/doxygen/IRBuilder_8h_source.html>`_
-class template keep track of the current place to insert instructions
-and has methods to create new instructions.
+``Builder`` オブジェクトは、LLVM命令の生成を簡単にするヘルパーオブジェクトです。 `IRBuilder <https://llvm.org/doxygen/IRBuilder_8h_source.html>`_ クラステンプレートのインスタンスは、命令を挿入する現在位置を追跡し、新しい命令を作成するメソッドを持っています。
 
-``TheModule`` is an LLVM construct that contains functions and global
-variables. In many ways, it is the top-level structure that the LLVM IR
-uses to contain code. It will own the memory for all of the IR that we
-generate, which is why the codegen() method returns a raw Value\*,
-rather than a unique_ptr<Value>.
+``TheModule`` は関数とグローバル変数を含むLLVM構成体です。多くの点で、LLVM IRがコードを含めるために使用するトップレベル構造です。生成するすべてのIRのメモリを所有するため、codegen()メソッドはunique_ptr<Value>ではなく、生のValue*を返します。
 
-The ``NamedValues`` map keeps track of which values are defined in the
-current scope and what their LLVM representation is. (In other words, it
-is a symbol table for the code). In this form of Kaleidoscope, the only
-things that can be referenced are function parameters. As such, function
-parameters will be in this map when generating code for their function
-body.
+``NamedValues`` マップは、現在のスコープで定義されている値とそのLLVM表現が何であるかを追跡します (つまり、コードのシンボルテーブルです) 。この形のKaleidoscopeでは、参照できるものは関数パラメータのみです。そのため、関数本体のコードを生成するときに、関数パラメータがこのマップに含まれることになります。
 
-With these basics in place, we can start talking about how to generate
-code for each expression. Note that this assumes that the ``Builder``
-has been set up to generate code *into* something. For now, we'll assume
-that this has already been done, and we'll just use it to emit code.
+これらの基本が整ったところで、各式のコード生成方法について話し始めることができます。これは ``Builder`` が何かにコードを生成*する*ように設定されていることを前提としていることに注意してください。今のところ、これがすでに行われていると仮定し、コードを発行するためにそれを使用するだけです。
 
-Expression Code Generation
-==========================
+式のコード生成
+================
 
-Generating LLVM code for expression nodes is very straightforward: less
-than 45 lines of commented code for all four of our expression nodes.
-First we'll do numeric literals:
+式ノード用のLLVMコードの生成は非常に分かりやすく、4つの式ノードすべてに対してコメント付きで45行未満のコードです。まず数値リテラルから始めましょう: 
 
 .. code-block:: c++
 
@@ -125,33 +75,19 @@ First we'll do numeric literals:
       return ConstantFP::get(*TheContext, APFloat(Val));
     }
 
-In the LLVM IR, numeric constants are represented with the
-``ConstantFP`` class, which holds the numeric value in an ``APFloat``
-internally (``APFloat`` has the capability of holding floating point
-constants of Arbitrary Precision). This code basically just creates
-and returns a ``ConstantFP``. Note that in the LLVM IR that constants
-are all uniqued together and shared. For this reason, the API uses the
-"foo::get(...)" idiom instead of "new foo(..)" or "foo::Create(..)".
+LLVM IRでは、数値定数は ``ConstantFP`` クラスで表され、内部的に ``APFloat`` で数値を保持します (``APFloat`` は任意精度の浮動小数点定数を保持する機能を持っています) 。このコードは基本的に ``ConstantFP`` を作成して返すだけです。LLVM IRでは、定数はすべて一意化されて共有されることに注意してください。そのため、APIは "new foo(..)" や "foo::Create(..)" の代わりに"foo::get(...)" イディオムを使用します。
 
 .. code-block:: c++
 
     Value *VariableExprAST::codegen() {
-      // Look this variable up in the function.
+      // 関数内でこの変数を検索
       Value *V = NamedValues[Name];
       if (!V)
         LogErrorV("Unknown variable name");
       return V;
     }
 
-References to variables are also quite simple using LLVM. In the simple
-version of Kaleidoscope, we assume that the variable has already been
-emitted somewhere and its value is available. In practice, the only
-values that can be in the ``NamedValues`` map are function arguments.
-This code simply checks to see that the specified name is in the map (if
-not, an unknown variable is being referenced) and returns the value for
-it. In future chapters, we'll add support for `loop induction
-variables <LangImpl05.html#for-loop-expression>`_ in the symbol table, and for `local
-variables <LangImpl07.html#user-defined-local-variables>`_.
+変数への参照もLLVMを使用すると非常にシンプルです。Kaleidoscopeのシンプル版では、変数がすでにどこかで発行されており、その値が利用可能であると仮定します。実際には、``NamedValues`` マップに含まれる値は関数の引数のみです。このコードは、指定された名前がマップにあるかどうかを確認し (ない場合は未知の変数が参照されています) 、その値を返します。将来の章では、シンボルテーブルに `ループ誘導変数 <LangImpl05.html#for-loop-expression>`_ と `ローカル変数 <LangImpl07.html#user-defined-local-variables>`_ のサポートを追加します。
 
 .. code-block:: c++
 
@@ -170,7 +106,7 @@ variables <LangImpl07.html#user-defined-local-variables>`_.
         return Builder->CreateFMul(L, R, "multmp");
       case '<':
         L = Builder->CreateFCmpULT(L, R, "cmptmp");
-        // Convert bool 0/1 to double 0.0 or 1.0
+        // bool 0/1をdouble 0.0または1.0に変換
         return Builder->CreateUIToFP(L, Type::getDoubleTy(*TheContext),
                                      "booltmp");
       default:
@@ -178,51 +114,25 @@ variables <LangImpl07.html#user-defined-local-variables>`_.
       }
     }
 
-Binary operators start to get more interesting. The basic idea here is
-that we recursively emit code for the left-hand side of the expression,
-then the right-hand side, then we compute the result of the binary
-expression. In this code, we do a simple switch on the opcode to create
-the right LLVM instruction.
+二項演算子はより興味深くなり始めます。ここでの基本的なアイデアは、式の左辺のコードを再帰的に発行し、次に右辺、そして二項式の結果を計算することです。このコードでは、適切なLLVM命令を作成するためにオペコードに対して単純なswitchを実行します。
 
-In the example above, the LLVM builder class is starting to show its
-value. IRBuilder knows where to insert the newly created instruction,
-all you have to do is specify what instruction to create (e.g. with
-``CreateFAdd``), which operands to use (``L`` and ``R`` here) and
-optionally provide a name for the generated instruction.
+上記の例では、LLVMビルダークラスがその価値を示し始めています。IRBuilderは新しく作成された命令をどこに挿入するかを知っており、あなたがすることは、作成する命令 (例: ``CreateFAdd``) 、使用するオペランド (ここでは ``L`` と ``R``) を指定し、オプションで生成された命令の名前を提供することだけです。
 
-One nice thing about LLVM is that the name is just a hint. For instance,
-if the code above emits multiple "addtmp" variables, LLVM will
-automatically provide each one with an increasing, unique numeric
-suffix. Local value names for instructions are purely optional, but it
-makes it much easier to read the IR dumps.
+LLVMの優れた点の一つは、名前が単なるヒントであることです。たとえば、上記のコードが複数の"addtmp"変数を発行する場合、LLVMは自動的にそれぞれに増加する一意の数値サフィックスを提供します。命令のローカル値名は純粋にオプションですが、IRダンプを読むのがはるかに簡単になります。
 
-`LLVM instructions <../../LangRef.html#instruction-reference>`_ are constrained by strict
-rules: for example, the Left and Right operands of an `add
-instruction <../../LangRef.html#add-instruction>`_ must have the same type, and the
-result type of the add must match the operand types. Because all values
-in Kaleidoscope are doubles, this makes for very simple code for add,
-sub and mul.
+`LLVM命令 <../../LangRef.html#instruction-reference>`_ は厳格なルールによって制約されます: たとえば、 `add命令 <../../LangRef.html#add-instruction>`_ の左右のオペランドは同じ型である必要があり、addの結果型はオペランド型と一致する必要があります。Kaleidoscopeのすべての値はdoubleであるため、add、sub、mulに対して非常にシンプルなコードになります。
 
-On the other hand, LLVM specifies that the `fcmp
-instruction <../../LangRef.html#fcmp-instruction>`_ always returns an 'i1' value (a
-one bit integer). The problem with this is that Kaleidoscope wants the
-value to be a 0.0 or 1.0 value. In order to get these semantics, we
-combine the fcmp instruction with a `uitofp
-instruction <../../LangRef.html#uitofp-to-instruction>`_. This instruction converts its
-input integer into a floating point value by treating the input as an
-unsigned value. In contrast, if we used the `sitofp
-instruction <../../LangRef.html#sitofp-to-instruction>`_, the Kaleidoscope '<' operator
-would return 0.0 and -1.0, depending on the input value.
+一方、LLVMは `fcmp命令 <../../LangRef.html#fcmp-instruction>`_ が常に'i1'値 (1ビット整数) を返すことを指定しています。これの問題は、Kaleidoscopeが値を0.0または1.0の値にしたいということです。これらのセマンティクスを取得するために、fcmp命令を `uitofp命令 <../../LangRef.html#uitofp-to-instruction>`_ と組み合わせます。この命令は、入力を符号なし値として扱うことで、入力整数を浮動小数点値に変換します。対照的に、 `sitofp命令 <../../LangRef.html#sitofp-to-instruction>`_ を使用した場合、Kaleidoscopeの'<'演算子は入力値に応じて0.0と-1.0を返すでしょう。
 
 .. code-block:: c++
 
     Value *CallExprAST::codegen() {
-      // Look up the name in the global module table.
+      // グローバルモジュールテーブルで名前を検索
       Function *CalleeF = TheModule->getFunction(Callee);
       if (!CalleeF)
         return LogErrorV("Unknown function referenced");
 
-      // If argument mismatch error.
+      // 引数の不一致エラーのチェック
       if (CalleeF->arg_size() != Args.size())
         return LogErrorV("Incorrect # arguments passed");
 
@@ -236,39 +146,21 @@ would return 0.0 and -1.0, depending on the input value.
       return Builder->CreateCall(CalleeF, ArgsV, "calltmp");
     }
 
-Code generation for function calls is quite straightforward with LLVM. The code
-above initially does a function name lookup in the LLVM Module's symbol table.
-Recall that the LLVM Module is the container that holds the functions we are
-JIT'ing. By giving each function the same name as what the user specifies, we
-can use the LLVM symbol table to resolve function names for us.
+LLVM による関数呼び出しのコード生成は非常に分かりやすいものです。上記のコードは最初にLLVMモジュールのシンボルテーブルで関数名の検索を行います。LLVMモジュールはJITコンパイルしている関数を保持するコンテナであることを思い出してください。各関数にユーザーが指定したものと同じ名前を付けることで、LLVMシンボルテーブルを使用して関数名を解決できます。
 
-Once we have the function to call, we recursively codegen each argument
-that is to be passed in, and create an LLVM `call
-instruction <../../LangRef.html#call-instruction>`_. Note that LLVM uses the native C
-calling conventions by default, allowing these calls to also call into
-standard library functions like "sin" and "cos", with no additional
-effort.
+呼び出す関数が決まったら、渡される各引数を再帰的にコード生成し、LLVM `call命令 <../../LangRef.html#call-instruction>`_ を作成します。LLVMはデフォルトでネイティブC呼び出し規約を使用するため、これらの呼び出しは追加の労力なしに"sin"や"cos"などの標準ライブラリ関数も呼び出すことができることに注意してください。
 
-This wraps up our handling of the four basic expressions that we have so
-far in Kaleidoscope. Feel free to go in and add some more. For example,
-by browsing the `LLVM language reference <../../LangRef.html>`_ you'll find
-several other interesting instructions that are really easy to plug into
-our basic framework.
+これで、Kaleidoscopeで現在持っている4つの基本式の処理が完了しました。ぜひもっと追加してみてください。たとえば、`LLVM言語リファレンス <../../LangRef.html>`_ を参照すると、基本フレームワークに簡単に組み込むことができる興味深い他の命令がいくつか見つかるでしょう。
 
-Function Code Generation
-========================
+関数のコード生成
+================
 
-Code generation for prototypes and functions must handle a number of
-details, which make their code less beautiful than expression code
-generation, but allows us to illustrate some important points. First,
-let's talk about code generation for prototypes: they are used both for
-function bodies and external function declarations. The code starts
-with:
+プロトタイプと関数のコード生成は多くの詳細を処理する必要があり、式のコード生成ほど美しくありませんが、いくつかの重要な点を説明できます。まず、プロトタイプのコード生成について話しましょう: これらは関数本体と外部関数宣言の両方で使用されます。コードは次のように始まります: 
 
 .. code-block:: c++
 
     Function *PrototypeAST::codegen() {
-      // Make the function type:  double(double,double) etc.
+      // 関数型を作成:  double(double,double) など
       std::vector<Type*> Doubles(Args.size(),
                                  Type::getDoubleTy(*TheContext));
       FunctionType *FT =
@@ -277,54 +169,29 @@ with:
       Function *F =
         Function::Create(FT, Function::ExternalLinkage, Name, TheModule.get());
 
-This code packs a lot of power into a few lines. Note first that this
-function returns a "Function\*" instead of a "Value\*". Because a
-"prototype" really talks about the external interface for a function
-(not the value computed by an expression), it makes sense for it to
-return the LLVM Function it corresponds to when codegen'd.
+このコードは数行に多くの機能を詰め込んでいます。まず、この関数が"Value*"ではなく"Function*"を返すことに注意してください。"prototype"は実際には関数の外部インターフェース (式で計算される値ではない) について話しているため、コード生成時に対応するLLVM関数を返すことは理にかなっています。
 
-The call to ``FunctionType::get`` creates the ``FunctionType`` that
-should be used for a given Prototype. Since all function arguments in
-Kaleidoscope are of type double, the first line creates a vector of "N"
-LLVM double types. It then uses the ``Functiontype::get`` method to
-create a function type that takes "N" doubles as arguments, returns one
-double as a result, and that is not vararg (the false parameter
-indicates this). Note that Types in LLVM are uniqued just like Constants
-are, so you don't "new" a type, you "get" it.
+``FunctionType::get`` の呼び出しは、与えられたPrototypeに使用すべき ``FunctionType`` を作成します。Kaleidoscopeのすべての関数引数はdouble型であるため、最初の行は"N"個のLLVM double型のベクターを作成します。次に ``Functiontype::get`` メソッドを使用して、"N"個のdoubleを引数として受け取り、結果として1つのdoubleを返し、可変引数でない (falseパラメータがこれを示している) 関数型を作成します。LLVMの型は定数と同様に一意化されているため、型を"new"するのではなく"get"することに注意してください。
 
-The final line above actually creates the IR Function corresponding to
-the Prototype. This indicates the type, linkage and name to use, as
-well as which module to insert into. "`external
-linkage <../../LangRef.html#linkage>`_" means that the function may be
-defined outside the current module and/or that it is callable by
-functions outside the module. The Name passed in is the name the user
-specified: since "``TheModule``" is specified, this name is registered
-in "``TheModule``"s symbol table.
+上記の最後の行は、実際にプロトタイプに対応するIR関数を作成します。これは使用する型、リンケージ、名前、および挿入するモジュールを示します。"`外部リンケージ <../../LangRef.html#linkage>`_" は、関数が現在のモジュールの外部で定義される可能性があり、かつ/またはモジュール外部の関数によって呼び出し可能であることを意味します。渡される名前はユーザーが指定した名前です: "``TheModule``"が指定されているため、この名前は"``TheModule``"のシンボルテーブルに登録されます。
 
 .. code-block:: c++
 
-  // Set names for all arguments.
+  // すべての引数の名前を設定
   unsigned Idx = 0;
   for (auto &Arg : F->args())
     Arg.setName(Args[Idx++]);
 
   return F;
 
-Finally, we set the name of each of the function's arguments according to the
-names given in the Prototype. This step isn't strictly necessary, but keeping
-the names consistent makes the IR more readable, and allows subsequent code to
-refer directly to the arguments for their names, rather than having to look
-them up in the Prototype AST.
+最後に、プロトタイプで指定された名前に従って、関数の各引数の名前を設定します。このステップは厳密には必要ありませんが、名前を一貫させることでIRがより読みやすくなり、後続のコードがプロトタイプASTで名前を調べる代わりに、引数を直接名前で参照できるようになります。
 
-At this point we have a function prototype with no body. This is how LLVM IR
-represents function declarations. For extern statements in Kaleidoscope, this
-is as far as we need to go. For function definitions however, we need to
-codegen and attach a function body.
+この時点で、本体のない関数プロトタイプができました。これは、LLVM IRが関数宣言を表現する方法です。Kaleidoscopeのextern文では、ここまでで十分です。しかし、関数定義の場合は、関数本体をコード生成して添付する必要があります。
 
 .. code-block:: c++
 
   Function *FunctionAST::codegen() {
-      // First, check for an existing function from a previous 'extern' declaration.
+      // 最初に、以前の'extern'宣言からの既存の関数をチェック
     Function *TheFunction = TheModule->getFunction(Proto->getName());
 
     if (!TheFunction)
@@ -337,115 +204,73 @@ codegen and attach a function body.
       return (Function*)LogErrorV("Function cannot be redefined.");
 
 
-For function definitions, we start by searching TheModule's symbol table for an
-existing version of this function, in case one has already been created using an
-'extern' statement. If Module::getFunction returns null then no previous version
-exists, so we'll codegen one from the Prototype. In either case, we want to
-assert that the function is empty (i.e. has no body yet) before we start.
+関数定義では、'extern'文を使用してすでに作成されている場合に備えて、TheModuleのシンボルテーブルでこの関数の既存バージョンを検索することから始めます。Module::getFunctionがnullを返す場合は、以前のバージョンが存在しないため、プロトタイプから一つをコード生成します。いずれの場合も、開始前に関数が空である (つまり、まだ本体がない) ことをアサートしたいと思います。
 
 .. code-block:: c++
 
-  // Create a new basic block to start insertion into.
+  // 新しいベーシックブロックを作成して挿入を開始
   BasicBlock *BB = BasicBlock::Create(*TheContext, "entry", TheFunction);
   Builder->SetInsertPoint(BB);
 
-  // Record the function arguments in the NamedValues map.
+  // 関数引数をNamedValuesマップに記録
   NamedValues.clear();
   for (auto &Arg : TheFunction->args())
     NamedValues[std::string(Arg.getName())] = &Arg;
 
-Now we get to the point where the ``Builder`` is set up. The first line
-creates a new `basic block <http://en.wikipedia.org/wiki/Basic_block>`_
-(named "entry"), which is inserted into ``TheFunction``. The second line
-then tells the builder that new instructions should be inserted into the
-end of the new basic block. Basic blocks in LLVM are an important part
-of functions that define the `Control Flow
-Graph <http://en.wikipedia.org/wiki/Control_flow_graph>`_. Since we
-don't have any control flow, our functions will only contain one block
-at this point. We'll fix this in `Chapter 5 <LangImpl05.html>`_ :).
+ここで ``Builder`` が設定されるポイントに到達します。最初の行は新しい `ベーシックブロック <http://en.wikipedia.org/wiki/Basic_block>`_ ("エントリ"と名付けられた) を作成し、``TheFunction`` に挿入します。2行目は、新しい命令が新しいベーシックブロックの終わりに挿入されるべきであることをビルダーに伝えます。LLVMのベーシックブロックは、 `制御フローグラフ <http://en.wikipedia.org/wiki/Control_flow_graph>`_ を定義する関数の重要な部分です。制御フローがないため、現時点では関数には1つのブロックのみが含まれます。これは `第5章 <LangImpl05.html>`_ で修正します :)。
 
-Next we add the function arguments to the NamedValues map (after first clearing
-it out) so that they're accessible to ``VariableExprAST`` nodes.
+次に、関数引数をNamedValuesマップに追加し (まずクリアした後で)、``VariableExprAST`` ノードがアクセスできるようにします。
 
 .. code-block:: c++
 
       if (Value *RetVal = Body->codegen()) {
-        // Finish off the function.
+        // 関数を完了させる
         Builder->CreateRet(RetVal);
 
-        // Validate the generated code, checking for consistency.
+        // 生成されたコードを検証し、一貫性をチェック
         verifyFunction(*TheFunction);
 
         return TheFunction;
       }
 
-Once the insertion point has been set up and the NamedValues map populated,
-we call the ``codegen()`` method for the root expression of the function. If no
-error happens, this emits code to compute the expression into the entry block
-and returns the value that was computed. Assuming no error, we then create an
-LLVM `ret instruction <../../LangRef.html#ret-instruction>`_, which completes the function.
-Once the function is built, we call ``verifyFunction``, which is
-provided by LLVM. This function does a variety of consistency checks on
-the generated code, to determine if our compiler is doing everything
-right. Using this is important: it can catch a lot of bugs. Once the
-function is finished and validated, we return it.
+挿入ポイントが設定され、NamedValuesマップがポピュレートされた後、関数のルート式に対して ``codegen()`` メソッドを呼び出します。エラーが発生しなければ、これはエントリブロックに式を計算するコードを発行し、計算された値を返します。エラーがないと仮定して、関数を完成する LLVM `ret命令 <../../LangRef.html#ret-instruction>`_ を作成します。関数が構築されたら、LLVMが提供する ``verifyFunction`` を呼び出します。この関数は、コンパイラーがすべてを正しく実行しているかどうかを判定するため、生成されたコードに対してさまざまな一貫性チェックを実行します。これを使用することは重要です: 多くのバグを捕捉することができます。関数が完成し、検証されたら、それを返します。
 
 .. code-block:: c++
 
-      // Error reading body, remove function.
+      // 本体の読み取りエラー、関数を削除
       TheFunction->eraseFromParent();
       return nullptr;
     }
 
-The only piece left here is handling of the error case. For simplicity,
-we handle this by merely deleting the function we produced with the
-``eraseFromParent`` method. This allows the user to redefine a function
-that they incorrectly typed in before: if we didn't delete it, it would
-live in the symbol table, with a body, preventing future redefinition.
+ここで残っている唯一の部分は、エラーケースの処理です。簡単にするため、 ``eraseFromParent`` メソッドで作成した関数を単に削除することでこれを処理します。これにより、ユーザーが以前に間違ってタイプした関数を再定義できます: これを削除しなければ、それは本体とともにシンボルテーブルに残り、将来の再定義を妨げてしまいます。
 
-This code does have a bug, though: If the ``FunctionAST::codegen()`` method
-finds an existing IR Function, it does not validate its signature against the
-definition's own prototype. This means that an earlier 'extern' declaration will
-take precedence over the function definition's signature, which can cause
-codegen to fail, for instance if the function arguments are named differently.
-There are a number of ways to fix this bug, see what you can come up with! Here
-is a testcase:
+ただし、このコードにはバグがあります: ``FunctionAST::codegen()`` メソッドが既存のIR関数を見つけた場合、定義自身のプロトタイプに対してシグネチャを検証しません。これは、以前の'extern'宣言が関数定義のシグネチャよりも優先されることを意味し、たとえば関数引数の名前が違う場合にコード生成の失敗を引き起こす可能性があります。このバグを修正する方法はいくつかあります。どんな方法があるか考えてみてください！こちらがテストケースです: 
 
 ::
 
-    extern foo(a);     # ok, defines foo.
-    def foo(b) b;      # Error: Unknown variable name. (decl using 'a' takes precedence).
+    extern foo(a);     # ok, fooを定義
+    def foo(b) b;      # エラー: Unknown variable name. ('a'を使う宣言が優先される)
 
-Driver Changes and Closing Thoughts
-===================================
+ドライバーの変更と結論
+========================
 
-For now, code generation to LLVM doesn't really get us much, except that
-we can look at the pretty IR calls. The sample code inserts calls to
-codegen into the "``HandleDefinition``", "``HandleExtern``" etc
-functions, and then dumps out the LLVM IR. This gives a nice way to look
-at the LLVM IR for simple functions. For example:
+現在のところ、LLVMへのコード生成は、美しいIR呼び出しを見ることができること以外は、実際にはそれほどの利益を得られません。サンプルコードは、"``HandleDefinition``"、"``HandleExtern``" などの関数にcodegenの呼び出しを挿入し、そしてLLVM IRをダンプ出力します。これにより、シンプルな関数のLLVM IRを見る良い方法を提供します。例えば: 
 
 ::
 
     ready> 4+5;
-    Read top-level expression:
+    トップレベル式を読み取り:
     define double @0() {
     entry:
       ret double 9.000000e+00
     }
 
-Note how the parser turns the top-level expression into anonymous
-functions for us. This will be handy when we add `JIT
-support <LangImpl04.html#adding-a-jit-compiler>`_ in the next chapter. Also note that the
-code is very literally transcribed, no optimizations are being performed
-except simple constant folding done by IRBuilder. We will `add
-optimizations <LangImpl04.html#trivial-constant-folding>`_ explicitly in the next
-chapter.
+parserがトップレベル式を無名関数に変換してくれることに注意してください。これは次の章で `JITサポート <LangImpl04.html#adding-a-jit-compiler>`_ を追加するときに便利になります。また、コードは非常に文字通りに転写され、IRBuilderが実行する単純な定数畳み込み以外は最適化が実行されていないことに注意してください。次の章では `最適化を明示的に追加 <LangImpl04.html#trivial-constant-folding>`_ します。
 
 ::
 
     ready> def foo(a b) a*a + 2*a*b + b*b;
-    Read function definition:
+    関数定義を読み取り:
     define double @foo(double %a, double %b) {
     entry:
       %multmp = fmul double %a, %a
@@ -457,13 +282,12 @@ chapter.
       ret double %addtmp4
     }
 
-This shows some simple arithmetic. Notice the striking similarity to the
-LLVM builder calls that we use to create the instructions.
+これはシンプルな算術を示しています。命令を作成するために使用するLLVMビルダー呼び出しとの驚くべき類似性に注意してください。
 
 ::
 
     ready> def bar(a) foo(a, 4.0) + bar(31337);
-    Read function definition:
+    関数定義を読み取り:
     define double @bar(double %a) {
     entry:
       %calltmp = call double @foo(double %a, double 4.000000e+00)
@@ -472,25 +296,23 @@ LLVM builder calls that we use to create the instructions.
       ret double %addtmp
     }
 
-This shows some function calls. Note that this function will take a long
-time to execute if you call it. In the future we'll add conditional
-control flow to actually make recursion useful :).
+これは関数呼び出しを示しています。この関数を呼び出した場合、実行に時間がかかることに注意してください。将来、再帰を実際に便利にするために条件制御フローを追加する予定です :)。
 
 ::
 
     ready> extern cos(x);
-    Read extern:
+    externを読み取り:
     declare double @cos(double)
 
     ready> cos(1.234);
-    Read top-level expression:
+    トップレベル式を読み取り:
     define double @1() {
     entry:
       %calltmp = call double @cos(double 1.234000e+00)
       ret double %calltmp
     }
 
-This shows an extern for the libm "cos" function, and a call to it.
+これはlibmの"cos"関数のexternとその呼び出しを示しています。
 
 .. TODO:: Abandon Pygments' horrible `llvm` lexer. It just totally gives up
    on highlighting this due to the first line.
@@ -533,36 +355,26 @@ This shows an extern for the libm "cos" function, and a call to it.
       ret double %calltmp
     }
 
-When you quit the current demo (by sending an EOF via CTRL+D on Linux
-or CTRL+Z and ENTER on Windows), it dumps out the IR for the entire
-module generated. Here you can see the big picture with all the
-functions referencing each other.
+現在のデモを終了するとき (LinuxでCTRL+D、WindowsでCTRL+ZとENTERでEOFを送信) 、生成されたモジュール全体のIRがダンプされます。ここでは、すべての関数が相互に参照している全体像を見ることができます。
 
-This wraps up the third chapter of the Kaleidoscope tutorial. Up next,
-we'll describe how to `add JIT codegen and optimizer
-support <LangImpl04.html>`_ to this so we can actually start running
-code!
+これでKaleidoscopeチュートリアルの第3章が完了しました。次に、実際にコードを実行できるように `JITコード生成とオプティマイザーサポートの追加 <LangImpl04.html>`_ について説明します！
 
-Full Code Listing
-=================
+全コードリスト
+==============
 
-Here is the complete code listing for our running example, enhanced with
-the LLVM code generator. Because this uses the LLVM libraries, we need
-to link them in. To do this, we use the
-`llvm-config <https://llvm.org/cmds/llvm-config.html>`_ tool to inform
-our makefile/command line about which options to use:
+こちらはLLVMコードジェネレーターで強化された、実行中の例の完全なコードリストです。これはLLVMライブラリを使用するため、リンクする必要があります。このために、 `llvm-config <https://llvm.org/cmds/llvm-config.html>`_ ツールを使用して、makefile/コマンドラインに使用するオプションを通知します: 
 
 .. code-block:: bash
 
-    # Compile
+    # コンパイル
     clang++ -g -O3 toy.cpp `llvm-config --cxxflags --ldflags --system-libs --libs core` -o toy
-    # Run
+    # 実行
     ./toy
 
-Here is the code:
+コードはこちらです: 
 
 .. literalinclude:: ../../../examples/Kaleidoscope/Chapter3/toy.cpp
    :language: c++
 
-`Next: Adding JIT and Optimizer Support <LangImpl04.html>`_
+`次: JITとオプティマイザーサポートの追加 <LangImpl04.html>`_
 
