@@ -78,15 +78,15 @@ Kaleidoscopeでは、現在、ユーザーが入力するたびに関数を一�
 .. code-block:: c++
 
     void InitializeModuleAndManagers(void) {
-      // Open a new context and module.
+      // 新しいコンテキストとモジュールを開く
       TheContext = std::make_unique<LLVMContext>();
       TheModule = std::make_unique<Module>("KaleidoscopeJIT", *TheContext);
       TheModule->setDataLayout(TheJIT->getDataLayout());
 
-      // Create a new builder for the module.
+      // モジュール用の新しいビルダーを作成
       Builder = std::make_unique<IRBuilder<>>(*TheContext);
 
-      // Create new pass and analysis managers.
+      // 新しいパスと解析マネージャーを作成
       TheFPM = std::make_unique<FunctionPassManager>();
       TheLAM = std::make_unique<LoopAnalysisManager>();
       TheFAM = std::make_unique<FunctionAnalysisManager>();
@@ -94,7 +94,7 @@ Kaleidoscopeでは、現在、ユーザーが入力するたびに関数を一�
       TheMAM = std::make_unique<ModuleAnalysisManager>();
       ThePIC = std::make_unique<PassInstrumentationCallbacks>();
       TheSI = std::make_unique<StandardInstrumentations>(*TheContext,
-                                                        /*DebugLogging*/ true);
+                                                        /*デバッグログ*/ true);
       TheSI->registerCallbacks(*ThePIC, TheMAM.get());
       ...
 
@@ -104,14 +104,14 @@ Kaleidoscopeでは、現在、ユーザーが入力するたびに関数を一�
 
 .. code-block:: c++
 
-      // Add transform passes.
-      // Do simple "peephole" optimizations and bit-twiddling optzns.
+      // 変換パスを追加します。
+      // 簡単な「ピープホール」最適化とビット操作の最適化を行います。
       TheFPM->addPass(InstCombinePass());
-      // Reassociate expressions.
+      // 式を再結合します。
       TheFPM->addPass(ReassociatePass());
-      // Eliminate Common SubExpressions.
+      // 共通部分式を削除します。
       TheFPM->addPass(GVNPass());
-      // Simplify the control flow graph (deleting unreachable blocks, etc).
+      // 制御フローグラフを簡略化します（到達不能なブロックの削除など）。
       TheFPM->addPass(SimplifyCFGPass());
 
 この場合、4つの最適化パスを追加することを選択します。ここで選択するパスは、幅広い種類のコードに有用な「クリーンアップ」最適化のかなり標準的なセットです。それらが何をするかについては深く立ち入りませんが、間違いなく良い出発点です :)。
@@ -120,7 +120,7 @@ Kaleidoscopeでは、現在、ユーザーが入力するたびに関数を一�
 
 .. code-block:: c++
 
-      // Register analysis passes used in these transform passes.
+      // これらの変換パスで使用される解析パスを登録
       PassBuilder PB;
       PB.registerModuleAnalyses(*TheMAM);
       PB.registerFunctionAnalyses(*TheFAM);
@@ -132,13 +132,13 @@ PassManagerが設定されたら、それを使用する必要があります。
 .. code-block:: c++
 
       if (Value *RetVal = Body->codegen()) {
-        // Finish off the function.
+        // 関数を終了
         Builder.CreateRet(RetVal);
 
-        // Validate the generated code, checking for consistency.
+        // 生成されたコードを検証し、一貫性を確認
         verifyFunction(*TheFunction);
 
-        // Optimize the function.
+        // 関数を最適化
         TheFPM->run(*TheFunction, *TheFAM);
 
         return TheFunction;
@@ -181,20 +181,21 @@ LLVM IRで利用可能なコードには、様々なツールを適用できま�
       InitializeNativeTargetAsmPrinter();
       InitializeNativeTargetAsmParser();
 
-      // Install standard binary operators.
-      // 1 is lowest precedence.
+      // 標準の二項演算子を登録
+      // 1は最低の優先順位
       BinopPrecedence['<'] = 10;
       BinopPrecedence['+'] = 20;
       BinopPrecedence['-'] = 20;
-      BinopPrecedence['*'] = 40; // highest.
+      BinopPrecedence['*'] = 40; // 最高の優先順位
 
-      // Prime the first token.
+      // 最初のトークンを準備
       fprintf(stderr, "ready> ");
       getNextToken();
 
+      // KaleidoscopeJITのインスタンスを作成
       TheJIT = std::make_unique<KaleidoscopeJIT>();
 
-      // Run the main "interpreter loop" now.
+      // メインの「インタープリターループ」を実行
       MainLoop();
 
       return 0;
@@ -205,15 +206,15 @@ LLVM IRで利用可能なコードには、様々なツールを適用できま�
 .. code-block:: c++
 
     void InitializeModuleAndPassManager(void) {
-      // Open a new context and module.
+      // 新しいコンテキストとモジュールを開く
       TheContext = std::make_unique<LLVMContext>();
       TheModule = std::make_unique<Module>("my cool jit", TheContext);
       TheModule->setDataLayout(TheJIT->getDataLayout());
 
-      // Create a new builder for the module.
+      // モジュール用の新しいビルダーを作成
       Builder = std::make_unique<IRBuilder<>>(*TheContext);
 
-      // Create a new pass manager attached to it.
+      // それにアタッチされた新しいパスマネージャーを作成
       TheFPM = std::make_unique<legacy::FunctionPassManager>(TheModule.get());
       ...
 
@@ -229,24 +230,24 @@ KaleidoscopeJITクラスは、これらのチュートリアル専用に構築�
       // Evaluate a top-level expression into an anonymous function.
       if (auto FnAST = ParseTopLevelExpr()) {
         if (FnAST->codegen()) {
-          // Create a ResourceTracker to track JIT'd memory allocated to our
-          // anonymous expression -- that way we can free it after executing.
+          // 匿名式に割り当てられたJITメモリを追跡するためのResourceTrackerを作成
+          // これにより実行後にメモリを解放できる
           auto RT = TheJIT->getMainJITDylib().createResourceTracker();
 
           auto TSM = ThreadSafeModule(std::move(TheModule), std::move(TheContext));
           ExitOnErr(TheJIT->addModule(std::move(TSM), RT));
           InitializeModuleAndPassManager();
 
-          // Search the JIT for the __anon_expr symbol.
+          // JIT内で __anon_expr シンボルを検索
           auto ExprSymbol = ExitOnErr(TheJIT->lookup("__anon_expr"));
           assert(ExprSymbol && "Function not found");
 
-          // Get the symbol's address and cast it to the right type (takes no
-          // arguments, returns a double) so we can call it as a native function.
+          // シンボルのアドレスを取得し、適切な型にキャスト
+          // (引数を取らず、doubleを返す) ことで、ネイティブ関数として呼び出せるように
           double (*FP)() = ExprSymbol.getAddress().toPtr<double (*)()>();
           fprintf(stderr, "Evaluated to %f\n", FP());
 
-          // Delete the anonymous expression module from the JIT.
+          // JITから匿名式モジュールを削除
           ExitOnErr(RT->remove());
         }
 
@@ -337,31 +338,30 @@ KaleidoscopeJITクラスは、これらのチュートリアル専用に構築�
     ...
 
     Function *getFunction(std::string Name) {
-      // First, see if the function has already been added to the current module.
+      // まず関数が現在のモジュールにすでに追加されているか確認
       if (auto *F = TheModule->getFunction(Name))
         return F;
 
-      // If not, check whether we can codegen the declaration from some existing
+      // そうでない場合、既存の宣言からコード生成できるかどうかを確認
       // prototype.
       auto FI = FunctionProtos.find(Name);
       if (FI != FunctionProtos.end())
         return FI->second->codegen();
 
-      // If no existing prototype exists, return null.
+      // 既存のプロトタイプが存在しない場合は、nullを返す
       return nullptr;
     }
 
     ...
 
     Value *CallExprAST::codegen() {
-      // Look up the name in the global module table.
+      // グローバルモジュールテーブル内で名前を検索
       Function *CalleeF = getFunction(Callee);
 
     ...
 
     Function *FunctionAST::codegen() {
-      // Transfer ownership of the prototype to the FunctionProtos map, but keep a
-      // reference to it for use below.
+      // プロトタイプの所有権をFunctionProtosマップに移すが、以下で使用するために参照を保持
       auto &P = *Proto;
       FunctionProtos[Proto->getName()] = std::move(Proto);
       Function *TheFunction = getFunction(P.getName());
@@ -386,7 +386,7 @@ HandleDefinitionとHandleExternも更新する必要があります:
           InitializeModuleAndPassManager();
         }
       } else {
-        // Skip token for error recovery.
+        // エラー回復のためにトークンをスキップ
          getNextToken();
       }
     }
@@ -400,7 +400,7 @@ HandleDefinitionとHandleExternも更新する必要があります:
           FunctionProtos[ProtoAST->getName()] = std::move(ProtoAST);
         }
       } else {
-        // Skip token for error recovery.
+        // エラー回復のためにトークンをスキップ
         getNextToken();
       }
     }
@@ -483,7 +483,7 @@ HandleDefinitionでは、新しく定義された関数をJITに転送し、新�
     #define DLLEXPORT
     #endif
 
-    /// putchard - putchar that takes a double and returns 0.
+    /// putchard - doubleを受け取り、0を返すputchar関数
     extern "C" DLLEXPORT double putchard(double X) {
       fputc((char)X, stderr);
       return 0;
@@ -501,9 +501,9 @@ HandleDefinitionでは、新しく定義された関数をJITに転送し、新�
 
 .. code-block:: bash
 
-    # Compile
+    # コンパイル
     clang++ -g toy.cpp `llvm-config --cxxflags --ldflags --system-libs --libs core orcjit native` -O3 -o toy
-    # Run
+    # 実行
     ./toy
 
 Linuxでコンパイルしている場合は、"-rdynamic"オプションも必ず追加してください。これにより、外部関数が実行時に正しく解決されることが保証されます。

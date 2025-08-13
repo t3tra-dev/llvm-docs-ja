@@ -360,9 +360,9 @@ DIBuilder経由でデバッグ情報を生成する一部として最後に必�
 
 .. code-block:: bash
 
-    # Compile
+    # コンパイル
     clang++ -g toy.cpp `llvm-config --cxxflags --ldflags --system-libs --libs core orcjit native` -O3 -o toy
-    # Run
+    # 実行
     ./toy
 
 コードは次の通りです: 

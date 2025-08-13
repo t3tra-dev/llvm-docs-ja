@@ -480,7 +480,7 @@ codegenの最初の部分は非常にシンプルです: ループ値の開始�
 .. code-block:: c++
 
     Value *ForExprAST::codegen() {
-      // Emit the start code first, without 'variable' in scope.
+      // まず'variable'がスコープ内にない状態で開始コードを生成
       Value *StartVal = Start->codegen();
       if (!StartVal)
         return nullptr;
@@ -489,40 +489,38 @@ codegenの最初の部分は非常にシンプルです: ループ値の開始�
 
 .. code-block:: c++
 
-      // Make the new basic block for the loop header, inserting after current
-      // block.
+      // ループヘッダー用の新しい基本ブロックを作成し、現在のブロックの後に挿入
       Function *TheFunction = Builder->GetInsertBlock()->getParent();
       BasicBlock *PreheaderBB = Builder->GetInsertBlock();
       BasicBlock *LoopBB =
           BasicBlock::Create(*TheContext, "loop", TheFunction);
 
-      // Insert an explicit fall through from the current block to the LoopBB.
+      // 現在のブロックからLoopBBへの明示的なフォールスルーを挿入
       Builder->CreateBr(LoopBB);
 
 このコードは、if/then/elseで見たものと似ています。Phiノードを作成するために必要になるので、ループにフォールスルーするブロックを記憶しています。それができたら、ループを開始する実際のブロックを作成し、2つのブロック間のフォールスルー用の無条件分岐を作成します。
 
 .. code-block:: c++
 
-      // Start insertion in LoopBB.
+      // 挿入をLoopBBで開始
       Builder->SetInsertPoint(LoopBB);
 
-      // Start the PHI node with an entry for Start.
+      // PHIノードを開始し、Startのエントリを追加
       PHINode *Variable = Builder->CreatePHI(Type::getDoubleTy(*TheContext),
-                                             2, VarName);
+                    2, VarName);
       Variable->addIncoming(StartVal, PreheaderBB);
 
 ループの「プリヘッダー」が設定されたので、ループ本体のコードを発行することに切り替えます。まず、挿入ポイントを移動し、ループ誘導変数用のPHIノードを作成します。開始値の入力値をすでに知っているので、それをPhiノードに追加します。Phiは最終的にバックエッジ用の2番目の値を取得することに注意してください。ただし、まだそれを設定することはできません (存在しないためです！) 。
 
 .. code-block:: c++
 
-      // Within the loop, the variable is defined equal to the PHI node.  If it
-      // shadows an existing variable, we have to restore it, so save it now.
+      // ループ内では、変数はPHIノードと等しい値として定義されます
+      // 既存の変数をシャドウイングする場合、元に戻す必要があるため、今保存します
       Value *OldVal = NamedValues[VarName];
       NamedValues[VarName] = Variable;
 
-      // Emit the body of the loop.  This, like any other expr, can change the
-      // current BB.  Note that we ignore the value computed by the body, but don't
-      // allow an error.
+      // ループの本体を生成します。他の式と同様に、現在のBBを変更する可能性があります
+      // 本体で計算された値は無視しますが、エラーは許容しません
       if (!Body->codegen())
         return nullptr;
 
@@ -532,14 +530,14 @@ codegenの最初の部分は非常にシンプルです: ループ値の開始�
 
 .. code-block:: c++
 
-      // Emit the step value.
+      // ステップ値を生成
       Value *StepVal = nullptr;
       if (Step) {
         StepVal = Step->codegen();
         if (!StepVal)
           return nullptr;
       } else {
-        // If not specified, use 1.0.
+        // ステップ値が指定されていない場合は1.0を使用
         StepVal = ConstantFP::get(*TheContext, APFloat(1.0));
       }
 
@@ -549,12 +547,12 @@ codegenの最初の部分は非常にシンプルです: ループ値の開始�
 
 .. code-block:: c++
 
-      // Compute the end condition.
+      // 終了条件を計算
       Value *EndCond = End->codegen();
       if (!EndCond)
         return nullptr;
 
-      // Convert condition to a bool by comparing non-equal to 0.0.
+      // 条件を0.0と非等価比較してboolに変換
       EndCond = Builder->CreateFCmpONE(
           EndCond, ConstantFP::get(*TheContext, APFloat(0.0)), "loopcond");
 
@@ -562,31 +560,31 @@ codegenの最初の部分は非常にシンプルです: ループ値の開始�
 
 .. code-block:: c++
 
-      // Create the "after loop" block and insert it.
+      // "ループ後"ブロックを作成し、挿入
       BasicBlock *LoopEndBB = Builder->GetInsertBlock();
       BasicBlock *AfterBB =
           BasicBlock::Create(*TheContext, "afterloop", TheFunction);
 
-      // Insert the conditional branch into the end of LoopEndBB.
+      // LoopEndBBの末尾に条件分岐を挿入
       Builder->CreateCondBr(EndCond, LoopBB, AfterBB);
 
-      // Any new code will be inserted in AfterBB.
+      // 新しいコードはAfterBBに挿入される
       Builder->SetInsertPoint(AfterBB);
 
 ループ本体のコードが完了したので、その制御フローを仕上げるだけです。このコードは終了ブロック (phiノード用) を記憶し、次にループ終了用のブロック (「afterloop」) を作成します。終了条件の値に基づいて、ループを再び実行するかループを終了するかを選択する条件分岐を作成します。将来のコードは「afterloop」ブロックで発行されるため、挿入位置をそこに設定します。
 
 .. code-block:: c++
 
-      // Add a new entry to the PHI node for the backedge.
+      // PHIノードにバックエッジ用の新しいエントリを追加
       Variable->addIncoming(NextVar, LoopEndBB);
 
-      // Restore the unshadowed variable.
+      // シャドウイングされていない変数を復元
       if (OldVal)
         NamedValues[VarName] = OldVal;
       else
         NamedValues.erase(VarName);
 
-      // for expr always returns 0.0.
+      // for式は常に0.0を返す
       return Constant::getNullValue(Type::getDoubleTy(*TheContext));
     }
 
@@ -601,9 +599,9 @@ codegenの最初の部分は非常にシンプルです: ループ値の開始�
 
 .. code-block:: bash
 
-    # Compile
+    # コンパイル
     clang++ -g toy.cpp `llvm-config --cxxflags --ldflags --system-libs --libs core orcjit native` -O3 -o toy
-    # Run
+    # 実行
     ./toy
 
 コードはこちらです: 

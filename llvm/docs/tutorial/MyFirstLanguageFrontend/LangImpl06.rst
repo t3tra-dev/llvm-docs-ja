@@ -85,13 +85,13 @@ Kaleidoscopeに追加する「演算子オーバーロード」は、C++のよ�
 
 .. code-block:: c++
 
-    /// PrototypeAST - This class represents the "prototype" for a function,
-    /// which captures its argument names as well as if it is an operator.
+    /// PrototypeAST - このクラスは関数の「プロトタイプ」を表し、
+    /// 引数名とそれが演算子であるかどうかをキャプチャします
     class PrototypeAST {
       std::string Name;
       std::vector<std::string> Args;
       bool IsOperator;
-      unsigned Precedence;  // Precedence if a binary op.
+      unsigned Precedence;  // 二項演算子の場合の優先順位
 
     public:
       PrototypeAST(const std::string &Name, std::vector<std::string> Args,
@@ -143,7 +143,7 @@ Kaleidoscopeに追加する「演算子オーバーロード」は、C++のよ�
         Kind = 2;
         getNextToken();
 
-        // Read the precedence if present.
+        // 優先順位が存在する場合は読み取る
         if (CurTok == tok_number) {
           if (NumVal < 1 || NumVal > 100)
             return LogErrorP("Invalid precedence: must be 1..100");
@@ -162,10 +162,10 @@ Kaleidoscopeに追加する「演算子オーバーロード」は、C++のよ�
       if (CurTok != ')')
         return LogErrorP("Expected ')' in prototype");
 
-      // success.
+      // 成功
       getNextToken();  // eat ')'.
 
-      // Verify right number of names for operator.
+      // 演算子のための名前の数が正しいことを確認
       if (Kind && ArgNames.size() != Kind)
         return LogErrorP("Invalid number of operands for operator");
 
@@ -194,15 +194,14 @@ Kaleidoscopeに追加する「演算子オーバーロード」は、C++のよ�
         return Builder->CreateFMul(L, R, "multmp");
       case '<':
         L = Builder->CreateFCmpULT(L, R, "cmptmp");
-        // Convert bool 0/1 to double 0.0 or 1.0
+        // bool 0/1をdouble 0.0または1.0に変換
         return Builder->CreateUIToFP(L, Type::getDoubleTy(*TheContext),
                                     "booltmp");
       default:
         break;
       }
 
-      // If it wasn't a builtin binary operator, it must be a user defined one. Emit
-      // a call to it.
+      // もし組み込みの二項演算子でなければ、ユーザー定義のものであるはずなのでそれに対する呼び出しを生成
       Function *F = getFunction(std::string("binary") + Op);
       assert(F && "binary operator not found!");
 
@@ -217,19 +216,18 @@ Kaleidoscopeに追加する「演算子オーバーロード」は、C++のよ�
 .. code-block:: c++
 
     Function *FunctionAST::codegen() {
-      // Transfer ownership of the prototype to the FunctionProtos map, but keep a
-      // reference to it for use below.
+      // プロトタイプの所有権をFunctionProtosマップに移すが、以下で使用するために参照を保持
       auto &P = *Proto;
       FunctionProtos[Proto->getName()] = std::move(Proto);
       Function *TheFunction = getFunction(P.getName());
       if (!TheFunction)
         return nullptr;
 
-      // If this is an operator, install it.
+      // 演算子であればそれを登録
       if (P.isBinaryOp())
         BinopPrecedence[P.getOperatorName()] = P.getBinaryPrecedence();
 
-      // Create a new basic block to start insertion into.
+      // 新しい基本ブロックを作成しそこに挿入を開始
       BasicBlock *BB = BasicBlock::Create(*TheContext, "entry", TheFunction);
       ...
 
@@ -264,11 +262,11 @@ Kaleidoscopeに追加する「演算子オーバーロード」は、C++のよ�
     ///   ::= primary
     ///   ::= '!' unary
     static std::unique_ptr<ExprAST> ParseUnary() {
-      // If the current token is not an operator, it must be a primary expr.
+      // 現在のトークンが演算子でない場合、それはプライマリ式である必要がある
       if (!isascii(CurTok) || CurTok == '(' || CurTok == ',')
         return ParsePrimary();
 
-      // If this is a unary operator, read it.
+      // これが単項演算子である場合、それを読み取る
       int Opc = CurTok;
       getNextToken();
       if (auto Operand = ParseUnary())
@@ -287,7 +285,7 @@ Kaleidoscopeに追加する「演算子オーバーロード」は、C++のよ�
     static std::unique_ptr<ExprAST> ParseBinOpRHS(int ExprPrec,
                                                   std::unique_ptr<ExprAST> LHS) {
       ...
-        // Parse the unary expression after the binary operator.
+        // 二項演算子の後の単項式を解析する
         auto RHS = ParseUnary();
         if (!RHS)
           return nullptr;
@@ -625,9 +623,9 @@ Kaleidoscopeに追加する「演算子オーバーロード」は、C++のよ�
 
 .. code-block:: bash
 
-    # Compile
+    # コンパイル
     clang++ -g toy.cpp `llvm-config --cxxflags --ldflags --system-libs --libs core orcjit native` -O3 -o toy
-    # Run
+    # 実行
     ./toy
 
 一部のプラットフォームでは、リンク時に-rdynamicまたは-Wl,--export-dynamicを指定する必要があります。これにより、メイン実行ファイルで定義されたシンボルが動的リンカーにエクスポートされ、実行時のシンボル解決で利用できるようになります。サポートコードを共有ライブラリにコンパイルする場合はこれは必要ありませんが、そうするとWindowsで問題が発生します。
