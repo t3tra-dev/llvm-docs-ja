@@ -105,6 +105,10 @@ for project in "${RELAXED_PROJECTS[@]}"; do
     echo -e "${BLUE}✓ Completed processing: $project${NC}"
 done
 
+cp ./index.html "$SITE_DIR/"
+mkdir -p "$SITE_DIR/img"
+cp ./img/* "$SITE_DIR/img/"
+
 # Summary
 echo -e "\n${BLUE}📊 Build Summary${NC}"
 echo -e "${BLUE}================${NC}"

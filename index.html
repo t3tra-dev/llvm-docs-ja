@@ -1,0 +1,978 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>The LLVM Compiler Infrastructure Project</title>
+  </head>
+
+  <body style="margin-left: 0">
+    <div class="www_title">
+      The <strong>LLVM</strong> Compiler Infrastructure
+      <img src="img/LLVMWyvernSmall.png" style="height: 1em; width: auto" />
+    </div>
+
+    <table width="100%" border="0" cellpadding="10">
+      <tr>
+        <td valign="top" align="center">
+          <b>Site Map:</b>
+          <div class="www_sidebar">
+            <a href="https://llvm.org/">Overview</a><br />
+            <a href="https://llvm.org/Features.html">Features</a><br />
+            <a href="https://llvm.org/docs/">Documentation</a><br />
+            <a href="https://llvm.org/docs/CommandGuide/">Command Guide</a><br />
+            <a href="https://llvm.org/docs/FAQ.html">FAQ</a><br />
+            <a href="https://llvm.org/pubs/">Publications</a><br />
+            <a href="https://llvm.org/ProjectsWithLLVM/">LLVM&nbsp;Projects</a><br />
+            <a href="https://llvm.org/OpenProjects.html">Open&nbsp;Projects</a><br />
+            <a href="https://llvm.org/Users.html">LLVM&nbsp;Users</a><br />
+            <a href="https://github.com/llvm/llvm-project/issues/"
+              >Bug&nbsp;tracker</a
+            ><br />
+            <a href="https://llvm.org/Logo.html">LLVM Logo</a><br />
+            <a href="http://blog.llvm.org/">Blog</a><br />
+            <a href="https://llvm.org/devmtg/">Meetings</a><br />
+            <a href="//foundation.llvm.org">LLVM&nbsp;Foundation</a><br />
+          </div>
+
+          <br />
+
+          <b>Download!</b>
+          <div class="www_sidebar">
+            <span style="font-size: smaller">Download now:</span>
+            <a href="https://releases.llvm.org/"><b>LLVM&nbsp;20.1.8</b></a
+            ><br />
+            <a href="https://llvm.org/releases/">All Releases</a><br />
+            <a href="https://apt.llvm.org/">APT Packages</a><br />
+            <a
+              href="https://copr.fedorainfracloud.org/coprs/g/fedora-llvm-team/llvm-snapshots/"
+              >RPM Snapshots</a
+            ><br />
+            <a href="https://prereleases.llvm.org/">Pre-releases</a><br />
+            <br />
+
+            <span style="font-size: smaller">View the open-source</span><br />
+            <a href="https://llvm.org/releases/14.0.0/LICENSE.TXT"
+              ><b>license</b></a
+            >
+          </div>
+
+          <br />
+
+          <b>Search&nbsp;this&nbsp;Site</b>
+
+          <div class="www_sidebar">
+            <form action="https://www.google.com/search" method="get">
+              <div>
+                <input type="hidden" name="sitesearch" value="llvm.org" />
+                <input type="text" name="q" size="11" /><br />
+                <input type="submit" value="Search!" name="submit" />
+              </div>
+            </form>
+          </div>
+
+          <br />
+
+          <b>Useful&nbsp;Links</b>
+          <div class="www_sidebar">
+            <span style="font-size: smaller">Forums</span><br />
+            <a href="https://discourse.llvm.org/">LLVM Discourse</a>
+
+            <br /><br />
+
+            <span style="font-size: smaller">Mailing Lists:</span><br />
+            <a href="https://lists.llvm.org/cgi-bin/mailman/listinfo"
+              >Commits List</a
+            >
+
+            <br /><br />
+
+            <span style="font-size: smaller">Discord (Real-time Chat):</span
+            ><br />
+            <a href="https://discord.gg/xS7Z362">Discord</a>
+
+            <br /><br />
+
+            <span style="font-size: smaller">Calendar:</span><br />
+            <a
+              href="https://calendar.google.com/calendar/u/0/embed?src=calendar@llvm.org"
+              >LLVM Community Calendar</a
+            >
+
+            <br /><br />
+
+            <span style="font-size: smaller">Dev. Resources:</span><br />
+            <a href="https://llvm.org/doxygen/">doxygen</a><br />
+            <a href="https://github.com/llvm/llvm-project/">Sources (GitHub)</a
+            ><br />
+            <a href="https://reviews.llvm.org">Code Review</a><br />
+            <a href="http://blog.llvm.org/">Blog</a><br />
+            <a href="https://github.com/llvm/llvm-project/issues/"
+              >Bug tracker</a
+            ><br />
+            <a href="https://lab.llvm.org/buildbot/">Buildbot</a><br />
+            <a href="http://green.lab.llvm.org/">Green Dragon</a><br />
+            <a href="http://lnt.llvm.org/">LNT</a><br />
+            <a href="https://llvm.org/reports/scan-build/">Scan-build</a><br />
+            <a href="https://lab.llvm.org/coverage/coverage-reports/index.html"
+              >llvm-cov</a
+            ><br />
+            <a href="https://llvm-compile-time-tracker.com/"
+              >Compile-time tracker</a
+            ><br />
+          </div>
+
+          <br />
+
+          <b>Release&nbsp;Emails</b>
+          <div class="www_sidebar">
+            <span style="font-size: smaller">
+              20.1.8:
+              <a href="https://discourse.llvm.org/t/llvm-20-1-8-released/87259"
+                >Jul 2025</a
+              ><br />
+              20.1.7:
+              <a href="https://discourse.llvm.org/t/llvm-20-1-7-released/86855"
+                >Jun 2025</a
+              ><br />
+              20.1.6:
+              <a href="https://discourse.llvm.org/t/llvm-20-1-6-released/86598"
+                >May 2025</a
+              ><br />
+              20.1.5:
+              <a href="https://discourse.llvm.org/t/llvm-20-1-5-released/86371"
+                >May 2025</a
+              ><br />
+              20.1.4:
+              <a href="https://discourse.llvm.org/t/llvm-20-1-4-released/86147"
+                >Apr 2025</a
+              ><br />
+              20.1.3:
+              <a href="https://discourse.llvm.org/t/llvm-20-1-3-released/85874"
+                >Apr 2025</a
+              ><br />
+              20.1.2:
+              <a href="https://discourse.llvm.org/t/llvm-20-1-2-released/85654"
+                >Apr 2025</a
+              ><br />
+              20.1.1:
+              <a href="https://discourse.llvm.org/t/llvm-20-1-1-released/85337"
+                >Mar 2025</a
+              ><br />
+              20.1.0:
+              <a href="https://discourse.llvm.org/t/llvm-20-1-0-released/85122"
+                >Mar 2025</a
+              ><br />
+              19.1.7:
+              <a href="https://discourse.llvm.org/t/llvm-19-1-7-released/84062"
+                >Jan 2025</a
+              ><br />
+              19.1.6:
+              <a href="https://discourse.llvm.org/t/llvm-19-1-6-released/83723"
+                >Dec 2024</a
+              ><br />
+              19.1.5:
+              <a href="https://discourse.llvm.org/t/llvm-19-1-5-released/83455"
+                >Dec 2024</a
+              ><br />
+              19.1.4:
+              <a href="https://discourse.llvm.org/t/llvm-19-1-4-released/83230"
+                >Nov 2024</a
+              ><br />
+              19.1.3:
+              <a href="https://discourse.llvm.org/t/llvm-19-1-3-released/82829"
+                >Oct 2024</a
+              ><br />
+              19.1.2:
+              <a href="https://discourse.llvm.org/t/llvm-19-1-2-released/82550"
+                >Oct 2024</a
+              ><br />
+              19.1.1:
+              <a href="https://discourse.llvm.org/t/llvm-19-1-1-released/82321"
+                >Oct 2024</a
+              ><br />
+              19.1.0:
+              <a href="https://discourse.llvm.org/t/llvm-19-1-0-released/81285"
+                >Sep 2024</a
+              ><br />
+              <a href="https://discourse.llvm.org/c/announce/46"
+                >All Announcements</a
+              ><br />
+            </span>
+          </div>
+
+          <br />
+
+          <span style="font-size: smaller"
+            >Maintained by the <br />
+            <a href="mailto:llvm-admin@lists.llvm.org">llvm-admin team</a>
+          </span>
+        </td>
+        <td valign="top">
+          <table border="0" cellpadding="0" cellspacing="0" width="95%">
+            <!-- Start of the left bar... -->
+            <tr>
+              <td valign="top" style="width: 64%">
+                <div class="www_sectiontitle">LLVM Overview</div>
+
+                <div class="www_text">
+                  <p>
+                    The LLVM Project is a collection of modular and reusable
+                    compiler and toolchain technologies. Despite its name, LLVM
+                    has little to do with traditional virtual machines. The name
+                    "LLVM" itself is not an acronym; it is the full name of the
+                    project.
+                  </p>
+
+                  <p>
+                    LLVM began as a
+                    <a href="https://llvm.org/pubs/2004-01-30-CGO-LLVM.html"
+                      >research project</a
+                    >
+                    at the
+                    <a href="https://cs.illinois.edu/">University of Illinois</a
+                    >, with the goal of providing a modern, SSA-based
+                    compilation strategy capable of supporting both static and
+                    dynamic compilation of arbitrary programming languages.
+                    Since then, LLVM has grown to be an umbrella project
+                    consisting of a number of subprojects, many of which are
+                    being used in production by a wide variety of
+                    <a href="./Users.html">commercial and open source</a>
+                    projects as well as being widely used in
+                    <a href="https://llvm.org/pubs/">academic research</a>. Code
+                    in the LLVM project is licensed under the
+                    <a
+                      href="./docs/DeveloperPolicy.html#new-llvm-project-license-framework"
+                    >
+                      "Apache 2.0 License with LLVM exceptions"</a
+                    >
+                  </p>
+
+                  <p>The primary sub-projects of LLVM are:</p>
+
+                  <ol>
+                    <li>
+                      <p>
+                        The <b>LLVM Core</b> libraries provide a modern source-
+                        and target-independent
+                        <a href="./llvm//Passes.html">optimizer</a>, along
+                        with
+                        <a href="./llvm/CodeGenerator.html"
+                          >code generation support</a
+                        >
+                        for many popular CPUs (as well as some less common
+                        ones!) These libraries are built around a
+                        <a href="./llvm/LangRef.html">well specified</a>
+                        code representation known as the LLVM intermediate
+                        representation ("LLVM IR"). The LLVM Core libraries are
+                        <a href="./llvm/">well documented</a>, and it is
+                        particularly easy to invent your own language (or port
+                        an existing compiler) to use
+                        <a href="./llvm/tutorial/"
+                          >LLVM as an optimizer and code generator</a
+                        >.
+                      </p>
+                    </li>
+
+                    <li>
+                      <p>
+                        <b><a href="https://clang.llvm.org">Clang</a></b> is an
+                        "LLVM native" C/C++/Objective-C compiler, which aims to
+                        deliver amazingly fast compiles, extremely useful
+                        <a href="https://clang.llvm.org/diagnostics.html"
+                          >error and warning messages</a
+                        >
+                        and to provide a platform for building great source
+                        level tools. The
+                        <a href="https://clang-analyzer.llvm.org/"
+                          >Clang Static Analyzer</a
+                        >
+                        and
+                        <a href="https://clang.llvm.org/extra/clang-tidy/"
+                          >clang-tidy</a
+                        >
+                        are tools that automatically find bugs in your code, and
+                        are great examples of the sort of tools that can be
+                        built using the Clang frontend as a library to parse
+                        C/C++ code.
+                      </p>
+                    </li>
+
+                    <li>
+                      <p>
+                        The
+                        <b><a href="https://lldb.llvm.org">LLDB</a></b> project
+                        builds on libraries provided by LLVM and Clang to
+                        provide a great native debugger. It uses the Clang ASTs
+                        and expression parser, LLVM JIT, LLVM disassembler, etc
+                        so that it provides an experience that "just works". It
+                        is also blazing fast and much more memory efficient than
+                        GDB at loading symbols.
+                      </p>
+                    </li>
+
+                    <li>
+                      <p>
+                        The
+                        <b><a href="https://libcxx.llvm.org">libc++</a></b> and
+                        <b
+                          ><a href="https://libcxxabi.llvm.org"
+                            >libc++ ABI</a
+                          ></b
+                        >
+                        projects provide a standard conformant and
+                        high-performance implementation of the C++ Standard
+                        Library, including full support for C++11 and C++14.
+                      </p>
+                    </li>
+
+                    <li>
+                      <p>
+                        The
+                        <b><a href="https://libc.llvm.org">libc</a></b> project
+                        provides a high-performance, standards-conformant
+                        implementation of the C Standard Library, fully
+                        integrated with LLVM. It delivers optimized performance
+                        and comprehensive support for modern C standards,
+                        ensuring a reliable and efficient foundation for C
+                        applications.
+                      </p>
+                    </li>
+
+                    <li>
+                      <p>
+                        The
+                        <b
+                          ><a href="https://compiler-rt.llvm.org"
+                            >compiler-rt</a
+                          ></b
+                        >
+                        project provides highly tuned implementations of the
+                        low-level code generator support routines like
+                        "<tt>__fixunsdfdi</tt>" and other calls generated when a
+                        target doesn't have a short sequence of native
+                        instructions to implement a core IR operation. It also
+                        provides implementations of run-time libraries for
+                        dynamic testing tools such as
+                        <a
+                          href="https://clang.llvm.org/docs/AddressSanitizer.html"
+                          >AddressSanitizer</a
+                        >,
+                        <a
+                          href="https://clang.llvm.org/docs/ThreadSanitizer.html"
+                          >ThreadSanitizer</a
+                        >,
+                        <a
+                          href="https://clang.llvm.org/docs/MemorySanitizer.html"
+                          >MemorySanitizer</a
+                        >, and
+                        <a
+                          href="https://clang.llvm.org/docs/DataFlowSanitizer.html"
+                          >DataFlowSanitizer</a
+                        >.
+                      </p>
+                    </li>
+
+                    <li>
+                      <p>
+                        The
+                        <b><a href="https://mlir.llvm.org">MLIR</a></b>
+                        subproject is a novel approach to building reusable and
+                        extensible compiler infrastructure. MLIR aims to address
+                        software fragmentation, improve compilation for
+                        heterogeneous hardware, significantly reduce the cost of
+                        building domain specific compilers, and aid in
+                        connecting existing compilers together.
+                      </p>
+                    </li>
+
+                    <li>
+                      <p>
+                        The
+                        <b><a href="https://openmp.llvm.org">OpenMP</a></b>
+                        subproject provides an
+                        <a href="https://openmp.org">OpenMP</a> runtime for use
+                        with the OpenMP implementation in Clang.
+                      </p>
+                    </li>
+
+                    <li>
+                      <p>
+                        The
+                        <b><a href="https://polly.llvm.org/">polly</a></b>
+                        project implements a suite of cache-locality
+                        optimizations as well as auto-parallelism and
+                        vectorization using a polyhedral model.
+                      </p>
+                    </li>
+
+                    <li>
+                      <p>
+                        The
+                        <b><a href="https://libclc.llvm.org/">libclc</a></b>
+                        project aims to implement the OpenCL standard library.
+                      </p>
+                    </li>
+
+                    <li>
+                      <p>
+                        The
+                        <b><a href="https://klee.llvm.org">klee</a></b> project
+                        implements a "symbolic virtual machine" which uses a
+                        theorem prover to try to evaluate all dynamic paths
+                        through a program in an effort to find bugs and to prove
+                        properties of functions. A major feature of klee is that
+                        it can produce a testcase in the event that it detects a
+                        bug.
+                      </p>
+                    </li>
+
+                    <li>
+                      <p>
+                        The
+                        <b><a href="https://lld.llvm.org/">LLD</a></b> project
+                        is a new linker. That is a drop-in replacement for
+                        system linkers and runs much faster.
+                      </p>
+                    </li>
+
+                    <li>
+                      <p>
+                        The
+                        <b>
+                          <a
+                            href="https://github.com/llvm/llvm-project/tree/main/bolt"
+                            >BOLT</a
+                          ></b
+                        >
+                        project is a post-link optimizer. It achieves the
+                        improvements by optimizing application's code layout
+                        based on execution profile gathered by sampling
+                        profiler.
+                      </p>
+                    </li>
+                  </ol>
+
+                  <p>
+                    In addition to official subprojects of LLVM, there are a
+                    broad variety of other projects that
+                    <a href="/ProjectsWithLLVM/"
+                      >use components of LLVM for various tasks</a
+                    >. Through these external projects you can use LLVM to
+                    compile Ruby, Python, Haskell, Rust, D, PHP, Pure, Lua,
+                    Julia, and a number of other languages. A major strength of
+                    LLVM is its versatility, flexibility, and reusability, which
+                    is why it is being used for such a wide variety of different
+                    tasks: everything from doing light-weight JIT compiles of
+                    embedded languages like Lua to compiling Fortran code for
+                    massive super computers.
+                  </p>
+
+                  <p>
+                    As much as everything else, LLVM has a broad and friendly
+                    community of people who are interested in building great
+                    low-level tools. If you are interested in
+                    <a href="https://llvm.org/docs/GettingInvolved.html"
+                      >getting involved</a
+                    >, a good first place is to skim the
+                    <a href="https://blog.llvm.org">LLVM Blog</a> and join
+                    <a href="https://discourse.llvm.org">LLVM Discourse</a>. For
+                    information on how to send in a patch, get commit access,
+                    and copyright and license topics, please see
+                    <a href="llvm/docs/DeveloperPolicy.html"
+                      >the LLVM Developer Policy</a
+                    >.
+                  </p>
+                </div>
+              </td>
+
+              <!-- Dividing space between columns -->
+              <td style="width: 2%"></td>
+              <!-- Start of the right bar... 359 -->
+              <td valign="top" style="width: 35%">
+                <div class="www_sectiontitle">Latest LLVM Release!</div>
+
+                <div class="www_text">
+                  <p>
+                    <b>8 July 2025</b>: LLVM 20.1.8 is now
+                    <a href="https://llvm.org/releases/"
+                      ><b>available for download</b></a
+                    >! LLVM is publicly available under an open source
+                    <a href="https://llvm.org/releases/20.1.0/LICENSE.TXT"
+                      >License</a
+                    >. Also, you might want to check out
+                    <a href="https://llvm.org/docs/ReleaseNotes.html#whatsnew"
+                      ><b>the new features</b></a
+                    >
+                    in Git that will appear in the next LLVM release. If you
+                    want them early,
+                    <a href="https://llvm.org/releases/">download LLVM</a>
+                    through anonymous Git.
+                  </p>
+                </div>
+
+                <div class="www_sectiontitle">Upcoming Events</div>
+                <p>
+                  <a href="https://llvm.org/devmtg/2025-10/">October 27-29</a>
+                  2025 US LLVM<br />
+                </p>
+
+                <div class="www_sectiontitle">ACM Software System Award!</div>
+
+                <div class="www_text">
+                  <p>
+                    LLVM has been awarded the
+                    <b>2012 ACM Software System Award</b>! This award is given
+                    by ACM to <i>one</i> software system worldwide every year.
+                    <!--
+     and is "<i>Awarded to an institution or individual(s) recognized for
+     developing a software system that has had a lasting influence,
+     reflected in contributions to concepts, in commercial acceptance,
+     or both</i>".-->
+                    LLVM is
+                    <a
+                      href="https://awards.acm.org/software-system/award-recipients"
+                    >
+                      in highly distinguished company</a
+                    >! Click on any of the individual recipients' names on that
+                    page for the detailed citation describing the award.
+                  </p>
+                </div>
+
+                <div class="www_sectiontitle">Upcoming Releases</div>
+
+                <div class="www_text">
+                  <p><b>LLVM Release Schedule:</b></p>
+                  <ul>
+                    <li>
+                      21.1.x
+                      <ul>
+                        <li>Jul 15th, 2025: release/21.x branch was created</li>
+                        <li>Jul 17th, 2025: 21.1.0-rc1 was released</li>
+                        <li>Jul 29th, 2025: 21.1.0-rc2 was released</li>
+                        <li>Aug 12th, 2025: 21.1.0-rc3</li>
+                        <li>Aug 26th, 2025: 21.1.0</li>
+                        <li>Sep 9th, 2025: 21.1.1</li>
+                        <li>Sep 23rd, 2025: 21.1.2</li>
+                        <li>Oct 7th, 2025: 21.1.3</li>
+                        <li>Oct 21st, 2025: 21.1.4</li>
+                        <li>Nov 4th, 2025: 21.1.5</li>
+                        <li>Nov 18th, 2025: 21.1.6</li>
+                        <li>Dec 2nd, 2025: 21.1.7</li>
+                        <li>Dec 16th, 2025: 21.1.8</li>
+                      </ul>
+                    </li>
+                  </ul>
+                </div>
+
+                <div class="www_sectiontitle">Developer&nbsp;Meetings</div>
+
+                <div class="www_text">
+                  <p>Upcoming:</p>
+                  <ul>
+                    <li>
+                      <a href="https://llvm.org/devmtg/2025-10/"
+                        >October 27-29, 2025</a
+                      >
+                    </li>
+                  </ul>
+                  <p>Proceedings from past meetings:</p>
+                  <ul>
+                    <li>
+                      <a href="https://llvm.org/devmtg/2025-06/"
+                        >June 10, 2025</a
+                      >
+                    </li>
+                    <li>
+                      <a href="https://llvm.org/devmtg/2025-04/"
+                        >April 14-16, 2025</a
+                      >
+                    </li>
+                    <li>
+                      <a href="https://llvm.org/devmtg/2024-10/"
+                        >October 22-24, 2024</a
+                      >
+                    </li>
+                    <li>
+                      <a href="https://llvm.org/devmtg/2024-04/"
+                        >April 10-11, 2024</a
+                      >
+                    </li>
+                    <li>
+                      <a href="https://llvm.org/devmtg/2023-10/"
+                        >October 9-11, 2023</a
+                      >
+                    </li>
+                    <li>
+                      <a href="https://llvm.org/devmtg/2023-05/"
+                        >May 10-11, 2023</a
+                      >
+                    </li>
+                    <li>
+                      <a href="https://llvm.org/devmtg/2022-11/"
+                        >November 8-9, 2022</a
+                      >
+                    </li>
+                    <li>
+                      <a href="https://llvm.org/devmtg/2022-05/"
+                        >May 10-11, 2022</a
+                      >
+                    </li>
+                    <li>
+                      <a href="https://llvm.org/devmtg/2021-11/"
+                        >November 16-19, 2021</a
+                      >
+                    </li>
+                    <li>
+                      <a href="https://llvm.org/devmtg/2020-09/"
+                        >October 6-8, 2020</a
+                      >
+                    </li>
+                    <li>
+                      <a href="https://llvm.org/devmtg/2019-10/"
+                        >October 22-23, 2019</a
+                      >
+                    </li>
+                    <li>
+                      <a href="https://llvm.org/devmtg/2019-04/"
+                        >April 8-9, 2019</a
+                      >
+                    </li>
+                    <li>
+                      <a href="https://llvm.org/devmtg/2018-10/"
+                        >October 17-18, 2018</a
+                      >
+                    </li>
+                    <li>
+                      <a href="https://llvm.org/devmtg/2018-04/"
+                        >April 16-17, 2018</a
+                      >
+                    </li>
+                    <li>
+                      <a href="https://llvm.org/devmtg/2017-10/"
+                        >October 18-19, 2017</a
+                      >
+                    </li>
+                    <li>
+                      <a href="https://llvm.org/devmtg/2017-03/"
+                        >March 27-28, 2017</a
+                      >
+                    </li>
+                    <li>
+                      <a href="https://llvm.org/devmtg/2016-11/"
+                        >November 3-4, 2016</a
+                      >
+                    </li>
+                    <li>
+                      <a href="https://llvm.org/devmtg/2016-03/"
+                        >March 17-18, 2016</a
+                      >
+                    </li>
+                    <li>
+                      <a href="https://llvm.org/devmtg/2015-10/"
+                        >October 29-30, 2015</a
+                      >
+                    </li>
+                    <li>
+                      <a href="https://llvm.org/devmtg/2015-04/"
+                        >April 13-14, 2015</a
+                      >
+                    </li>
+                    <li>
+                      <a href="https://llvm.org/devmtg/2014-10/"
+                        >October 28-29, 2014</a
+                      >
+                    </li>
+                    <li>
+                      <a href="https://llvm.org/devmtg/2014-04/"
+                        >April 7-8, 2014</a
+                      >
+                    </li>
+                    <li>
+                      <a href="https://llvm.org/devmtg/2013-11/"
+                        >Nov 6-7, 2013</a
+                      >
+                    </li>
+                    <li>
+                      <a href="https://llvm.org/devmtg/2013-04/"
+                        >April 29-30, 2013</a
+                      >
+                    </li>
+                    <li>
+                      <a href="https://llvm.org/devmtg/2012-11/"
+                        >November 7-8, 2012</a
+                      >
+                    </li>
+                    <li>
+                      <a href="https://llvm.org/devmtg/2012-04-12/"
+                        >April 12, 2012</a
+                      >
+                    </li>
+                    <li>
+                      <a href="https://llvm.org/devmtg/2011-11/"
+                        >November 18, 2011</a
+                      >
+                    </li>
+                    <li>
+                      <a href="https://llvm.org/devmtg/2011-09-16/"
+                        >September 2011</a
+                      >
+                    </li>
+                    <li>
+                      <a href="https://llvm.org/devmtg/2010-11/"
+                        >November 2010</a
+                      >
+                    </li>
+                    <li>
+                      <a href="https://llvm.org/devmtg/2009-10/"
+                        >October 2009</a
+                      >
+                    </li>
+                    <li>
+                      <a href="https://llvm.org/devmtg/2008-08/">August 2008</a>
+                    </li>
+                    <li>
+                      <a href="https://llvm.org/devmtg/2007-05/">May 2007</a>
+                    </li>
+                  </ul>
+                </div>
+
+                <br />
+
+                <!-- End of the right column -->
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+    <style>
+      /*
+ * LLVM website style sheet
+ */
+
+      /* No borders on image links */
+      a:link img,
+      a:visited img {
+        border-style: none;
+      }
+
+      address img {
+        float: right;
+        width: 88px;
+        height: 31px;
+      }
+      address {
+        clear: right;
+      }
+
+      /* Main website */
+      .www_title {
+        font-family: "Georgia", "Palatino", "Times", "Roman";
+        font-size: 33pt;
+        text-align: center;
+      }
+
+      .www_sidebar {
+        text-align: center;
+        font-family: "Georgia", "Palatino", "Times", "Roman";
+        font-size: 12pt;
+        margin-left: 0em;
+        margin-right: 0em;
+        padding: 0.15em 0.15em 0.15em 0.15em;
+        width: 100%;
+        background: url("img/lines.gif");
+        border: 2px solid #cccccc;
+      }
+
+      .www_sectiontitle,
+      .www_subsection {
+        border-width: 1px;
+        border-style: solid none solid none;
+        text-align: center;
+        vertical-align: middle;
+        font-family: "Georgia", "Palatino", "Times", "Roman";
+        font-weight: bold;
+        font-size: 18pt;
+        background: url("img/lines.gif");
+        padding: 0.1em 0.1em 0.1em 0.1em;
+        width: 100%;
+        margin-bottom: 0.3em;
+      }
+
+      .www_subsection {
+        width: 75%;
+        text-align: left;
+        font-size: 12pt;
+      }
+
+      .www_subsubsection {
+        margin: 1em 0.5em 0.5em 0.5em;
+        font-weight: bold;
+        font-style: oblique;
+        border-bottom: 1px solid #999999;
+        font-size: 12pt;
+        width: 75%;
+      }
+
+      .www_code {
+        border: solid 1px gray;
+        background: #eeeeee;
+        margin: 0 1em 0 1em;
+        padding: 0 1em 0 1em;
+        display: table;
+      }
+
+      .www_footer {
+        text-align: left;
+        padding: 0 0 0 0;
+      }
+
+      /* Publications */
+      .pub_title {
+        font-family: "Georgia,Palatino,Times,Roman";
+        font-size: 24pt;
+        text-align: center;
+      }
+
+      .pub_author {
+        font-size: 14pt;
+        text-align: center;
+      }
+
+      /* Releases */
+      .rel_container {
+        text-align: center;
+        margin-left: 20%;
+      }
+
+      .rel_title {
+        text-align: center;
+        font-family: "Georgia,Palatino,Times,Roman";
+        font-weight: bold;
+        font-size: 28pt;
+        margin-bottom: 0.5em;
+      }
+
+      .rel_section {
+        vertical-align: middle;
+        border-width: 1px;
+        border-style: solid none solid none;
+        text-align: center;
+        vertical-align: middle;
+        font-family: "Georgia,Palatino,Times,Roman";
+        font-weight: bold;
+        font-size: 18pt;
+        background: url("img/lines.gif");
+        margin: 1em 0.5em 1em 0.5em;
+        padding-left: 1em;
+        width: 330px;
+      }
+
+      .rel_sectiontxt {
+        padding: 0 1em 0 1em;
+        margin: 1em 0.5em 1em 0.5em;
+      }
+
+      .rel_intro,
+      .rel_boxtext {
+        text-align: left;
+        font-family: "Georgia,Palatino,Times,Roman";
+        font-size: 11pt;
+        padding: 0.5em 0.5em 0.5em 1.5em;
+        margin-left: 2em;
+        margin-right: 3em;
+        width: 60%;
+        background: #f7f7f7;
+        border: 2px solid #cccccc;
+      }
+      .www TD,
+      TH {
+        border: 2px solid gray;
+        padding: 4pt 4pt 2pt 2pt;
+        text-align: left;
+      }
+      .www TH {
+        border: 2px solid gray;
+        font-weight: bold;
+        font-size: 105%;
+        color: black;
+        background: url("img/lines.gif");
+        font-family: "Georgia,Palatino,Times,Roman,SanSerif";
+        text-align: center;
+        vertical-align: middle;
+      }
+      TABLE.www {
+        text-align: left;
+        border: 2px solid black;
+        border-collapse: collapse;
+        margin-top: 1em;
+        margin-left: 1em;
+        margin-right: 1em;
+        margin-bottom: 1em;
+      }
+
+      /* Open Projects */
+
+      ul li ul li {
+        margin-left: 15px;
+      }
+
+      /* Dev Meeting */
+      .tab {
+        margin-left: 40px;
+      }
+      #devmtg {
+        font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
+        border-collapse: collapse;
+      }
+      #devmtg td,
+      #devmtg th {
+        font-size: 1em;
+        border: 1px solid #045fb4;
+        padding: 3px 7px 2px 7px;
+      }
+      #devmtg th {
+        font-size: 1.1em;
+        text-align: left;
+        padding-top: 5px;
+        padding-bottom: 4px;
+        background-color: #045fb4;
+        color: #ffffff;
+      }
+      #devmtg tr.alt td {
+        color: #000000;
+        background-color: #81bef7;
+      }
+
+      /* Sponsors */
+      .sponsors_diamond,
+      .sponsors_platinum,
+      .sponsors_gold,
+      .sponsors_silver,
+      .sponsors_bronze td {
+        padding: 30px;
+        text-align: center;
+      }
+
+      .sponsors_diamond img {
+        width: 220px;
+      }
+
+      .sponsors_platinum img {
+        width: 200px;
+      }
+
+      .sponsors_gold img {
+        width: 180px;
+      }
+
+      .sponsors_silver img {
+        width: 160px;
+      }
+
+      .sponsors_bronze img {
+        width: 150px;
+      }
+    </style>
+  </body>
+</html>
